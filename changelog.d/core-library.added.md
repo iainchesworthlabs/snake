@@ -1,0 +1,1 @@
+**The core library holds the game state, frame timing and logging of the old code.** `TimingLoop` keeps the 60 Hz frame time, `Logger` and `StreamLogger` replace the debug-output logger with a prefix for each level, and `Game` holds the state and frame counter. The main window size and multisampling are constants in `WindowSettings`.
