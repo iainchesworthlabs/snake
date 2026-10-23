@@ -77,6 +77,18 @@ TEST_CASE("A bound of zero or one always gives zero", "[random]")
     }
 }
 
+TEST_CASE("A bound near the top of the range still gives numbers below it", "[random]")
+{
+    // With this bound about half of the raw numbers fall under the threshold and are skipped, which exercises
+    // the retry.
+    Random random(5);
+    constexpr std::uint32_t BOUND = 0x80000001U;
+    for (int i = 0; i < 1000; ++i)
+    {
+        REQUIRE(random.below(BOUND) < BOUND);
+    }
+}
+
 TEST_CASE("Bounded numbers cover the whole range with no value far from its share", "[random]")
 {
     Random random(2026);

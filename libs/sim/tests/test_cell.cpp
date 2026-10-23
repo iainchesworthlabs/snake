@@ -48,4 +48,5 @@ TEST_CASE("Cells compare by position", "[cell]")
 {
     CHECK(Cell{4, 5} == Cell{4, 5});
     CHECK_FALSE(Cell{4, 5} == Cell{5, 4});
+    CHECK_FALSE(Cell{4, 5} == Cell{4, 6});
 }

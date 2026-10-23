@@ -18,18 +18,8 @@ enum class Direction : std::uint8_t
 /// The direction that points the other way.
 [[nodiscard]] constexpr Direction opposite(Direction direction) noexcept
 {
-    switch (direction)
-    {
-    case Direction::UP:
-        return Direction::DOWN;
-    case Direction::DOWN:
-        return Direction::UP;
-    case Direction::LEFT:
-        return Direction::RIGHT;
-    case Direction::RIGHT:
-        return Direction::LEFT;
-    }
-    return direction;
+    constexpr Direction OPPOSITES[] = {Direction::DOWN, Direction::UP, Direction::RIGHT, Direction::LEFT};
+    return OPPOSITES[static_cast<std::uint8_t>(direction) % 4];
 }
 
 /// True when the two directions are on the same axis and point opposite ways. A snake cannot reverse into itself.

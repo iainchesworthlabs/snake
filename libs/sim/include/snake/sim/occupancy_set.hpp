@@ -72,15 +72,12 @@ public:
                 rank -= available;
                 continue;
             }
-            for (;; --rank)
+            // Drop the lowest `rank` clear bits; the lowest one left is the answer.
+            for (; rank > 0; --rank)
             {
-                const auto position = static_cast<std::size_t>(std::countr_zero(clear_bits));
-                if (rank == 0)
-                {
-                    return first + position;
-                }
                 clear_bits &= clear_bits - 1;
             }
+            return first + static_cast<std::size_t>(std::countr_zero(clear_bits));
         }
         return Bits;
     }

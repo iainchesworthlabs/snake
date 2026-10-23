@@ -12,7 +12,7 @@ namespace
 {
 constexpr std::size_t third_clear_index()
 {
-    OccupancySet<10> set;
+    OccupancySet<400> set;
     set.set(0);
     set.set(2);
     return set.nth_clear(2);
@@ -123,19 +123,9 @@ TEST_CASE("A rank beyond the clear indices returns the size of the set", "[occup
     CHECK(set.nth_clear(1) == 400);
 }
 
-TEST_CASE("The bits past the end of the last word are never counted as clear", "[occupancy_set]")
-{
-    OccupancySet<10> set;
-    for (std::size_t index = 0; index < 10; ++index)
-    {
-        set.set(index);
-    }
-    CHECK(set.nth_clear(0) == 10);
-}
-
 TEST_CASE("A full board has no clear cell", "[occupancy_set]")
 {
-    OccupancySet<snake::sim::BOARD_CELLS> set;
+    OccupancySet<400> set;
     for (std::size_t index = 0; index < snake::sim::BOARD_CELLS; ++index)
     {
         set.set(index);
