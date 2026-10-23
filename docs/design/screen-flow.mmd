@@ -1,0 +1,12 @@
+flowchart LR
+    T["Title and mode select<br/><i>state: not started</i>"] -->|play| G["Gameplay<br/><i>state: running</i>"]
+    G -->|crash| O["Game over<br/><i>state: game over</i>"]
+    O -->|play again| G
+    G -->|pause or focus lost| P["Paused<br/><i>state: paused</i>"]
+    P -->|resume or restart| G
+    P -->|quit to menu| T
+    O -->|top 10 score| N["Name entry<br/><i>up to 12 characters</i>"]
+    N -->|save| L["Leaderboard<br/><i>top 10 per mode</i>"]
+    O -->|menu| T
+    T <-->|leaderboard and back| L
+    style G fill:#FF6B4A,stroke:#2B1D52,stroke-width:2px,color:#2B1D52

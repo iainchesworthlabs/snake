@@ -1,0 +1,1 @@
+**The product requirements and the Toybox Pixel design are in the repository.** `docs/prd.md` holds the rules, controls, modes, scoring and acceptance criteria for version 1, and `docs/design/` holds the design tokens, screenshots, clickable screen mock-ups and the Pixelify Sans font files with their licence.

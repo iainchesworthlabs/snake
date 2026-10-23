@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toybox Pixel ESP32-P4 gameplay</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+html,body{margin:0;background:#26232E}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:56px 32px 32px;box-sizing:border-box}
+#dc-root{flex:none}
+.dc-back{position:fixed;top:12px;left:12px;z-index:10;font:600 13px system-ui,sans-serif;color:#EDEAF5;text-decoration:none;background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px}
+.dc-back:hover{background:rgba(255,255,255,0.18)}
+</style>
+<style>
+body{margin:0}
+a{color:#2B1D52}a:hover{color:#1A1035}
+@keyframes tbRise{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-18px);opacity:0.4}}
+.tb-pop{animation:tbRise 1.6s steps(6) infinite}
+@media (prefers-reduced-motion: reduce){.tb-pop{animation:none}}
+</style>
+</head>
+<body>
+<a class="dc-back" href="../index.html">&#8592; All screens</a>
+<div id="dc-root"></div>
+<template id="dc-template">
+<div style="width: 1024px; height: 600px; box-sizing: border-box; padding: 30px 32px; display: grid; grid-template-columns: minmax(0, 1fr) 540px minmax(0, 1fr); gap: 40px; align-items: center; background: #FFC93C; color: #2B1D52; font-family: 'Pixelify Sans', 'Courier New', monospace">
+  <div style="display: flex; flex-direction: column; gap: 20px; align-items: flex-start">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 17px; font-weight: 500">Score</span>
+      <span style="font-size: 44px; line-height: 1; font-weight: 700">000420</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 17px; font-weight: 500">Best</span>
+      <span style="font-size: 24px; line-height: 1; font-weight: 700; padding: 6px 10px; border-radius: 8px; background: #2B1D52; color: #FFF1D6">001480</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+      <span style="padding: 7px 12px; border-radius: 8px; background: #2B1D52; color: #FFF1D6; font-size: 17px; font-weight: 600">Classic</span>
+      <span style="padding: 7px 12px; border-radius: 8px; background: #FF6B4A; color: #2B1D52; font-size: 17px; font-weight: 700">Combo x3</span>
+    </div>
+  </div>
+  <div role="img" aria-label="Game board: the striped snake heads right towards a blueberry" style="position: relative; width: 540px; height: 540px; border-radius: 8px; background: repeating-conic-gradient(#1F6E7A 0 25%, #1A6170 0 50%) 0 0 / 54px 54px; box-shadow: 0 0 0 5px #2B1D52, 0 9px 0 5px #1A1035">
+    <sc-for list="{{segs}}" as="s" hint-placeholder-count="14">
+      <div style="position: absolute; left: {{s.l}}px; top: {{s.t}}px; width: 27px; height: 27px; border-radius: 6px; background: {{s.bg}}; box-shadow: inset 0 -4px 0 rgba(43,29,82,0.25)"></div>
+    </sc-for>
+    <div style="position: absolute; left: 351px; top: 216px; width: 27px; height: 27px; border-radius: 8px; background: #FF6B4A; box-shadow: inset 0 -4px 0 rgba(43,29,82,0.28)">
+      <div style="position: absolute; left: 14px; top: 3px; width: 8px; height: 8px; border-radius: 2px; background: #FFFFFF"></div>
+      <div style="position: absolute; left: 14px; top: 15px; width: 8px; height: 8px; border-radius: 2px; background: #FFFFFF"></div>
+      <div style="position: absolute; left: 18px; top: 5px; width: 4px; height: 4px; background: #2B1D52"></div>
+      <div style="position: absolute; left: 18px; top: 17px; width: 4px; height: 4px; background: #2B1D52"></div>
+      <div style="position: absolute; left: 27px; top: 12px; width: 9px; height: 3px; background: #FF2E63"></div>
+    </div>
+    <div style="position: absolute; left: 435px; top: 219px; width: 21px; height: 21px">
+      <div style="position: absolute; left: 0; top: 0; width: 21px; height: 21px; border-radius: 50%; background: #4C6BFF; box-shadow: inset -3px -3px 0 rgba(43,29,82,0.35)"></div>
+      <div style="position: absolute; left: 4px; top: 4px; width: 5px; height: 5px; border-radius: 1px; background: #DDE3FF"></div>
+      <div style="position: absolute; left: 7px; top: -5px; width: 8px; height: 5px; border-radius: 2px; background: #5BD16A"></div>
+    </div>
+    <span class="tb-pop" style="position: absolute; left: 300px; top: 140px; font-size: 22px; font-weight: 700; color: #FFF1D6; text-shadow: 2px 2px 0 #2B1D52">+30</span>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 22px; align-items: center">
+    <button aria-label="Pause" style="align-self: flex-end; width: 52px; height: 52px; border-radius: 12px; border: none; background: #2B1D52; color: #FFF1D6; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 4px 0 #1A1035; cursor: pointer">
+      <svg width="18" height="20" viewBox="0 0 18 20" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="18"></rect><rect x="11" y="1" width="6" height="18"></rect></svg>
+    </button>
+    <div role="img" aria-label="Tilt indicator: tilting right" style="position: relative; width: 140px; height: 140px; box-sizing: border-box; border-radius: 28px; border: 4px solid #2B1D52; background: #FFF1D6; box-shadow: 0 6px 0 #1A1035">
+      <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+        <polygon points="66,8 58,18 74,18" fill="rgba(43,29,82,0.35)"></polygon>
+        <polygon points="66,124 58,114 74,114" fill="rgba(43,29,82,0.35)"></polygon>
+        <polygon points="8,66 18,58 18,74" fill="rgba(43,29,82,0.35)"></polygon>
+        <polygon points="124,66 114,58 114,74" fill="#2B1D52"></polygon>
+      </svg>
+      <div style="position: absolute; left: 40px; top: 40px; width: 52px; height: 52px; box-sizing: border-box; border-radius: 50%; border: 3px dashed rgba(43,29,82,0.35)"></div>
+      <div style="position: absolute; left: 85px; top: 53px; width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; border: 3px solid #2B1D52; background: #FF6B4A">
+        <div style="position: absolute; left: 3px; top: 3px; width: 6px; height: 6px; border-radius: 2px; background: #FFF1D6"></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center">
+      <span style="font-size: 18px; font-weight: 600">Tilt to steer</span>
+      <span style="font-size: 15px; font-weight: 500">Level out to cruise</span>
+    </div>
+  </div>
+</div>
+</template>
+<script src="dc-lite.js"></script>
+<script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = 27;
+    const cells = [[12,8],[11,8],[10,8],[10,9],[10,10],[10,11],[9,11],[8,11],[7,11],[6,11],[6,10],[6,9],[6,8],[6,7]];
+    const segs = cells.map((c, i) => ({ l: c[0] * C, t: c[1] * C, bg: i % 2 === 0 ? '#FFF1D6' : '#FF6B4A' }));
+    return { segs: segs };
+  }
+}
+dcBoot(Component, {"$preview": {"width": 1024, "height": 600}});
+</script>
+</body>
+</html>
