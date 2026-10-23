@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "snake/sim/cell.hpp"
 #include "snake/sim/ring_buffer.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -123,6 +124,25 @@ TEST_CASE("The snake pattern of adding a head and dropping the tail wraps around
         REQUIRE(body[1] == head - 1);
         REQUIRE(body.back() == head - 2);
     }
+}
+
+TEST_CASE("A buffer as large as the board holds every cell and refuses one more", "[ring_buffer]")
+{
+    // The snake's own buffer: one place for each of the 400 cells.
+    RingBuffer<snake::sim::Cell, snake::sim::BOARD_CELLS> body;
+    for (std::uint16_t index = 0; index < snake::sim::BOARD_CELLS; ++index)
+    {
+        REQUIRE(body.push_back(snake::sim::from_index(index)));
+    }
+    CHECK(body.full());
+    CHECK_FALSE(body.push_back(snake::sim::Cell{0, 0}));
+    CHECK_FALSE(body.push_front(snake::sim::Cell{0, 0}));
+    for (std::uint16_t count = 0; count < snake::sim::BOARD_CELLS; ++count)
+    {
+        REQUIRE(body.pop_back());
+    }
+    CHECK_FALSE(body.pop_back());
+    CHECK(body.empty());
 }
 
 TEST_CASE("Clearing empties the buffer and it can be filled again", "[ring_buffer]")

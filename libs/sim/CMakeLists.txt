@@ -5,7 +5,8 @@
 # desktop, on phones and on the ESP32-P4. Exceptions and RTTI are switched off for its sources.
 add_library(snake_sim
     src/input_buffer.cpp
-    src/random.cpp)
+    src/random.cpp
+    src/simulation.cpp)
 add_library(snake::sim ALIAS snake_sim)
 
 target_include_directories(snake_sim

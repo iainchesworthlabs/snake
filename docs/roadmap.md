@@ -200,6 +200,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 8. Easy ends in a perfect game when the board fills, like Classic.
 9. The best score on the gameplay screen is the top entry of the current mode's leaderboard.
 10. The tick interval is in whole milliseconds and never below the floor, as in the requirements table.
+11. A new snake has its head at column 10, row 10 (the 20 by 20 board has no single middle cell) with the body trailing
+    to the left, and the first food is placed like every later one.
+12. A tick that ends the game leaves the snake where it was: it does not move into the wall or the body.
 
 ## Risks
 
