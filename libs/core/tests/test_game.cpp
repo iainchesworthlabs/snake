@@ -76,7 +76,7 @@ TEST_CASE("Frames are counted only while the game runs", "[game]")
 TEST_CASE("Each frame is logged at trace level, counting from 0", "[game]")
 {
     std::ostringstream out;
-    const auto logger = std::make_shared<const snake::StreamLogger>(out, snake::LogLevel::TRACE);
+    const auto logger = std::make_shared<const snake::StreamLogger>(out, snake::LogLevel::LEVEL_TRACE);
     Game game(logger);
     REQUIRE(game.start());
 

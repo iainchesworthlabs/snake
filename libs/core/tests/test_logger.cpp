@@ -14,18 +14,18 @@ using snake::StreamLogger;
 TEST_CASE("Every level has its own prefix", "[logger]")
 {
     // The old logger wrote [TRACE] for all six levels.
-    CHECK(snake::level_prefix(LogLevel::TRACE) == "[TRACE] ");
-    CHECK(snake::level_prefix(LogLevel::DEBUG) == "[DEBUG] ");
-    CHECK(snake::level_prefix(LogLevel::INFO) == "[INFO] ");
-    CHECK(snake::level_prefix(LogLevel::WARNING) == "[WARNING] ");
-    CHECK(snake::level_prefix(LogLevel::ERROR) == "[ERROR] ");
-    CHECK(snake::level_prefix(LogLevel::FATAL) == "[FATAL] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_TRACE) == "[TRACE] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_DEBUG) == "[DEBUG] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_INFO) == "[INFO] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_WARNING) == "[WARNING] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_ERROR) == "[ERROR] ");
+    CHECK(snake::level_prefix(LogLevel::LEVEL_FATAL) == "[FATAL] ");
 }
 
 TEST_CASE("StreamLogger writes one prefixed line per message", "[logger]")
 {
     std::ostringstream out;
-    const StreamLogger logger(out, LogLevel::TRACE);
+    const StreamLogger logger(out, LogLevel::LEVEL_TRACE);
 
     logger.trace("a");
     logger.debug("b");
@@ -41,7 +41,7 @@ TEST_CASE("StreamLogger drops messages below the minimum level", "[logger]")
 {
     std::ostringstream out;
     const StreamLogger logger(out);
-    REQUIRE(logger.minimum_level() == LogLevel::INFO);
+    REQUIRE(logger.minimum_level() == LogLevel::LEVEL_INFO);
 
     logger.trace("hidden");
     logger.debug("hidden");

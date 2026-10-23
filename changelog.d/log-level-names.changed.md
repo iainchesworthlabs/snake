@@ -1,0 +1,1 @@
+**Log level enumerators carry a `LEVEL_` prefix.** `LogLevel::ERROR` and `LogLevel::DEBUG` clash with macros in the Windows headers and in many build setups, so code that included `windows.h` before `snake/logger.hpp` would not have compiled.
