@@ -3,6 +3,7 @@
 
 #include "snake/sim/cell.hpp"
 #include "snake/sim/direction.hpp"
+#include "snake/sim/edge_rule.hpp"
 #include "snake/sim/input_buffer.hpp"
 #include "snake/sim/occupancy_set.hpp"
 #include "snake/sim/random.hpp"
@@ -15,13 +16,6 @@
 
 namespace snake::sim
 {
-
-/// What happens at the edge of the board. Classic ends the game on a wall. Easy wraps to the opposite edge.
-enum class EdgeRule : std::uint8_t
-{
-    WALLS,
-    WRAP,
-};
 
 /// What one call to tick() did.
 enum class TickOutcome : std::uint8_t
