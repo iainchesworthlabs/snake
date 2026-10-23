@@ -52,6 +52,8 @@ A library never depends on an application, and `libs/core` never includes a Qt h
 4. The tick interval is rounded to whole milliseconds (17 ms) because Qt timers count in milliseconds. The old
    code waited for an exact 1/60 s using `sleep_until`.
 5. The graphics API is chosen by Qt. The old code asked for an OpenGL 3.3 core context.
+6. The window title is "Snake", translated, instead of "Test Window".
+7. The window shows the frame count, so the 60 Hz tick can be seen. The old window was empty.
 
 ## Decisions
 
