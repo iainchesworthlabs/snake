@@ -7,7 +7,7 @@ target_link_libraries(snake_translation_tests
 catch_discover_tests(snake_translation_tests
     PROPERTIES
         LABELS unit
-        ENVIRONMENT "SNAKE_TRANSLATIONS_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../translations")
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../translations")
 
 # The view-model is built a second time here so that the tests link it without the QML module.
 add_executable(snake_viewmodel_tests

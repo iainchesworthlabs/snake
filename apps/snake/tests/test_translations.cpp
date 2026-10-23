@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -58,11 +57,10 @@ std::string between(const std::string& text, std::size_t from, std::size_t until
     return text.substr(begin, text.find(close, begin) - begin);
 }
 
+// The test runs in apps/snake/translations (see tests/CMakeLists.txt), so the files are found by name.
 std::filesystem::path catalogue_path(std::string_view code)
 {
-    const char* dir = std::getenv("SNAKE_TRANSLATIONS_DIR");
-    REQUIRE(dir != nullptr);
-    return std::filesystem::path(dir) / ("snake_" + std::string(code) + ".ts");
+    return std::filesystem::path("snake_" + std::string(code) + ".ts");
 }
 
 std::vector<Message> read_catalogue(std::string_view code)
