@@ -30,6 +30,22 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
         run: python3 tools/ci/check_release_version.py "$TAG"
+      - name: Work out the version
+        id: tag
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Check the release has notes
+        uses: iainchesworthlabs/icl-common-infra/actions/release-notes@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
+        with:
+          version: ${{ steps.tag.outputs.version }}
+          prerelease: ${{ steps.tag.outputs.prerelease }}
+          output-file: ${{ runner.temp }}/notes.md
 
   package:
     name: Package (${{ matrix.name }})
@@ -53,18 +69,18 @@ jobs:
           persist-credentials: false
       - name: Install GCC
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
       - name: Load the MSVC environment
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
       - name: Set up Qt
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
       - name: Set up ccache
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
         with:
           key: release-${{ matrix.name }}
       - name: Configure, build and install
@@ -85,7 +101,7 @@ jobs:
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
         with:
           mode: ${{ vars.SIGN_WINDOWS || 'false' }}
           files: stage/bin/snake.exe
@@ -118,7 +134,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@513b3c60a24497ebdced02e4b2b808666dfbf28b # v0.1.6
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@6471335c6f49bfa69dbd5508da84478187d5952e # v0.1.7
     secrets:
       REPO_GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
       REPO_GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}
