@@ -3,14 +3,8 @@ find_package(Qt6 6.8 REQUIRED COMPONENTS Quick LinguistTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(snake_app src/main.cpp)
-# On macOS the application is a bundle (snake.app), which is what the deploy step below fills with the Qt
-# frameworks. The identifier follows the reverse-domain form of the project's GitHub address; change it here if the
-# project later gets its own domain, because macOS keys saved settings and permissions by it.
-set_target_properties(snake_app PROPERTIES
-    OUTPUT_NAME snake
-    MACOSX_BUNDLE ON
-    MACOSX_BUNDLE_GUI_IDENTIFIER io.github.iainchesworthlabs.snake
-    MACOSX_BUNDLE_BUNDLE_NAME Snake)
+# The executable is named snake while the target is snake_app, so the QML module and the target stay distinct.
+set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
 
 # QML is compiled ahead of time by qmlcachegen; no QML file is parsed from source at run time.
 # The URI must differ from the executable name: the module gets a directory of that name in the build tree,
@@ -37,20 +31,14 @@ target_link_libraries(snake_app
 # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
 icl_relax_generated_warnings(snake_app)
 
-install(TARGETS snake_app
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION bin)
-
-# Copies the Qt libraries, plugins and QML modules the application needs next to it, so the installed
-# tree runs on a machine without Qt. This is what the release packages hold.
-qt_generate_deploy_qml_app_script(
-    TARGET snake_app
-    OUTPUT_SCRIPT snake_deploy_script
-    NO_UNSUPPORTED_PLATFORM_ERROR
-    NO_TRANSLATIONS)
-install(SCRIPT "${snake_deploy_script}")
-
-install(FILES "${PROJECT_SOURCE_DIR}/LICENSE" DESTINATION share/doc/snake)
+# Installs the program, copies the Qt libraries, plugins and QML modules next to it so the installed tree runs on a
+# machine without Qt, and adds the licence, notices and source information. The macOS bundle identifier follows the
+# reverse-domain form of the project's GitHub address; change it here if the project later gets its own domain, because
+# macOS keys saved settings and permissions by it. catch2 is used by the tests only and is not shipped.
+icl_install_qt_app(snake_app
+    BUNDLE_IDENTIFIER io.github.iainchesworthlabs.snake
+    DISPLAY_NAME Snake
+    NOTICE_EXCLUDE catch2)
 
 if(SNAKE_BUILD_TESTS)
     set(snake_ui_test_environment

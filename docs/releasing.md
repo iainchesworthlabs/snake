@@ -14,6 +14,10 @@
    pull request that assembles the changelog.
 4. The Release workflow builds the Linux, macOS and Windows packages. Windows binaries are handled
    according to the `SIGN_WINDOWS` repository variable: `false`, `test` or `production`.
+   Each package holds `LICENSE`, `LICENSES/`, `THIRD-PARTY-NOTICES.txt` and `SOURCE.txt` (the commit it was
+   built from), which `icl_install_qt_app` in `apps/snake/CMakeLists.txt` installs. The notices are generated
+   from the licence file of each runtime dependency, so adding a dependency to `vcpkg.json` without a licence
+   file in its port stops the configure step. Test-only packages are listed in `NOTICE_EXCLUDE`.
 5. The publish job waits for approval in the `release` environment, then writes `SHA512SUMS`,
    detached GPG signatures, an SPDX SBOM and build provenance, creates the GitHub Release, and for a
    final release fast-forwards `main` to the tag.

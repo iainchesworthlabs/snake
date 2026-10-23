@@ -27,6 +27,7 @@ include(IclHardening)
 include(IclTracy)
 include(IclCoverage)
 include(IclPlatform)
+include(IclQtApp)
 
 option(SNAKE_BUILD_TESTS "Build the tests" ON)
 option(SNAKE_BUILD_GUI "Build the Qt application" ON)
