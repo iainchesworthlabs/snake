@@ -53,28 +53,18 @@ jobs:
           persist-credentials: false
       - name: Install GCC
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
       - name: Load the MSVC environment
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
-      - name: Read the Qt version
-        id: qt
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "version=$(python3 -c "import json; print(json.load(open('.github/toolchain-versions.json'))['qt'])")" >> "$GITHUB_OUTPUT"
-          echo "aqtsource=$(python3 -c "import json; print(json.load(open('.github/toolchain-versions.json')).get('aqtsource',''))")" >> "$GITHUB_OUTPUT"
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
       - name: Set up Qt
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
-        with:
-          version: ${{ steps.qt.outputs.version }}
-          aqtsource: ${{ runner.os == 'Windows' && steps.qt.outputs.aqtsource || '' }}
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
       - name: Set up ccache
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
         with:
           key: release-${{ matrix.name }}
       - name: Configure, build and install
@@ -95,7 +85,7 @@ jobs:
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
         with:
           mode: ${{ vars.SIGN_WINDOWS || 'false' }}
           files: stage/bin/snake.exe
@@ -128,7 +118,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@36ab4ef896c7163ea39b223115e59f0d1c9f50eb # v0.1.4-test
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@292e4a7f4497a315e0a801a6fbccea7132a7ab82 # v0.1.4
     secrets:
       REPO_GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
       REPO_GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}
