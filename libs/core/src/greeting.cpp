@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "icl_template/greeting.hpp"
+#include "snake/greeting.hpp"
 
 #include <utility>
 
-#include "icl_template/platform.hpp"
+#include "snake/platform.hpp"
 
-namespace icl_template
+namespace snake
 {
 
 Greeter::Greeter(std::string name) : m_Name(std::move(name))
@@ -22,4 +22,4 @@ std::string Greeter::greet() const
     return text;
 }
 
-}  // namespace icl_template
+}  // namespace snake

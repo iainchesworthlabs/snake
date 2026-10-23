@@ -1,6 +1,6 @@
-site_name: ICL C++ template
-site_description: Template for C++23 projects in the iainchesworthlabs organisation
-repo_url: https://github.com/iainchesworthlabs/icl-cpp-template
+site_name: snake
+site_description: Snake game on Qt 6 and C++23
+repo_url: https://github.com/iainchesworthlabs/snake
 docs_dir: docs
 strict: true
 theme:
@@ -15,4 +15,3 @@ nav:
   - Testing: testing.md
   - Continuous integration: ci.md
   - Releasing: releasing.md
-  - Starting a project: new-project.md

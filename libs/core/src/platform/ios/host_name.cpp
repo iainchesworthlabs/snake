@@ -4,9 +4,9 @@
 #include <array>
 #include <string>
 
-#include "icl_template/platform.hpp"
+#include "snake/platform.hpp"
 
-namespace icl_template::platform
+namespace snake::platform
 {
 
 std::string host_name()
@@ -20,4 +20,4 @@ std::string host_name()
     return buffer.data();
 }
 
-}  // namespace icl_template::platform
+}  // namespace snake::platform

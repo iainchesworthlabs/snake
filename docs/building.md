@@ -11,11 +11,11 @@ or later, or Apple Clang 16 or later. Clang with libstdc++ older than 14 does no
 Dependencies come from vcpkg, using the `iainchesworthlabs/vcpkg` fork. The build finds it through
 `icl_resolve_vcpkg`, which looks for, in order:
 
-1. `ICL_TEMPLATE_VCPKG_ROOT`, a checkout used as is.
+1. `SNAKE_VCPKG_ROOT`, a checkout used as is.
 2. `ICL_VCPKG_STORE`, a directory shared by all projects (on this workstation `C:\repos\vcpkg`).
 3. `ICL_VCPKG_MIRROR`, a local mirror to clone from when the store is empty.
 
-Qt, when a project uses it, is found through `ICL_TEMPLATE_QT_ROOT` and then `ICL_QT_ROOT`.
+Qt, when a project uses it, is found through `SNAKE_QT_ROOT` and then `ICL_QT_ROOT`.
 Set these once in the shell profile; the presets do not hard-code paths.
 
 ## Presets

@@ -1,11 +1,11 @@
-# ICL C++ template
+# snake
 
-A small C++23 project that builds, tests and releases with the shared infrastructure in
-[icl-common-infra](https://github.com/iainchesworthlabs/icl-common-infra). Copy it to start a project.
+A Snake game on Qt 6 and C++23. The game itself is not implemented yet: the project holds the structure it
+will grow into. It builds, tests and releases with the shared infrastructure in
+[icl-common-infra](https://github.com/iainchesworthlabs/icl-common-infra).
 
-It contains one library (`libs/core`), one command-line application (`apps/cli`), the CMake
-presets, the CI callers, the repository settings as files, and the check configuration.
-The code is small on purpose so the structure is easy to see.
+The history of the original 2017 code is in
+[iainchesworth/snake.old](https://github.com/iainchesworth/snake.old).
 
 | Page | Covers |
 |---|---|
@@ -14,4 +14,3 @@ The code is small on purpose so the structure is easy to see.
 | [Testing](testing.md) | Test kinds, labels, coverage floors |
 | [Continuous integration](ci.md) | What runs when, required checks |
 | [Releasing](releasing.md) | Changelog, tags, signing, publishing |
-| [Starting a project](new-project.md) | Instantiate and configure a new repository |

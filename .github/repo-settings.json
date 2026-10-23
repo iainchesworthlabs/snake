@@ -1,4 +1,6 @@
 {
+  "description": "Snake game on Qt 6 and C++23. Window and structure only; the game is not implemented.",
+  "homepage": "https://iainchesworthlabs.github.io/snake/",
   "repository": {
     "has_issues": true,
     "has_wiki": false,
@@ -18,7 +20,9 @@
     "cpp",
     "cpp23",
     "cmake",
-    "vcpkg"
+    "vcpkg",
+    "qt6",
+    "game"
   ],
   "actions": {
     "default_workflow_permissions": "read",
