@@ -190,7 +190,8 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 ## Rules the requirements leave open, and the defaults used
 
 1. Bonus food scores 50 flat, not multiplied by the combo.
-2. Bonus food resets the combo window and steps the speed like normal food, and does not count towards the fifth.
+2. Bonus food restarts the combo window without raising the combo (a lapsed window drops it to x1 first), steps the
+   speed like normal food, and does not count towards the fifth.
 3. The bonus item goes on a uniformly random empty cell other than the food's, and is skipped if fewer than two cells
    are empty.
 4. The combo window is 20 ticks after the previous eating tick, so a second food on tick 20 still counts.
@@ -203,6 +204,10 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 11. A new snake has its head at column 10, row 10 (the 20 by 20 board has no single middle cell) with the body trailing
     to the left, and the first food is placed like every later one.
 12. A tick that ends the game leaves the snake where it was: it does not move into the wall or the body.
+13. A bonus item still on the board when the next one is due is replaced by the new one. An item takes a tick off its
+    40 on every tick the snake does not eat it, so it can be eaten on the 40th tick after it appears and is gone after
+    that.
+14. Food never goes on the bonus item. A bonus item on the last empty cell gives way to the food.
 
 ## Risks
 

@@ -92,11 +92,22 @@ std::optional<Simulation> Simulation::from_setup(const Setup& setup) noexcept
             return std::nullopt;
         }
     }
-    if (game.m_Occupied.test(to_index(setup.food)))
+    if (game.m_Occupied.test(to_index(setup.food)) || !Scoring::valid(setup.scoring))
     {
         return std::nullopt;
     }
+    if (setup.bonus)
+    {
+        const Bonus& bonus = *setup.bonus;
+        if (!on_board(bonus.cell) || game.m_Occupied.test(to_index(bonus.cell)) || bonus.cell == setup.food ||
+            bonus.ticks_left == 0 || bonus.ticks_left > BONUS_LIFETIME_TICKS)
+        {
+            return std::nullopt;
+        }
+    }
     game.m_Food = setup.food;
+    game.m_Bonus = setup.bonus;
+    game.m_Scoring = Scoring(setup.scoring);
     return game;
 }
 
@@ -111,6 +122,7 @@ TickOutcome Simulation::tick() noexcept
     {
         return TickOutcome::NOT_RUNNING;
     }
+    m_Scoring.advance();
     if (const std::optional<Direction> next_heading = m_Input.pop())
     {
         m_Heading = *next_heading;
@@ -124,7 +136,9 @@ TickOutcome Simulation::tick() noexcept
     }
 
     // The tail moves away this tick, so its cell is free, unless the snake eats and keeps its tail.
-    const bool eating = *next == m_Food;
+    const bool eating_food = *next == m_Food;
+    const bool eating_bonus = m_Bonus && *next == m_Bonus->cell;
+    const bool eating = eating_food || eating_bonus;
     const Cell tail = m_Snake.back();
     const bool tail_is_free = !eating && *next == tail;
     if (m_Occupied.test(to_index(*next)) && !tail_is_free)
@@ -141,29 +155,77 @@ TickOutcome Simulation::tick() noexcept
     static_cast<void>(m_Snake.push_front(*next));
     m_Occupied.set(to_index(*next));
 
-    if (!eating)
+    if (eating_bonus)
+    {
+        static_cast<void>(m_Scoring.eat_bonus());
+        m_Bonus.reset();
+        return TickOutcome::ATE_BONUS;
+    }
+
+    // An eating snake reaches the bonus item before it runs out. Otherwise it loses a tick.
+    if (m_Bonus && --m_Bonus->ticks_left == 0)
+    {
+        m_Bonus.reset();
+    }
+    if (!eating_food)
     {
         return TickOutcome::MOVED;
     }
+
+    const Scoring::FoodResult eaten = m_Scoring.eat_food();
     if (!place_food())
     {
         m_Running = false;
         m_Won = true;
         return TickOutcome::WON;
     }
+    if (eaten.bonus_due)
+    {
+        place_bonus();
+    }
     return TickOutcome::ATE;
 }
 
 bool Simulation::place_food() noexcept
 {
-    const std::size_t empty_cells = BOARD_CELLS - m_Occupied.count();
+    std::size_t empty_cells = BOARD_CELLS - m_Occupied.count();
+    if (m_Bonus)
+    {
+        if (empty_cells == 1)
+        {
+            // The bonus item sits on the last empty cell. The food goes there instead.
+            m_Bonus.reset();
+        }
+        else
+        {
+            m_Occupied.set(to_index(m_Bonus->cell));
+            --empty_cells;
+        }
+    }
     if (empty_cells == 0)
     {
         return false;
     }
     const auto rank = static_cast<std::size_t>(m_Random.below(static_cast<std::uint32_t>(empty_cells)));
     m_Food = from_index(static_cast<std::uint16_t>(m_Occupied.nth_clear(rank)));
+    if (m_Bonus)
+    {
+        m_Occupied.reset(to_index(m_Bonus->cell));
+    }
     return true;
+}
+
+void Simulation::place_bonus() noexcept
+{
+    // The food is not in the occupancy set, so mark it to keep the bonus item off it.
+    m_Occupied.set(to_index(m_Food));
+    const std::size_t empty_cells = BOARD_CELLS - m_Occupied.count();
+    if (empty_cells > 0)
+    {
+        const auto rank = static_cast<std::size_t>(m_Random.below(static_cast<std::uint32_t>(empty_cells)));
+        m_Bonus = Bonus{.cell = from_index(static_cast<std::uint16_t>(m_Occupied.nth_clear(rank)))};
+    }
+    m_Occupied.reset(to_index(m_Food));
 }
 
 } // namespace snake::sim

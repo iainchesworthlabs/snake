@@ -40,10 +40,23 @@ void check_invariants(const Simulation& game, std::size_t foods_eaten)
         }
     }
     REQUIRE(game.length() == Simulation::INITIAL_LENGTH + foods_eaten);
+    REQUIRE(game.foods_eaten() == foods_eaten);
+    REQUIRE(game.combo() >= 1);
+    REQUIRE(game.combo() <= Scoring::MAX_COMBO);
     if (!game.won())
     {
         REQUIRE(on_board(game.food()));
         REQUIRE_FALSE(seen[to_index(game.food())]); // the food is on an empty cell
+    }
+    if (game.bonus())
+    {
+        // The bonus item is on an empty cell of its own, and only for a while.
+        const Simulation::Bonus& bonus = *game.bonus();
+        REQUIRE(on_board(bonus.cell));
+        REQUIRE_FALSE(seen[to_index(bonus.cell)]);
+        REQUIRE(bonus.cell != game.food());
+        REQUIRE(bonus.ticks_left >= 1);
+        REQUIRE(bonus.ticks_left <= Simulation::BONUS_LIFETIME_TICKS);
     }
 }
 
@@ -61,6 +74,7 @@ TEST_CASE("Random play never breaks the rules of the board", "[simulation][prope
         {
             Simulation game(edges, seed++);
             std::size_t eaten = 0;
+            std::uint32_t score_before = 0;
             while (game.running() && ticks < 200000)
             {
                 // Mostly keep going, sometimes turn, sometimes press something silly such as a reversal.
@@ -72,15 +86,20 @@ TEST_CASE("Random play never breaks the rules of the board", "[simulation][prope
                 const std::size_t length_before = game.length();
                 const TickOutcome outcome = game.tick();
                 ++ticks;
-                if (outcome == TickOutcome::ATE || outcome == TickOutcome::WON)
+                const bool grew =
+                    outcome == TickOutcome::ATE || outcome == TickOutcome::ATE_BONUS || outcome == TickOutcome::WON;
+                if (grew)
                 {
                     ++eaten;
                 }
-                if (outcome == TickOutcome::MOVED || outcome == TickOutcome::ATE)
+                if (outcome == TickOutcome::MOVED || outcome == TickOutcome::ATE || outcome == TickOutcome::ATE_BONUS)
                 {
                     REQUIRE(game.head() != head_before);
-                    REQUIRE(game.length() == length_before + (outcome == TickOutcome::ATE ? 1 : 0));
+                    REQUIRE(game.length() == length_before + (outcome == TickOutcome::MOVED ? 0 : 1));
                 }
+                // The score rises when something was eaten and stays put otherwise.
+                REQUIRE((game.score() > score_before) == grew);
+                score_before = game.score();
                 check_invariants(game, eaten);
             }
         }
