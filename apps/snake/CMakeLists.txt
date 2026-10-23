@@ -31,18 +31,7 @@ target_link_libraries(snake_app
     PRIVATE snake::core Qt6::Quick icl::warnings icl::hardening icl::coverage)
 
 # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
-# The files Qt adds to the target are found after Qt finalises it, at the end of this directory.
-function(snake_relax_generated_warnings target)
-    get_target_property(target_sources ${target} SOURCES)
-    foreach(source IN LISTS target_sources)
-        if(source MATCHES "^${CMAKE_CURRENT_BINARY_DIR}/.*\\.(cpp|cxx|cc)$")
-            set_source_files_properties("${source}" PROPERTIES COMPILE_OPTIONS "${ICL_WARNINGS_OFF_FLAG}")
-        endif()
-    endforeach()
-    set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/${target}_autogen/mocs_compilation.cpp"
-        PROPERTIES COMPILE_OPTIONS "${ICL_WARNINGS_OFF_FLAG}" GENERATED ON)
-endfunction()
-cmake_language(DEFER CALL snake_relax_generated_warnings snake_app)
+icl_relax_generated_warnings(snake_app)
 
 install(TARGETS snake_app
     BUNDLE DESTINATION .

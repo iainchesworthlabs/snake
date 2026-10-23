@@ -1,0 +1,1 @@
+**The project builds with the floor compilers.** CI installs GCC 16 and Clang 23 on Ubuntu 26.04, builds with MSVC 14.51 or newer and with Apple Clang from Xcode 26.6, and tries Xcode 27 in a leg that cannot fail the run. The versions are pins in `.github/toolchain-versions.json`.

@@ -2,9 +2,11 @@
 
 ## Prerequisites
 
-CMake 4.0 or later, Ninja, and a C++23 compiler with `std::expected`: GCC 13 or later, MSVC 19.40
-or later, or Apple Clang 16 or later. Clang with libstdc++ older than 14 does not provide
-`std::expected`.
+CMake 4.0 or later, Ninja, and a C++23 compiler with `std::expected` and the C++23 library. The project builds
+with the floor compilers, which CI installs from the pins in `.github/toolchain-versions.json`: GCC 16, Clang 23
+(with GCC 16's libstdc++), MSVC 14.51 (a newer toolset passes) and the newest Apple Clang the macOS runners offer
+(Xcode 26.6 on `macos-26`, with Xcode 27 tried in a leg that cannot fail the run). Older compilers may work
+but are not tested.
 
 ## Dependencies
 

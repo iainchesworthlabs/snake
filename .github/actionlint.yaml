@@ -5,3 +5,9 @@ paths:
   .github/workflows/**/*.yml:
     ignore:
       - 'specifying action "\$/.*" in invalid format because ref is missing'
+
+# Runner labels that are newer than the actionlint release pinned in CI.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
+    - xcode-27
