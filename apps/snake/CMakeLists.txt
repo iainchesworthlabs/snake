@@ -45,6 +45,17 @@ install(TARGETS snake_app
     BUNDLE DESTINATION .
     RUNTIME DESTINATION bin)
 
+# Copies the Qt libraries, plugins and QML modules the application needs next to it, so the installed
+# tree runs on a machine without Qt. This is what the release packages hold.
+qt_generate_deploy_qml_app_script(
+    TARGET snake_app
+    OUTPUT_SCRIPT snake_deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    NO_TRANSLATIONS)
+install(SCRIPT "${snake_deploy_script}")
+
+install(FILES "${PROJECT_SOURCE_DIR}/LICENSE" DESTINATION share/doc/snake)
+
 if(SNAKE_BUILD_TESTS)
     set(snake_ui_test_environment
         QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QSG_RENDER_LOOP=basic)
