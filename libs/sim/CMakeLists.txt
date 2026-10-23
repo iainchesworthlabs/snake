@@ -6,6 +6,7 @@
 add_library(snake_sim
     src/input_buffer.cpp
     src/random.cpp
+    src/scoring.cpp
     src/simulation.cpp)
 add_library(snake::sim ALIAS snake_sim)
 
