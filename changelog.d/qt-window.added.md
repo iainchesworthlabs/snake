@@ -1,0 +1,1 @@
+**A Qt Quick window opens.** The application starts a Qt Quick window of 1024 by 768 pixels with 4x multisampling, and `--smoke-test` makes it exit after the first frame so CI can start it without a display. Qt 6.12 is installed in CI from the version in `.github/toolchain-versions.json`, and a TSan suppressions file covers the uninstrumented Qt libraries.

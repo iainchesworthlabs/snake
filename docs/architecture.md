@@ -1,19 +1,19 @@
 # Architecture
 
 ```text
-libs/core/            library: public headers, sources, tests
+libs/core/            Qt-free library: timing, logging, game state; public headers, sources, tests
   include/snake/
   src/
-    platform/<os>/    one directory per platform, chosen by CMake
   tests/
-apps/cli/             command-line application and its integration tests
+apps/snake/           Qt Quick application: main.cpp, QML, smoke test
 cmake/icl/            vendored CMake modules from icl-common-infra (do not edit)
 tools/                project scripts, baselines and coverage floors
 ```
 
 ## Platform code
 
-Platform differences live in `src/platform/<os>/` with the same file names in each directory.
+There is no platform-specific code yet. When there is, the differences live in `src/platform/<os>/` with
+the same file names in each directory.
 `icl_platform_sources(target)` adds the directory that matches the target system. Source files
 contain no `#if` on the platform or compiler; the preprocessor check fails the pull request if
 one appears. Other directives are counted per file against `tools/preprocessor-baseline.json`,

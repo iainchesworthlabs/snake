@@ -29,7 +29,7 @@ include(IclCoverage)
 include(IclPlatform)
 
 option(SNAKE_BUILD_TESTS "Build the tests" ON)
-option(SNAKE_BUILD_CLI "Build the command-line application" ON)
+option(SNAKE_BUILD_GUI "Build the Qt application" ON)
 
 if(SNAKE_BUILD_TESTS)
     include(CTest)
@@ -39,6 +39,6 @@ endif()
 
 add_subdirectory(libs/core)
 
-if(SNAKE_BUILD_CLI)
-    add_subdirectory(apps/cli)
+if(SNAKE_BUILD_GUI)
+    add_subdirectory(apps/snake)
 endif()
