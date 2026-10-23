@@ -6,10 +6,12 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <QLocale>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QString>
 #include <QSurfaceFormat>
+#include <QTranslator>
 #include <QVariantMap>
 
 int main(int argc, char* argv[])
@@ -18,6 +20,13 @@ int main(int argc, char* argv[])
     QGuiApplication::setApplicationName(QStringLiteral("snake"));
     QGuiApplication::setApplicationVersion(
         QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size()));
+
+    // The catalogues are compiled into the executable. A language without one shows the English source.
+    QTranslator translator;
+    if (translator.load(QLocale(), QStringLiteral("snake"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+    {
+        QGuiApplication::installTranslator(&translator);
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Snake"));

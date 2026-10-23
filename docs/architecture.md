@@ -5,7 +5,12 @@ libs/core/            Qt-free library: timing, logging, game state; public heade
   include/snake/
   src/
   tests/
-apps/snake/           Qt Quick application: main.cpp, QML, smoke test
+apps/snake/           Qt Quick application
+  src/                main.cpp
+  src/viewmodel/      thin QObject classes that QML binds to (camelCase names, see below)
+  qml/                Main.qml
+  translations/       snake_<language>.ts
+  tests/              view-model and translation tests
 cmake/icl/            vendored CMake modules from icl-common-infra (do not edit)
 tools/                project scripts, baselines and coverage floors
 ```
@@ -24,6 +29,12 @@ which can go down but not up.
 Namespaces, functions and variables use `snake_case`. Types use `PascalCase`. Members use
 `m_PascalCase`. Constants and enumerators use `UPPER_SNAKE_CASE`. Braces follow Allman style.
 `.clang-format` and `.clang-tidy` enforce this.
+
+## View-models
+
+QML sees the game through `snake::ui::GameViewModel`, which holds a `snake::Game` and a timer and has no
+rules of its own. Names that QML sees (properties, signals, invokable functions) are camelCase; the
+override is in `apps/snake/src/viewmodel/.clang-tidy`. A bulk change emits one signal, not one per item.
 
 ## Vendored modules
 

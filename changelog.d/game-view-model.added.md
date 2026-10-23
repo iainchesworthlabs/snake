@@ -1,0 +1,1 @@
+**The window counts frames at 60 Hz and is translated.** A view-model ticks the game while it runs and QML shows the frame count. The user interface is available in English and Simplified Chinese, with a test that every language has every string, none is unfinished and the placeholders match.
