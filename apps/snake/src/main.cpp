@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
         Qt::QueuedConnection);
     engine.setInitialProperties({{QStringLiteral("windowWidth"), snake::MAIN_WINDOW.width},
                                  {QStringLiteral("windowHeight"), snake::MAIN_WINDOW.height}});
-    engine.loadFromModule("Snake", "Main");
+    engine.loadFromModule("SnakeApp", "Main");
 
     if (parser.isSet(smoke_test))
     {
