@@ -11,6 +11,10 @@
     "apps/snake": {
       "line": 92,
       "branch": 75
+    },
+    "libs/sim": {
+      "line": 98,
+      "branch": 95
     }
   }
 }

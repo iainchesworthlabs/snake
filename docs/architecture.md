@@ -1,6 +1,11 @@
 # Architecture
 
 ```text
+libs/sim/             portable library (see below): board cells, directions, fixed-capacity containers,
+                      seeded random numbers; public headers, sources, tests
+  include/snake/sim/
+  src/
+  tests/
 libs/core/            Qt-free library: timing, logging, game state; public headers, sources, tests
   include/snake/
   src/
@@ -14,6 +19,15 @@ apps/snake/           Qt Quick application
 cmake/icl/            vendored CMake modules from icl-common-infra (do not edit)
 tools/                project scripts, baselines and coverage floors
 ```
+
+## Portable libraries
+
+`libs/sim` holds the rules of the game and is a portable library (section 3.1 of the project standard). It includes
+no Qt or platform header and uses no exceptions, RTTI, iostream or clock, and nothing in it allocates after
+construction, so the same code runs on the desktop, on phones and on the ESP32-P4. Its sources are built with
+exceptions and RTTI off. The random number generator is its own (PCG32), because the standard library's generators
+and distributions give different numbers on different implementations, and a recorded game must replay identically.
+The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code
 
