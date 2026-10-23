@@ -2,6 +2,7 @@
 add_executable(snake_sim_tests
     test_cell.cpp
     test_direction.cpp
+    test_input_buffer.cpp
     test_occupancy_set.cpp
     test_random.cpp
     test_ring_buffer.cpp)
