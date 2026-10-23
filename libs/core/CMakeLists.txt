@@ -10,13 +10,8 @@ configure_file(
 add_library(snake_core
     src/game.cpp
     src/game_state.cpp
-    src/greeting.cpp
-    src/logger.cpp
-    src/version.cpp)
+    src/logger.cpp)
 add_library(snake::core ALIAS snake_core)
-
-# One implementation file per platform; CMake adds the directory that matches the target.
-icl_platform_sources(snake_core)
 
 target_include_directories(snake_core
     PUBLIC

@@ -1,4 +1,5 @@
 {
-  "qt": "",
-  "cmake": "4.4.4"
+  "qt": "6.12.0",
+  "cmake": "4.4.4",
+  "aqtsource": "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
 }

@@ -51,6 +51,18 @@ jobs:
         uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@e2427041d2c15fc40018eb2155d2bb278d5f615f # v0.1.3
       - name: Set up CMake
         uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e2427041d2c15fc40018eb2155d2bb278d5f615f # v0.1.3
+      - name: Read the Qt version
+        id: qt
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "version=$(python3 -c "import json; print(json.load(open('.github/toolchain-versions.json'))['qt'])")" >> "$GITHUB_OUTPUT"
+          echo "aqtsource=$(python3 -c "import json; print(json.load(open('.github/toolchain-versions.json')).get('aqtsource',''))")" >> "$GITHUB_OUTPUT"
+      - name: Set up Qt
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@e2427041d2c15fc40018eb2155d2bb278d5f615f # v0.1.3
+        with:
+          version: ${{ steps.qt.outputs.version }}
+          aqtsource: ${{ runner.os == 'Windows' && steps.qt.outputs.aqtsource || '' }}
       - name: Set up vcpkg
         uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e2427041d2c15fc40018eb2155d2bb278d5f615f # v0.1.3
       - name: Set up ccache

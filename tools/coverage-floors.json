@@ -1,7 +1,16 @@
 {
-  "default": { "line": 90, "branch": 80 },
+  "default": {
+    "line": 90,
+    "branch": 80
+  },
   "components": {
-    "libs/core": { "line": 90, "branch": 85 },
-    "apps/cli": { "line": 95, "branch": 90 }
+    "libs/core": {
+      "line": 95,
+      "branch": 90
+    },
+    "apps/snake": {
+      "line": 85,
+      "branch": 70
+    }
   }
 }

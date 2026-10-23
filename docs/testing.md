@@ -8,8 +8,8 @@ flaky tests stay visible. A phase that matches no tests fails, unless the phase 
 
 | Kind | Where | Example |
 |---|---|---|
-| unit | `libs/*/tests` | `test_parse.cpp` |
-| integration | `apps/*/tests` | `cli.greets` runs the executable |
+| unit | `libs/*/tests` | `test_game.cpp` |
+| ui | `apps/snake` | `app.smoke` starts the application without a display, waits for the first frame and exits |
 
 ## Coverage
 
