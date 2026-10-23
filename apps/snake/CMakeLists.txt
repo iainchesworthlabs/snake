@@ -3,7 +3,10 @@ find_package(Qt6 6.8 REQUIRED COMPONENTS Quick LinguistTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(snake_app src/main.cpp)
-set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
+# On macOS the application is a bundle (snake.app), which is what the deploy step below fills with the Qt
+# frameworks. The bundle identifier is left at CMake's default until the owner chooses one:
+# TODO(owner: bundle identifier, for example com.example.snake).
+set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake MACOSX_BUNDLE ON)
 
 # QML is compiled ahead of time by qmlcachegen; no QML file is parsed from source at run time.
 # The URI must differ from the executable name: the module gets a directory of that name in the build tree,
