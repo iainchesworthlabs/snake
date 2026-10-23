@@ -14,4 +14,5 @@ The history of the original 2017 code is in
 | [Testing](testing.md) | Test kinds, labels, coverage floors |
 | [Continuous integration](ci.md) | What runs when, required checks |
 | [Releasing](releasing.md) | Changelog, tags, signing, publishing |
+| [Translations](i18n.md) | Languages, how to change a string, how to add a language |
 | [Migration](migration.md) | How the 2017 code became this project |

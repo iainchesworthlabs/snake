@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Quick LinguistTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(snake_app src/main.cpp)
@@ -11,7 +11,18 @@ set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
 qt_add_qml_module(snake_app
     URI SnakeApp
     VERSION 1.0
-    QML_FILES qml/Main.qml)
+    QML_FILES qml/Main.qml
+    SOURCES
+        src/viewmodel/game_view_model.cpp
+        src/viewmodel/game_view_model.hpp)
+# qmltyperegistrar includes each header by its file name, so the directory of the view-models is on the path too.
+target_include_directories(snake_app PRIVATE src src/viewmodel)
+
+# Translations: the source language and Simplified Chinese. `cmake --build <dir> --target update_translations`
+# refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.
+qt_add_translations(snake_app
+    TS_FILES translations/snake_en.ts translations/snake_zh_CN.ts
+    LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app
     PRIVATE snake::core Qt6::Quick icl::warnings icl::hardening icl::coverage)
@@ -49,4 +60,11 @@ if(SNAKE_BUILD_TESTS)
         LABELS ui
         TIMEOUT 60
         ENVIRONMENT "${snake_ui_test_environment}")
+
+    # qmllint over the QML files; any warning fails (see qml/.qmllint.ini).
+    add_test(NAME app.qmllint
+        COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target snake_app_qmllint)
+    set_tests_properties(app.qmllint PROPERTIES LABELS ui TIMEOUT 120)
+
+    add_subdirectory(tests)
 endif()
