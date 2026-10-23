@@ -10,17 +10,17 @@ std::string_view level_prefix(LogLevel level) noexcept
 {
     switch (level)
     {
-    case LogLevel::TRACE:
+    case LogLevel::LEVEL_TRACE:
         return "[TRACE] ";
-    case LogLevel::DEBUG:
+    case LogLevel::LEVEL_DEBUG:
         return "[DEBUG] ";
-    case LogLevel::INFO:
+    case LogLevel::LEVEL_INFO:
         return "[INFO] ";
-    case LogLevel::WARNING:
+    case LogLevel::LEVEL_WARNING:
         return "[WARNING] ";
-    case LogLevel::ERROR:
+    case LogLevel::LEVEL_ERROR:
         return "[ERROR] ";
-    case LogLevel::FATAL:
+    case LogLevel::LEVEL_FATAL:
         return "[FATAL] ";
     }
     std::unreachable();

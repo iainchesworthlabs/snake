@@ -8,14 +8,16 @@
 namespace snake
 {
 
+// The enumerators carry a prefix because ERROR is a macro in the Windows headers and DEBUG is often defined on the
+// compiler command line.
 enum class LogLevel
 {
-    TRACE,
-    DEBUG,
-    INFO,
-    WARNING,
-    ERROR,
-    FATAL,
+    LEVEL_TRACE,
+    LEVEL_DEBUG,
+    LEVEL_INFO,
+    LEVEL_WARNING,
+    LEVEL_ERROR,
+    LEVEL_FATAL,
 };
 
 /// The line prefix of a level, for example "[WARNING] ".
@@ -34,27 +36,27 @@ public:
 
     void trace(std::string_view message) const
     {
-        log(LogLevel::TRACE, message);
+        log(LogLevel::LEVEL_TRACE, message);
     }
     void debug(std::string_view message) const
     {
-        log(LogLevel::DEBUG, message);
+        log(LogLevel::LEVEL_DEBUG, message);
     }
     void info(std::string_view message) const
     {
-        log(LogLevel::INFO, message);
+        log(LogLevel::LEVEL_INFO, message);
     }
     void warning(std::string_view message) const
     {
-        log(LogLevel::WARNING, message);
+        log(LogLevel::LEVEL_WARNING, message);
     }
     void error(std::string_view message) const
     {
-        log(LogLevel::ERROR, message);
+        log(LogLevel::LEVEL_ERROR, message);
     }
     void fatal(std::string_view message) const
     {
-        log(LogLevel::FATAL, message);
+        log(LogLevel::LEVEL_FATAL, message);
     }
 };
 
@@ -63,7 +65,7 @@ public:
 class StreamLogger final : public Logger
 {
 public:
-    explicit StreamLogger(std::ostream& stream, LogLevel minimum_level = LogLevel::INFO);
+    explicit StreamLogger(std::ostream& stream, LogLevel minimum_level = LogLevel::LEVEL_INFO);
 
     void log(LogLevel level, std::string_view message) const override;
 

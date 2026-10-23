@@ -101,7 +101,7 @@ TEST_CASE("Ending stops the game for good", "[viewmodel]")
 TEST_CASE("Each counted frame is logged at trace level", "[viewmodel]")
 {
     std::ostringstream out;
-    const auto logger = std::make_shared<const snake::StreamLogger>(out, snake::LogLevel::TRACE);
+    const auto logger = std::make_shared<const snake::StreamLogger>(out, snake::LogLevel::LEVEL_TRACE);
     GameViewModel model(logger, FAST_TICK);
     model.start();
     REQUIRE(wait_for([&model] { return model.frame() >= 2; }));
