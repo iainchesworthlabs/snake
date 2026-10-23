@@ -17,4 +17,5 @@ nav:
   - Releasing: releasing.md
   - Translations: i18n.md
   - Product requirements: prd.md
+  - Roadmap: roadmap.md
   - Migration from the original code: migration.md
