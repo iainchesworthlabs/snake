@@ -3,6 +3,10 @@
 1. Merge pull requests into `develop`. Each user-visible change brings a changelog fragment.
 2. Assemble the changelog on `develop` with a pull request:
    `python3 <icl-common-infra>/scripts/changelog_tool.py assemble --version 1.2.0 --date YYYY-MM-DD`.
+   A final release needs the `## [1.2.0]` section this creates, and the Release workflow fails at its
+   first job without it. A pre-release (`v1.2.0-rc.1`) can skip this step: its notes are the fragments
+   still in `changelog.d/`, which stay there for the final release. `changelog_tool.py notes --version 1.2.0
+   --allow-pending` prints the notes a release would get.
 3. Tag the merge commit: `git tag -s v1.2.0 && git push origin v1.2.0`. The tag must point at a
    commit on `develop` and must be semantic version form; a suffix such as `-rc.1` makes a pre-release.
    The version before the suffix must equal `VERSION` in `project()` in `CMakeLists.txt` and `version`
