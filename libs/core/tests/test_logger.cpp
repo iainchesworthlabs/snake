@@ -63,19 +63,21 @@ TEST_CASE("StreamLogger can be shared between threads", "[logger]")
 {
     std::ostringstream out;
     const StreamLogger logger(out);
+    std::vector<std::thread> threads;
+    for (int t = 0; t < 4; ++t)
     {
-        std::vector<std::jthread> threads;
-        for (int t = 0; t < 4; ++t)
-        {
-            threads.emplace_back(
-                [&logger]
+        threads.emplace_back(
+            [&logger]
+            {
+                for (int i = 0; i < 50; ++i)
                 {
-                    for (int i = 0; i < 50; ++i)
-                    {
-                        logger.info("x");
-                    }
-                });
-        }
+                    logger.info("x");
+                }
+            });
+    }
+    for (auto& thread : threads)
+    {
+        thread.join();
     }
     std::istringstream in(out.str());
     std::string line;
