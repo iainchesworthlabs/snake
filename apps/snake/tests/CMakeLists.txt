@@ -19,7 +19,7 @@ set_target_properties(snake_viewmodel_tests PROPERTIES AUTOMOC ON)
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
 target_link_libraries(snake_viewmodel_tests
     PRIVATE snake::core Qt6::Qml Catch2::Catch2 icl::warnings icl::coverage)
-snake_relax_generated_warnings(snake_viewmodel_tests)
+icl_relax_generated_warnings(snake_viewmodel_tests)
 catch_discover_tests(snake_viewmodel_tests
     PROPERTIES
         LABELS unit
