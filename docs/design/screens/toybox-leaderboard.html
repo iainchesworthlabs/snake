@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toybox Pixel leaderboard</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+html,body{margin:0;background:#26232E}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:56px 32px 32px;box-sizing:border-box}
+#dc-root{flex:none}
+.dc-back{position:fixed;top:12px;left:12px;z-index:10;font:600 13px system-ui,sans-serif;color:#EDEAF5;text-decoration:none;background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:8px}
+.dc-back:hover{background:rgba(255,255,255,0.18)}
+</style>
+<style>
+body{margin:0}
+a{color:#2B1D52}a:hover{color:#1A1035}
+</style>
+</head>
+<body>
+<a class="dc-back" href="../index.html">&#8592; All screens</a>
+<div id="dc-root"></div>
+<template id="dc-template">
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 28px 15px 32px; display: flex; flex-direction: column; gap: 16px; background: #FFC93C; color: #2B1D52; font-family: 'Pixelify Sans', 'Courier New', monospace">
+  <div style="display: flex; align-items: center; gap: 14px">
+    <a href="toybox-title.html" aria-label="Back to menu" style="width: 48px; height: 48px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 3px solid #2B1D52; background: #FFF1D6; color: #2B1D52; box-shadow: 0 4px 0 #1A1035">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="2" y="8" width="15" height="3"></rect><rect x="5" y="5" width="3" height="3"></rect><rect x="8" y="2" width="3" height="3"></rect><rect x="5" y="11" width="3" height="3"></rect><rect x="8" y="14" width="3" height="3"></rect></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 36px; line-height: 1; font-weight: 700">Leaderboard</h1>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+      <sc-if value="{{t.sel}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{t.pick}}" aria-pressed="true" style="height: 46px; padding: 0; border-radius: 10px; border: 3px solid #2B1D52; background: #2B1D52; color: #FFF1D6; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer">{{t.label}}</button>
+      </sc-if>
+      <sc-if value="{{t.unsel}}" hint-placeholder-val="{{true}}">
+        <button onClick="{{t.pick}}" aria-pressed="false" style="height: 46px; padding: 0; border-radius: 10px; border: 3px solid #2B1D52; background: #FFF1D6; color: #2B1D52; font-family: inherit; font-size: 18px; font-weight: 600; box-shadow: 0 3px 0 #1A1035; cursor: pointer">{{t.label}}</button>
+      </sc-if>
+    </sc-for>
+  </div>
+  <span style="font-size: 15px; font-weight: 500">Top 10 on this device</span>
+  <ol style="list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; border-radius: 18px; border: 4px solid #2B1D52; background: #FFF1D6; box-shadow: 0 6px 0 #1A1035">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+      <li style="height: 46px; box-sizing: border-box; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 0 10px 0 6px; border-radius: 10px; background: {{r.rowBg}}; font-size: 18px; font-weight: {{r.weight}}">
+        <span style="width: 32px; height: 32px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: {{r.tileBorder}}; background: {{r.tileBg}}; font-size: 16px; font-weight: 700">{{r.rank}}</span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.name}}</span>
+        <span>{{r.score}}</span>
+      </li>
+    </sc-for>
+  </ol>
+</div>
+</template>
+<script src="dc-lite.js"></script>
+<script>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const tab = s.tab || 'classic';
+    const boards = {
+      classic: { latest: 2, list: [['MUM','001480'],['DAD','001310'],['MAYA','001250'],['LEO','000980'],['GRANDMA JUNE','000870'],['MAYA','000760'],['DAD','000640'],['LEO','000510'],['MUM','000480'],['LEO','000460']] },
+      easy: { latest: -1, list: [['MAYA','002340'],['LEO','001980'],['GRANDMA JUNE','001720'],['MAYA','001500'],['DAD','001210'],['LEO','000990'],['MUM','000870'],['MAYA','000640'],['LEO','000420'],['DAD','000310']] }
+    };
+    const medals = ['#FFC93C', '#D7DCEB', '#F0A868'];
+    const b = boards[tab];
+    const rows = b.list.map((e, i) => ({
+      rank: String(i + 1),
+      name: e[0],
+      score: e[1],
+      rowBg: i === b.latest ? '#FF6B4A' : 'transparent',
+      weight: i === b.latest ? '700' : '600',
+      tileBg: i < 3 ? medals[i] : 'transparent',
+      tileBorder: i < 3 ? '3px solid #2B1D52' : '3px solid transparent'
+    }));
+    const tabs = [{ id: 'easy', label: 'Easy' }, { id: 'classic', label: 'Classic' }].map((t) => ({
+      label: t.label,
+      sel: tab === t.id,
+      unsel: tab !== t.id,
+      pick: () => this.setState({ tab: t.id })
+    }));
+    return { rows: rows, tabs: tabs };
+  }
+}
+dcBoot(Component, {"$preview": {"width": 390, "height": 844}});
+</script>
+</body>
+</html>
