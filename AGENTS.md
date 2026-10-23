@@ -17,6 +17,8 @@ This file applies to any automated contributor. Read it before changing the repo
 
 ## Code rules
 
+- The full project standard is [`docs/standard.md`](https://github.com/iainchesworthlabs/icl-common-infra/blob/develop/docs/standard.md)
+  in `icl-common-infra`. Read the sections that apply to the change.
 - C++23. No `#if`, `#ifdef` or `#elif` on a platform, compiler or standard-library version. Put the
   difference in `src/platform/<os>/` instead. Other preprocessor directives are counted in
   `tools/preprocessor-baseline.json` and the count must not rise.
