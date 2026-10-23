@@ -15,6 +15,9 @@ on:
   merge_group:
   push:
     branches: [develop]
+  # Runs every leg on the chosen branch (`gh workflow run ci.yml --ref <branch>`), so a change to
+  # threading, the standard library or platform code can be tried on macOS and Windows before it is queued.
+  workflow_dispatch:
 
 permissions: {}
 
