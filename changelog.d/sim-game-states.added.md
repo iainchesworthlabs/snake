@@ -1,0 +1,1 @@
+**A game has states and a speed.** The simulation library now has a session that is not started, running, paused or game over, takes turns only while it runs, and reports how long to wait before the next tick for the mode and the food eaten so far.
