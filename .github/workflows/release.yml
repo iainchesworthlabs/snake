@@ -7,12 +7,16 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Builds and uploads the packages from a branch without publishing, to try the packaging
+  # (`gh workflow run release.yml --ref <branch>`). The version check and the publish job run for tags only.
+  workflow_dispatch:
 
 permissions: {}
 
 jobs:
   version:
     name: Check the version
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -30,6 +34,7 @@ jobs:
   package:
     name: Package (${{ matrix.name }})
     needs: version
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     permissions:
@@ -115,6 +120,7 @@ jobs:
   publish:
     name: Publish
     needs: package
+    if: github.ref_type == 'tag'
     permissions:
       contents: write
       id-token: write
