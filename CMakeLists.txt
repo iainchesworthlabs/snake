@@ -38,6 +38,7 @@ if(SNAKE_BUILD_TESTS)
     include(Catch)
 endif()
 
+add_subdirectory(libs/sim)
 add_subdirectory(libs/core)
 
 if(SNAKE_BUILD_GUI)
