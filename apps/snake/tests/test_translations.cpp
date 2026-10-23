@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <iterator>
 #include <map>
 #include <set>
 #include <string>
@@ -72,7 +71,9 @@ std::vector<Message> read_catalogue(std::string_view code)
     INFO("catalogue " << path.string());
     std::ifstream in(path, std::ios::binary);
     REQUIRE(in.is_open());
-    const std::string text{std::istreambuf_iterator<char>{in}, std::istreambuf_iterator<char>{}};
+    // Not an istreambuf_iterator range: GCC 13 and 14 report a null dereference inside <streambuf> for it.
+    std::string text(std::filesystem::file_size(path), '\0');
+    in.read(text.data(), static_cast<std::streamsize>(text.size()));
 
     std::vector<Message> messages;
     for (auto at = text.find("<message"); at != std::string::npos; at = text.find("<message", at + 1))
