@@ -80,6 +80,18 @@ TEST_CASE("An empty ring buffer refuses to remove", "[ring_buffer]")
     CHECK(buffer.empty());
 }
 
+TEST_CASE("Taking from the front returns the element and removes it", "[ring_buffer]")
+{
+    Buffer buffer;
+    CHECK_FALSE(buffer.take_front().has_value());
+    REQUIRE(buffer.push_back(1));
+    REQUIRE(buffer.push_back(2));
+    CHECK(buffer.take_front() == 1);
+    CHECK(buffer.take_front() == 2);
+    CHECK_FALSE(buffer.take_front().has_value());
+    CHECK(buffer.empty());
+}
+
 TEST_CASE("Removing from either end leaves the rest in order", "[ring_buffer]")
 {
     Buffer buffer;

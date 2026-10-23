@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 
 namespace snake::sim
 {
@@ -71,6 +72,19 @@ public:
         m_Front = (m_Front + 1) % Capacity;
         --m_Size;
         return true;
+    }
+
+    /// Removes and returns the front element, or returns nothing when the buffer is empty.
+    [[nodiscard]] constexpr std::optional<T> take_front() noexcept
+    {
+        if (empty())
+        {
+            return std::nullopt;
+        }
+        const T value = m_Items[m_Front];
+        m_Front = (m_Front + 1) % Capacity;
+        --m_Size;
+        return value;
     }
 
     /// Removes the back element. Returns false when the buffer is empty.
