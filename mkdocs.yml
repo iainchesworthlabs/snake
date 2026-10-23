@@ -15,3 +15,4 @@ nav:
   - Testing: testing.md
   - Continuous integration: ci.md
   - Releasing: releasing.md
+  - Migration from the original code: migration.md
