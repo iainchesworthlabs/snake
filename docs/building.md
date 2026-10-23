@@ -8,6 +8,10 @@ with the floor compilers, which CI installs from the pins in `.github/toolchain-
 (Xcode 26.6 on `macos-26`, with Xcode 27 tried in a leg that cannot fail the run). Older compilers may work
 but are not tested.
 
+Until Ubuntu ships a release of GCC 16, the `gcc-16` package on Ubuntu 26.04 is a pre-release snapshot that reports
+version 16.0.1. CI uses it and it meets the floor. The pin in `.github/toolchain-versions.json` is the major version,
+so the leg moves to the release package when the distribution publishes one.
+
 ## Dependencies
 
 Dependencies come from vcpkg, using the `iainchesworthlabs/vcpkg` fork, and Qt comes from a prebuilt kit. Both are
