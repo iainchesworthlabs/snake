@@ -1,32 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/sim/simulation.hpp"
 
+#include "snake/sim/movement.hpp"
+
 namespace snake::sim
 {
 
 namespace
 {
-
-/// The cell one step from `from`, or nothing when that is off the board and the edges are walls.
-std::optional<Cell> step(Cell from, Direction direction, EdgeRule edges) noexcept
-{
-    // Indexed by Direction: up, down, left, right.
-    constexpr int DX[] = {0, 0, -1, 1};
-    constexpr int DY[] = {-1, 1, 0, 0};
-    const auto index = static_cast<std::size_t>(direction) % 4;
-    int x = from.x + DX[index];
-    int y = from.y + DY[index];
-    if (edges == EdgeRule::WRAP)
-    {
-        x = (x + BOARD_COLUMNS) % BOARD_COLUMNS;
-        y = (y + BOARD_ROWS) % BOARD_ROWS;
-    }
-    else if (x < 0 || x >= BOARD_COLUMNS || y < 0 || y >= BOARD_ROWS)
-    {
-        return std::nullopt;
-    }
-    return Cell{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
-}
 
 /// True when `to` is one step from `from` in some direction.
 bool adjacent(Cell from, Cell to, EdgeRule edges) noexcept

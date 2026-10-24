@@ -4,6 +4,7 @@
 # exceptions, RTTI, iostream or clock, and allocates nothing after construction, so the same code runs on the
 # desktop, on phones and on the ESP32-P4. Exceptions and RTTI are switched off for its sources.
 add_library(snake_sim
+    src/autoplayer.cpp
     src/input_buffer.cpp
     src/random.cpp
     src/replay.cpp

@@ -23,7 +23,7 @@ struct Cell
 /// The row-major index of a cell, from 0 to BOARD_CELLS - 1. The cell must be on the board.
 [[nodiscard]] constexpr std::uint16_t to_index(Cell cell) noexcept
 {
-    return static_cast<std::uint16_t>(cell.y * BOARD_COLUMNS + cell.x);
+    return static_cast<std::uint16_t>((cell.y * BOARD_COLUMNS) + cell.x);
 }
 
 /// The cell at a row-major index. The index must be below BOARD_CELLS.
