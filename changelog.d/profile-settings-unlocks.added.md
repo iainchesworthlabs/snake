@@ -1,0 +1,1 @@
+**The game has a settings model and mode unlocks.** The profile library holds the settings the player can change (controls, inverted axes, sound, music, reduced motion) and the modes that open at a score: Portals at 2,000 points in Classic and Hot potato at 3,000. An unlock stays open for good, even if the leaderboard is cleared.
