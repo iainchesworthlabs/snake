@@ -290,6 +290,7 @@ TEST_CASE("Bytes with a value no snapshot has are refused", "[snapshot][format]"
     const auto refused_with = [&](std::size_t position, std::uint8_t value)
     {
         std::vector<std::uint8_t> bytes = good;
+        REQUIRE(position < bytes.size());
         bytes[position] = value;
         return !decode(bytes).has_value();
     };
@@ -355,8 +356,8 @@ TEST_CASE("Two snapshots are equal only when every field is", "[snapshot]")
     CHECK(differs([](Snapshot& s) { s.snake[1] = Cell{9, 9}; }));
     CHECK(differs([](Snapshot& s) { s.food = Cell{9, 9}; }));
     CHECK(differs([](Snapshot& s) { s.bonus.reset(); }));
-    CHECK(differs([](Snapshot& s) { s.bonus->cell = Cell{1, 1}; }));
-    CHECK(differs([](Snapshot& s) { s.bonus->ticks_left -= 1; }));
+    CHECK(differs([](Snapshot& s) { s.bonus = Simulation::Bonus{.cell = Cell{1, 1}, .ticks_left = 9}; }));
+    CHECK(differs([](Snapshot& s) { s.bonus = Simulation::Bonus{.cell = Cell{10, 12}, .ticks_left = 8}; }));
     CHECK(differs([](Snapshot& s) { s.scoring.score += 1; }));
     CHECK(differs([](Snapshot& s) { s.random.state += 1; }));
     CHECK(differs([](Snapshot& s) { s.random.increment += 2; }));
@@ -379,7 +380,8 @@ TEST_CASE("The hash changes with every part of the state", "[snapshot][hash]")
     CHECK(hash_with([](Snapshot& s) { s.ticks += 1; }) != reference);
     CHECK(hash_with([](Snapshot& s) { s.snake[2] = Cell{3, 6}; }) != reference);
     CHECK(hash_with([](Snapshot& s) { s.food = Cell{7, 5}; }) != reference);
-    CHECK(hash_with([](Snapshot& s) { s.bonus->ticks_left -= 1; }) != reference);
+    CHECK(hash_with([](Snapshot& s) { s.bonus = Simulation::Bonus{.cell = Cell{10, 12}, .ticks_left = 8}; }) !=
+          reference);
     CHECK(hash_with([](Snapshot& s) { s.scoring.combo = 4; }) != reference);
     CHECK(hash_with([](Snapshot& s) { s.random.state += 1; }) != reference);
     CHECK(hash_with([](Snapshot& s) { s.pending[1] = Direction::DOWN; }) != reference);

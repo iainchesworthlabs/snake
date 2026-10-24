@@ -72,8 +72,8 @@ public:
 
     /// Builds the game in `setup`, or returns nothing when the position is impossible: a cell off the board, a cell
     /// used twice, cells that do not form a connected snake, a heading that points into the snake's neck, food (unless
-    /// the game is won) or a bonus item on the snake or on each other, scoring that cannot happen, waiting turns the input buffer
-    /// would not have taken, an even generator increment, or a win without a full board.
+    /// the game is won) or a bonus item on the snake or on each other, scoring that cannot happen, waiting turns the
+    /// input buffer would not have taken, an even generator increment, or a win without a full board.
     [[nodiscard]] static std::optional<Simulation> from_setup(const Setup& setup) noexcept;
 
     /// Queues a direction for the next ticks. Returns false when the input is dropped (see InputBuffer).
