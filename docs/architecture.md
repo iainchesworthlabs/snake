@@ -46,6 +46,10 @@ The title screen's attract mode plays an ordinary game with a seed of its own, s
 to the food (a cell the tail is about to leave counts as free), refused when it would leave the snake less room than its
 length, and otherwise the safe step with the most room. It keeps no state and draws no random numbers, so it never
 touches the generator of a real game. Two autoplayed games are among the golden tests.
+The game loop is a fixed timestep. The platform tells a `TickPacer` how much time has passed since the last frame, in
+microseconds, and asks it for each tick that is due, passing the session's current tick interval. The pacer reads no
+clock. It keeps at most 250 ms, so a stall (a dragged window, a slow frame) does not make the game race through the
+ticks it missed, and the simulation is unaffected by frame timing: a game is the same whatever the frames were.
 `libs/profile` is portable in the same way. It holds what a player keeps between runs: names, leaderboards, settings,
 unlocks and the versioned bytes they are saved as. It never reads or writes a file. The platform service keeps the
 bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each stores them its own
