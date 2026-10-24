@@ -1,0 +1,1 @@
+**Games can be recorded and played back.** The simulation library writes down the turns of a game, saves the game as a replay file with the mode, the seed, the score and a hash of the final state, and plays a replay back to check that it ends the same way. Recorded games run in the tests on every platform.

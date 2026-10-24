@@ -7,6 +7,7 @@ add_executable(snake_sim_tests
     test_mode.cpp
     test_occupancy_set.cpp
     test_random.cpp
+    test_replay.cpp
     test_ring_buffer.cpp
     test_scoring.cpp
     test_session.cpp
