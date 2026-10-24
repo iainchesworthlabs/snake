@@ -223,6 +223,8 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 20. Tilt samples are in g with the device lying face up reading z = 1. The filter's time constant is 50 ms, so a
     steady 25 degree tilt sets a direction after about 70 ms at 100 samples a second. A sample outside 0.5 to 1.5 g is
     skipped. These are starting values for tuning on a device.
+21. A swipe is given when the finger has moved 24 device-independent pixels along its larger axis, at once and not on
+    lift, and a finger that carries on is measured from the point of the last swipe. Only the first finger is followed.
 
 ## Risks
 
