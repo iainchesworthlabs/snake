@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/sim/replay.hpp"
 
+#include "snake/sim/byte_io.hpp"
 #include "snake/sim/snapshot.hpp"
 
 #include <array>
@@ -13,126 +14,6 @@ namespace
 
 constexpr std::array<std::uint8_t, 4> MARKER{'S', 'N', 'K', 'R'};
 constexpr std::uint8_t FORMAT_VERSION = 1;
-constexpr std::size_t MAX_VARINT_BYTES = 5;
-
-class Writer
-{
-public:
-    explicit Writer(std::span<std::uint8_t> out) noexcept : m_Out(out) {}
-
-    void u8(std::uint8_t value) noexcept
-    {
-        if (m_Size < m_Out.size())
-        {
-            m_Out[m_Size] = value;
-        }
-        ++m_Size;
-    }
-
-    void u32(std::uint32_t value) noexcept
-    {
-        for (unsigned shift = 0; shift < 32; shift += 8)
-        {
-            u8(static_cast<std::uint8_t>(value >> shift));
-        }
-    }
-
-    void u64(std::uint64_t value) noexcept
-    {
-        u32(static_cast<std::uint32_t>(value));
-        u32(static_cast<std::uint32_t>(value >> 32U));
-    }
-
-    /// A number in groups of 7 bits, low group first. A byte has its top bit set when another follows.
-    void varint(std::uint32_t value) noexcept
-    {
-        while (value >= 0x80U)
-        {
-            u8(static_cast<std::uint8_t>((value & 0x7FU) | 0x80U));
-            value >>= 7U;
-        }
-        u8(static_cast<std::uint8_t>(value));
-    }
-
-    [[nodiscard]] std::size_t size() const noexcept
-    {
-        return m_Size <= m_Out.size() ? m_Size : 0;
-    }
-
-private:
-    std::span<std::uint8_t> m_Out;
-    std::size_t m_Size = 0;
-};
-
-class Reader
-{
-public:
-    explicit Reader(std::span<const std::uint8_t> bytes) noexcept : m_Bytes(bytes) {}
-
-    std::uint8_t u8() noexcept
-    {
-        if (m_Position >= m_Bytes.size())
-        {
-            m_Bad = true;
-            return 0;
-        }
-        return m_Bytes[m_Position++];
-    }
-
-    std::uint32_t u32() noexcept
-    {
-        std::uint32_t value = 0;
-        for (unsigned shift = 0; shift < 32; shift += 8)
-        {
-            value |= static_cast<std::uint32_t>(u8()) << shift;
-        }
-        return value;
-    }
-
-    std::uint64_t u64() noexcept
-    {
-        const std::uint64_t low = u32();
-        const std::uint64_t high = u32();
-        return low | (high << 32U);
-    }
-
-    std::uint32_t varint() noexcept
-    {
-        std::uint64_t value = 0;
-        for (std::size_t group = 0; group < MAX_VARINT_BYTES; ++group)
-        {
-            const std::uint8_t byte = u8();
-            value |= static_cast<std::uint64_t>(byte & 0x7FU) << (7 * group);
-            if ((byte & 0x80U) == 0)
-            {
-                if (value > 0xFFFFFFFFULL)
-                {
-                    m_Bad = true;
-                }
-                return static_cast<std::uint32_t>(value);
-            }
-        }
-        // A sixth group is one too many for a 32-bit number.
-        m_Bad = true;
-        return 0;
-    }
-
-    /// True when every byte read so far existed and none is left over.
-    [[nodiscard]] bool complete() const noexcept
-    {
-        return !m_Bad && m_Position == m_Bytes.size();
-    }
-
-    [[nodiscard]] bool bad() const noexcept
-    {
-        return m_Bad;
-    }
-
-private:
-    std::span<const std::uint8_t> m_Bytes;
-    std::size_t m_Position = 0;
-    bool m_Bad = false;
-};
 
 } // namespace
 
@@ -202,7 +83,7 @@ std::optional<Replay> Recording::finish() const noexcept
 
 std::size_t encode_replay(const Replay& replay, std::span<std::uint8_t> out) noexcept
 {
-    Writer writer(out);
+    ByteWriter writer(out);
     for (const std::uint8_t letter : MARKER)
     {
         writer.u8(letter);
@@ -226,7 +107,7 @@ std::size_t encode_replay(const Replay& replay, std::span<std::uint8_t> out) noe
 
 std::optional<Replay> decode_replay(std::span<const std::uint8_t> bytes) noexcept
 {
-    Reader reader(bytes);
+    ByteReader reader(bytes);
     for (const std::uint8_t letter : MARKER)
     {
         if (reader.u8() != letter)
