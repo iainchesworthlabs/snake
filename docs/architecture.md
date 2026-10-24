@@ -105,6 +105,13 @@ resumes, and Escape pauses until there is a menu. A held key's repeats are used 
 loses the focus pauses the game. Each new game takes its seed from the system's random number generator, or from a
 function the tests give. The state, score and mode are properties, and `boardChanged` tells the board item to redraw.
 
+`BoardItem` draws the board from the view-model's session as plain rectangles: the board, the body, the head, the food
+and the bonus item, in the largest square that fits the item. It uses the window's rectangle nodes
+(`QQuickWindow::createRectangleNode()`) and not its own geometry, because the software renderer, which the UI tests
+and CI use, draws only the standard node types and shows nothing for a custom one. The tests draw the item into an
+off-screen window and read the pixels back. The colours are placeholders until the theme tokens arrive with the board
+art.
+
 ## Platform code
 
 There is no platform-specific code yet. When there is, the differences live in `src/platform/<os>/` with
