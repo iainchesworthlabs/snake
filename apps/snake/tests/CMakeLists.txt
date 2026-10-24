@@ -13,12 +13,15 @@ catch_discover_tests(snake_translation_tests
 add_executable(snake_viewmodel_tests
     test_main.cpp
     test_game_view_model.cpp
+    test_qt_keys.cpp
+    ../src/input/qt_keys.cpp
+    ../src/input/qt_keys.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp)
 set_target_properties(snake_viewmodel_tests PROPERTIES AUTOMOC ON)
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
 target_link_libraries(snake_viewmodel_tests
-    PRIVATE snake::core Qt6::Qml Catch2::Catch2 icl::warnings icl::coverage)
+    PRIVATE snake::input snake::sim Qt6::Qml Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_viewmodel_tests)
 catch_discover_tests(snake_viewmodel_tests
     PROPERTIES

@@ -15,12 +15,13 @@ libs/profile/         portable library: player names, leaderboards, recent names
   include/snake/profile/
   src/
   tests/
-libs/core/            Qt-free library: timing, logging, game state; public headers, sources, tests
+libs/core/            Qt-free library: logging, version, window settings; public headers, sources, tests
   include/snake/
   src/
   tests/
 apps/snake/           Qt Quick application
   src/                main.cpp
+  src/input/          Qt key codes to the keys of libs/input
   src/viewmodel/      thin QObject classes that QML binds to (camelCase names, see below)
   qml/                Main.qml
   translations/       snake_<language>.ts
@@ -92,6 +93,17 @@ from where the last direction was given, so one stroke can turn the snake more t
 presses, moves and releases, and calls `cancel()` when the system takes the touch away. The on-screen d-pad is a set of
 buttons that call the same turn function as every other input and needs no code in the library.
 The [roadmap](roadmap.md) lists the libraries that follow.
+
+## The application
+
+`GameViewModel` is what QML sees of the game. It owns a `sim::Session` and a `sim::TickPacer` and holds no rules. A
+`FrameAnimation` in `Main.qml` runs in step with the display and calls `advance()` with the time each frame took; the
+view-model runs the ticks that are due, at the speed the game has reached, so the game plays the same whatever the
+frame rate. Key presses go to `handleKey()`, which maps the Qt key code to the library's key and either steers or
+performs an action: Enter starts a game, resumes a paused one and starts a new one after game over, Space pauses and
+resumes, and Escape pauses until there is a menu. A held key's repeats are used up without effect, and a window that
+loses the focus pauses the game. Each new game takes its seed from the system's random number generator, or from a
+function the tests give. The state, score and mode are properties, and `boardChanged` tells the board item to redraw.
 
 ## Platform code
 

@@ -8,8 +8,20 @@
         <translation>Snake</translation>
     </message>
     <message>
-        <source>Frame %1</source>
-        <translation>Frame %1</translation>
+        <source>Score %1</source>
+        <translation>Score %1</translation>
+    </message>
+    <message>
+        <source>Press Enter to start</source>
+        <translation>Press Enter to start</translation>
+    </message>
+    <message>
+        <source>Paused. Press Space to resume.</source>
+        <translation>Paused. Press Space to resume.</translation>
+    </message>
+    <message>
+        <source>Game over. Press Enter to play again.</source>
+        <translation>Game over. Press Enter to play again.</translation>
     </message>
 </context>
 </TS>

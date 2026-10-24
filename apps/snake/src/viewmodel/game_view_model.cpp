@@ -1,79 +1,232 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "viewmodel/game_view_model.hpp"
 
-#include "snake/timing_loop.hpp"
+#include "input/qt_keys.hpp"
+#include "snake/input/action.hpp"
+#include "snake/input/key_map.hpp"
+#include "snake/sim/mode.hpp"
+#include "snake/sim/scoring.hpp"
+#include "snake/sim/session.hpp"
 
-#include <iostream>
+#include <QRandomGenerator>
+#include <QString>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <limits>
 #include <utility>
 
 namespace snake::ui
 {
 
-GameViewModel::GameViewModel(QObject* parent)
-    : GameViewModel(std::make_shared<const StreamLogger>(std::clog), TimingLoop::frame_interval(), parent)
+namespace
+{
+
+constexpr sim::Mode to_sim(GameViewModel::Mode mode) noexcept
+{
+    return mode == GameViewModel::Mode::Easy ? sim::Mode::EASY : sim::Mode::CLASSIC;
+}
+
+constexpr GameViewModel::Mode from_sim(sim::Mode mode) noexcept
+{
+    return mode == sim::Mode::EASY ? GameViewModel::Mode::Easy : GameViewModel::Mode::Classic;
+}
+
+constexpr GameViewModel::State from_sim(sim::GameState state) noexcept
+{
+    switch (state)
+    {
+    case sim::GameState::NOT_STARTED:
+        return GameViewModel::State::NotStarted;
+    case sim::GameState::RUNNING:
+        return GameViewModel::State::Running;
+    case sim::GameState::PAUSED:
+        return GameViewModel::State::Paused;
+    case sim::GameState::GAME_OVER:
+        break;
+    }
+    return GameViewModel::State::GameOver;
+}
+
+std::uint64_t system_seed()
+{
+    return QRandomGenerator::system()->generate64();
+}
+
+} // namespace
+
+GameViewModel::GameViewModel(QObject* parent) : GameViewModel(&system_seed, parent) {}
+
+GameViewModel::GameViewModel(SeedSource seeds, QObject* parent)
+    : QObject(parent), m_Seeds(std::move(seeds)), m_Session(sim::Mode::CLASSIC, m_Seeds())
 {
 }
 
-GameViewModel::GameViewModel(std::shared_ptr<const Logger> logger, std::chrono::milliseconds interval, QObject* parent)
-    : QObject(parent), m_Game(std::move(logger))
+GameViewModel::State GameViewModel::state() const
 {
-    m_Timer.setTimerType(Qt::PreciseTimer);
-    m_Timer.setInterval(interval);
-    connect(&m_Timer, &QTimer::timeout, this, [this] { tick(); });
+    return from_sim(m_Session.state());
 }
 
-qint64 GameViewModel::frame() const
+QString GameViewModel::score() const
 {
-    return static_cast<qint64>(m_Game.frame_count());
+    const auto digits = sim::score_digits(m_Session.simulation().score());
+    return QString::fromLatin1(digits.data(), static_cast<qsizetype>(digits.size()));
 }
 
-QString GameViewModel::state() const
+GameViewModel::Mode GameViewModel::mode() const
 {
-    const auto name = to_string_view(m_Game.state());
-    return QString::fromUtf8(name.data(), static_cast<qsizetype>(name.size()));
+    return from_sim(m_Session.mode());
+}
+
+void GameViewModel::setMode(Mode mode)
+{
+    if (mode == this->mode())
+    {
+        return;
+    }
+    const sim::GameState state_before = m_Session.state();
+    const std::uint32_t score_before = m_Session.simulation().score();
+    m_Session = sim::Session(to_sim(mode), m_Seeds());
+    m_Pacer.reset();
+    emit modeChanged();
+    publish(state_before, score_before, true);
+}
+
+void GameViewModel::newGame()
+{
+    const sim::GameState state_before = m_Session.state();
+    const std::uint32_t score_before = m_Session.simulation().score();
+    m_Session = sim::Session(m_Session.mode(), m_Seeds());
+    m_Pacer.reset();
+    publish(state_before, score_before, true);
 }
 
 void GameViewModel::start()
 {
-    if (m_Game.start())
+    const sim::GameState state_before = m_Session.state();
+    if (m_Session.start())
     {
-        m_Timer.start();
-        emit stateChanged();
+        m_Pacer.reset();
+        publish(state_before, m_Session.simulation().score(), false);
     }
 }
 
 void GameViewModel::pause()
 {
-    if (m_Game.pause())
+    const sim::GameState state_before = m_Session.state();
+    if (m_Session.pause())
     {
-        m_Timer.stop();
-        emit stateChanged();
+        publish(state_before, m_Session.simulation().score(), false);
     }
 }
 
 void GameViewModel::resume()
 {
-    if (m_Game.resume())
+    const sim::GameState state_before = m_Session.state();
+    if (m_Session.resume())
     {
-        m_Timer.start();
-        emit stateChanged();
+        // The time of the pause is not the game's.
+        m_Pacer.reset();
+        publish(state_before, m_Session.simulation().score(), false);
     }
 }
 
-void GameViewModel::end()
+void GameViewModel::advance(double seconds)
 {
-    if (m_Game.end())
+    if (m_Session.state() != sim::GameState::RUNNING || !(seconds > 0.0))
     {
-        m_Timer.stop();
-        emit stateChanged();
+        return;
+    }
+    constexpr double MAX_US = std::numeric_limits<std::uint32_t>::max();
+    m_Pacer.add(static_cast<std::uint32_t>(std::llround(std::min(seconds * 1.0e6, MAX_US))));
+
+    const sim::GameState state_before = m_Session.state();
+    const std::uint32_t score_before = m_Session.simulation().score();
+    bool ticked = false;
+    while (m_Session.state() == sim::GameState::RUNNING && m_Pacer.due(m_Session.tick_interval_ms()))
+    {
+        static_cast<void>(m_Session.tick());
+        ticked = true;
+    }
+    if (ticked)
+    {
+        publish(state_before, score_before, true);
     }
 }
 
-void GameViewModel::tick()
+bool GameViewModel::handleKey(int qtKey, bool autoRepeat)
 {
-    if (m_Game.tick())
+    const auto key = key_from_qt(qtKey);
+    if (!key)
     {
-        emit frameChanged();
+        return false;
+    }
+    if (autoRepeat)
+    {
+        return true;
+    }
+    if (const auto direction = input::steer_for(*key))
+    {
+        static_cast<void>(m_Session.turn(*direction));
+    }
+    else if (const auto action = input::action_for(*key))
+    {
+        perform(*action);
+    }
+    return true;
+}
+
+void GameViewModel::perform(input::Action action)
+{
+    const sim::GameState state = m_Session.state();
+    switch (action)
+    {
+    case input::Action::PAUSE_RESUME:
+        if (state == sim::GameState::RUNNING)
+        {
+            pause();
+        }
+        else
+        {
+            resume();
+        }
+        break;
+    case input::Action::MENU:
+        // There is no menu yet; it pauses, as the menu will.
+        pause();
+        break;
+    case input::Action::CONFIRM:
+        switch (state)
+        {
+        case sim::GameState::GAME_OVER:
+            newGame();
+            start();
+            break;
+        case sim::GameState::PAUSED:
+            resume();
+            break;
+        case sim::GameState::NOT_STARTED:
+        case sim::GameState::RUNNING:
+            start();
+            break;
+        }
+        break;
+    }
+}
+
+void GameViewModel::publish(sim::GameState state_before, std::uint32_t score_before, bool board_changed)
+{
+    if (m_Session.state() != state_before)
+    {
+        emit stateChanged();
+    }
+    if (m_Session.simulation().score() != score_before)
+    {
+        emit scoreChanged();
+    }
+    if (board_changed)
+    {
+        emit boardChanged();
     }
 }
 

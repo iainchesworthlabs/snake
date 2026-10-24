@@ -8,8 +8,6 @@ configure_file(
     @ONLY)
 
 add_library(snake_core
-    src/game.cpp
-    src/game_state.cpp
     src/logger.cpp)
 add_library(snake::core ALIAS snake_core)
 

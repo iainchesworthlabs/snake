@@ -21,7 +21,7 @@ dependencies and Qt 6 from the shared kit (`ICL_QT_ROOT`) or aqtinstall in CI.
 
 | Path | Contents |
 |---|---|
-| `libs/core` | Qt-free logic: `TimingLoop`, `Logger`, `GameState`, `Game`, window settings. Unit tested with Catch2. |
+| `libs/core` | Qt-free logic: `Logger`, window settings. Unit tested with Catch2. (`TimingLoop`, `GameState` and `Game` were placeholders for the old loop; the simulation in `libs/sim` and the application's view-model replaced them.) |
 | `apps/snake` | The Qt Quick application: `main.cpp`, the `GameViewModel` that QML binds to, `Main.qml`, translations. |
 | `docs/` | Developer documentation. |
 
@@ -31,11 +31,11 @@ A library never depends on an application, and `libs/core` never includes a Qt h
 
 | Old file | New home | Change |
 |---|---|---|
-| `EngineCore/TimingLoop` | `libs/core` `TimingLoop` | Same 60 Hz constant and `std::chrono` duration. Members renamed to the project style. |
+| `EngineCore/TimingLoop` | `libs/sim` `TickPacer` | The 60 Hz frame constant became a fixed timestep: the display's frame time goes in and the ticks that are due come out. |
 | `Infrastructure/DebugLogger`, `Interfaces/ILogger` | `libs/core` `Logger` and `StreamLogger` | `OutputDebugString` and the `wchar_t` stream buffer are gone. Messages are UTF-8 and go to a standard stream. Every level now has its own prefix (the old code wrote `[TRACE]` for all six). |
 | `Graphics/GraphicsOpenGL`, `Interfaces/IGraphics` | `libs/core` `window_settings` and the Qt Quick window | The 1024 by 768 size, the title and the 4x multisampling are constants in the library. Qt creates the window and chooses the graphics API (OpenGL, Metal or Direct3D) at run time. GLFW is dropped. |
 | `WindowManager/WindowManager`, `Interfaces/IWindow` | `apps/snake` `Main.qml` | Empty shells in the old code. The window is a QML `Window`. |
-| `main.cpp` | `apps/snake/src/main.cpp`, `libs/core` `Game` | The loop becomes a Qt timer calling `Game::tick`. The frame counter moves into `Game`. |
+| `main.cpp` | `apps/snake/src/main.cpp`, `GameViewModel` | The loop becomes a Qt `FrameAnimation` that calls `GameViewModel::advance`. The frame counter is gone with the placeholder game. |
 
 ## What was dropped
 
