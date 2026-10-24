@@ -27,6 +27,12 @@ no Qt or platform header and uses no exceptions, RTTI, iostream or clock, and no
 construction, so the same code runs on the desktop, on phones and on the ESP32-P4. Its sources are built with
 exceptions and RTTI off. The random number generator is its own (PCG32), because the standard library's generators
 and distributions give different numbers on different implementations, and a recorded game must replay identically.
+A game can be saved and compared. A snapshot holds all of a game's state and has a byte form that is the same on every
+platform. The state hash is FNV-1a over those bytes. A replay is the mode, the seed and every turn, with the tick count,
+score and hash the game ended on, and it has its own byte form. The golden replay tests play recorded games and compare
+the result with the stored values on every platform leg, which is the check that the rules behave identically
+everywhere. The golden values come from the library itself, so a change to a rule makes them fail on purpose and they
+are updated in the same pull request.
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code

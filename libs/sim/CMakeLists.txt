@@ -6,6 +6,7 @@
 add_library(snake_sim
     src/input_buffer.cpp
     src/random.cpp
+    src/replay.cpp
     src/scoring.cpp
     src/session.cpp
     src/snapshot.cpp
