@@ -6,7 +6,8 @@ libs/sim/             portable library (see below): board cells, directions, fix
   include/snake/sim/
   src/
   tests/
-libs/input/           portable library: direction selector, key and gamepad maps; public headers, sources, tests
+libs/input/           portable library: tilt processor, sample sources, direction selector, key and gamepad maps;
+                      public headers, sources, tests
   include/snake/input/
   src/
   tests/
@@ -67,6 +68,19 @@ signed axis values become at most one direction. A direction is set when an axis
 larger axis wins, it is kept until its axis falls below the release value, and the axis in control keeps priority until
 the other is a margin larger, so a diagonal hold does not flicker. Keys and buttons map through fixed tables: arrow
 keys, W A S D and the d-pad steer, and the others ask for an action (pause and resume, menu, confirm).
+
+Tilt comes in through a `SampleSource`, an interface that returns accelerometer samples in g in the frame of the
+screen (x to the right edge, y to the top edge, z out of the screen, a device lying face up reading z = 1). The phones
+implement it over the system sensor API, the ESP32-P4 over the MPU-6050 driver, and tests and the ESP work before the
+IMU is wired use a `TraceSource`, which plays back a recording. A platform whose sensor has other axes, signs or units
+converts before it hands a sample over. `TiltProcessor` smooths the samples with a low-pass filter (50 ms time
+constant), measures two angles from the filtered gravity (the roll about the long axis and the pitch above the
+horizontal), subtracts the neutral pose set by `calibrate()`, and gives the angles to a `DirectionSelector` set to
+12, 18 and 5 degrees. The player can hold the device at any angle from flat to nearly upright. The result is the
+direction in force, not an event. The caller offers it to the input buffer every frame it is set, and the buffer drops
+repeats. The reading also carries the two angles, which the on-screen tilt indicator draws. A sample whose size is not
+close to 1 g (free fall, a knock, a failed read) is skipped. The library is built without RTTI, so no virtual function
+of a class that its users also derive from or instantiate is defined in a source file.
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code

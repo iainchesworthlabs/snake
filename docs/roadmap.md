@@ -42,8 +42,8 @@ decisions behind it. It is kept up to date as steps land. The visual design is i
 ```text
 libs/sim/        portable library (standard 3.1): deterministic rules. No Qt, no iostream, no exceptions, no
                  clock, no allocation in the tick path. Integer arithmetic only.
-libs/input/      portable library: direction buffer, tilt processor (calibrate, dead zone, threshold,
-                 hysteresis, low-pass), swipe recogniser, key and gamepad maps, sample-source interface.
+libs/input/      portable library: tilt processor (calibrate, dead zone, threshold, hysteresis, low-pass),
+                 swipe recogniser, key and gamepad maps, sample-source interface. The direction buffer is in sim.
 libs/audio/      portable library: synthesised sound effects and music (voices, envelopes, note tables, sequencer).
 libs/profile/    portable library: player names, leaderboard ranking, recent names, settings model, unlocks,
                  versioned persistence schema. It reads and writes bytes and never a file.
@@ -220,6 +220,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     lets go below 40 percent and changes axis when the other is 15 points larger. Tilt uses the same rule in degrees.
 19. On a gamepad Start pauses and resumes, Select and the east button open the menu, and the south button confirms. A
     d-pad press and the left stick both steer. Face buttons for later modes are added with those modes.
+20. Tilt samples are in g with the device lying face up reading z = 1. The filter's time constant is 50 ms, so a
+    steady 25 degree tilt sets a direction after about 70 ms at 100 samples a second. A sample outside 0.5 to 1.5 g is
+    skipped. These are starting values for tuning on a device.
 
 ## Risks
 
