@@ -181,15 +181,18 @@ TEST_CASE("A translation keeps the placeholders of its source", "[translations]"
     }
 }
 
-TEST_CASE("The window title and the frame label are translated", "[translations]")
+TEST_CASE("The window title and the screen texts are translated", "[translations]")
 {
     std::map<std::string, std::string> chinese;
     for (const auto& message : read_catalogue("zh_CN"))
     {
         chinese[message.source] = message.translations.front();
     }
-    REQUIRE(chinese.contains("Snake"));
-    REQUIRE(chinese.contains("Frame %1"));
-    CHECK(chinese["Snake"] != "Snake");
-    CHECK(chinese["Frame %1"] != "Frame %1");
+    for (const char* source : {"Snake", "Score %1", "Press Enter to start", "Paused. Press Space to resume.",
+                               "Game over. Press Enter to play again."})
+    {
+        INFO(source);
+        REQUIRE(chinese.contains(source));
+        CHECK(chinese[source] != source);
+    }
 }

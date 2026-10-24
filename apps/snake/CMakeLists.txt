@@ -14,6 +14,8 @@ qt_add_qml_module(snake_app
     VERSION 1.0
     QML_FILES qml/Main.qml
     SOURCES
+        src/input/qt_keys.cpp
+        src/input/qt_keys.hpp
         src/viewmodel/game_view_model.cpp
         src/viewmodel/game_view_model.hpp)
 # qmltyperegistrar includes each header by its file name, so the directory of the view-models is on the path too.
@@ -26,7 +28,7 @@ qt_add_translations(snake_app
     LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app
-    PRIVATE snake::core Qt6::Quick icl::warnings icl::hardening icl::coverage)
+    PRIVATE snake::core snake::input snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
 
 # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
 icl_relax_generated_warnings(snake_app)

@@ -16,7 +16,7 @@ of a 2017 Visual Studio prototype (see [docs/migration.md](docs/migration.md)); 
 | `libs/sim` | The rules of the game: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/input` | Tilt, swipe, key and gamepad input turned into directions: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/profile` | Names, leaderboards, settings and unlocks: a portable library with no Qt. Unit tested with Catch2. |
-| `libs/core` | Qt-free logic: frame timing, logging, game state. Unit tested with Catch2. |
+| `libs/core` | Qt-free logic: logging, version and window settings. Unit tested with Catch2. |
 | `apps/snake` | The Qt Quick application, its view-model, translations (English and Simplified Chinese) and tests. |
 | `docs/` | Developer documentation, built with MkDocs. |
 

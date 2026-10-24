@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 add_executable(snake_core_tests
-    test_game.cpp
     test_logger.cpp
-    test_timing_loop.cpp
     test_version.cpp
     test_window_settings.cpp)
 target_link_libraries(snake_core_tests
