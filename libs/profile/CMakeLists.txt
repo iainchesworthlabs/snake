@@ -8,6 +8,7 @@ add_library(snake_profile
     src/leaderboard.cpp
     src/player_name.cpp
     src/recent_names.cpp
+    src/save_data.cpp
     src/unlocks.cpp)
 add_library(snake::profile ALIAS snake_profile)
 

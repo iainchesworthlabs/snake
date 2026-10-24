@@ -3,6 +3,7 @@ add_executable(snake_profile_tests
     test_leaderboard.cpp
     test_player_name.cpp
     test_recent_names.cpp
+    test_save_data.cpp
     test_settings.cpp
     test_unlocks.cpp)
 target_link_libraries(snake_profile_tests
