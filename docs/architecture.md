@@ -6,6 +6,10 @@ libs/sim/             portable library (see below): board cells, directions, fix
   include/snake/sim/
   src/
   tests/
+libs/input/           portable library: direction selector, key and gamepad maps; public headers, sources, tests
+  include/snake/input/
+  src/
+  tests/
 libs/profile/         portable library: player names, leaderboards, recent names; public headers, sources, tests
   include/snake/profile/
   src/
@@ -55,6 +59,14 @@ written by a newer program is reported as `NEWER_VERSION`, and the program then 
 with an older save. The recorded games are separate files in the replay format, because they are up to 64 KB each and
 change at other times. The platform service stores the bytes: it writes a new file next to the old one and renames it
 into place, so a crash or a flat battery leaves the old save whole.
+`libs/input` is portable in the same way, and may use floating point because none of it is part of the simulation. It
+turns what the player does into directions for the input buffer in `libs/sim`; reading the sensor, the touch screen
+and the keyboard stays with the platform, which hands the library plain numbers and its own key codes translated to the
+library's `Key` and `GamepadButton` values. `DirectionSelector` is the rule that tilt and the left stick share: two
+signed axis values become at most one direction. A direction is set when an axis reaches the engage value and the
+larger axis wins, it is kept until its axis falls below the release value, and the axis in control keeps priority until
+the other is a margin larger, so a diagonal hold does not flicker. Keys and buttons map through fixed tables: arrow
+keys, W A S D and the d-pad steer, and the others ask for an action (pause and resume, menu, confirm).
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code

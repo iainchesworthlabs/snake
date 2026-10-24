@@ -19,6 +19,10 @@
     "libs/sim": {
       "line": 98,
       "branch": 95
+    },
+    "libs/input": {
+      "line": 98,
+      "branch": 95
     }
   }
 }

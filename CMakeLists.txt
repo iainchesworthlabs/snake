@@ -39,6 +39,7 @@ if(SNAKE_BUILD_TESTS)
 endif()
 
 add_subdirectory(libs/sim)
+add_subdirectory(libs/input)
 add_subdirectory(libs/profile)
 add_subdirectory(libs/core)
 
