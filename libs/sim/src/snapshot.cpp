@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/sim/snapshot.hpp"
 
+#include "snake/sim/byte_io.hpp"
 #include "snake/sim/fnv1a.hpp"
 
 namespace snake::sim
@@ -16,111 +17,18 @@ constexpr std::uint8_t FLAG_WON = 1U << 1U;
 constexpr std::uint8_t FLAG_BONUS = 1U << 2U;
 constexpr std::uint8_t KNOWN_FLAGS = FLAG_RUNNING | FLAG_WON | FLAG_BONUS;
 
-/// Appends bytes to a buffer and remembers when it ran out of room.
-class Writer
+void put_cell(ByteWriter& writer, Cell value) noexcept
 {
-public:
-    explicit Writer(std::span<std::uint8_t> out) noexcept : m_Out(out) {}
+    writer.u8(value.x);
+    writer.u8(value.y);
+}
 
-    void u8(std::uint8_t value) noexcept
-    {
-        if (m_Size < m_Out.size())
-        {
-            m_Out[m_Size] = value;
-        }
-        ++m_Size;
-    }
-
-    void u16(std::uint16_t value) noexcept
-    {
-        u8(static_cast<std::uint8_t>(value));
-        u8(static_cast<std::uint8_t>(value >> 8U));
-    }
-
-    void u32(std::uint32_t value) noexcept
-    {
-        u16(static_cast<std::uint16_t>(value));
-        u16(static_cast<std::uint16_t>(value >> 16U));
-    }
-
-    void u64(std::uint64_t value) noexcept
-    {
-        u32(static_cast<std::uint32_t>(value));
-        u32(static_cast<std::uint32_t>(value >> 32U));
-    }
-
-    void cell(Cell value) noexcept
-    {
-        u8(value.x);
-        u8(value.y);
-    }
-
-    /// The bytes written, or 0 when they did not fit.
-    [[nodiscard]] std::size_t size() const noexcept
-    {
-        return m_Size <= m_Out.size() ? m_Size : 0;
-    }
-
-private:
-    std::span<std::uint8_t> m_Out;
-    std::size_t m_Size = 0;
-};
-
-/// Reads bytes from a buffer and remembers when it ran past the end.
-class Reader
+Cell get_cell(ByteReader& reader) noexcept
 {
-public:
-    explicit Reader(std::span<const std::uint8_t> bytes) noexcept : m_Bytes(bytes) {}
-
-    std::uint8_t u8() noexcept
-    {
-        if (m_Position >= m_Bytes.size())
-        {
-            m_Short = true;
-            return 0;
-        }
-        return m_Bytes[m_Position++];
-    }
-
-    std::uint16_t u16() noexcept
-    {
-        const std::uint16_t low = u8();
-        const std::uint16_t high = u8();
-        return static_cast<std::uint16_t>(low | (high << 8U));
-    }
-
-    std::uint32_t u32() noexcept
-    {
-        const std::uint32_t low = u16();
-        const std::uint32_t high = u16();
-        return low | (high << 16U);
-    }
-
-    std::uint64_t u64() noexcept
-    {
-        const std::uint64_t low = u32();
-        const std::uint64_t high = u32();
-        return low | (high << 32U);
-    }
-
-    Cell cell() noexcept
-    {
-        const std::uint8_t x = u8();
-        const std::uint8_t y = u8();
-        return Cell{x, y};
-    }
-
-    /// True when every byte read so far existed and none is left over.
-    [[nodiscard]] bool complete() const noexcept
-    {
-        return !m_Short && m_Position == m_Bytes.size();
-    }
-
-private:
-    std::span<const std::uint8_t> m_Bytes;
-    std::size_t m_Position = 0;
-    bool m_Short = false;
-};
+    const std::uint8_t x = reader.u8();
+    const std::uint8_t y = reader.u8();
+    return Cell{x, y};
+}
 
 } // namespace
 
@@ -176,7 +84,7 @@ std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexce
     {
         return 0;
     }
-    Writer writer(out);
+    ByteWriter writer(out);
     writer.u8(FORMAT_VERSION);
     writer.u8(static_cast<std::uint8_t>(snapshot.edges));
     writer.u8(static_cast<std::uint8_t>(snapshot.heading));
@@ -186,12 +94,12 @@ std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexce
     writer.u16(snapshot.length);
     for (std::size_t part = 0; part < snapshot.length; ++part)
     {
-        writer.cell(snapshot.snake[part]);
+        put_cell(writer, snapshot.snake[part]);
     }
-    writer.cell(snapshot.food);
+    put_cell(writer, snapshot.food);
     if (snapshot.bonus)
     {
-        writer.cell(snapshot.bonus->cell);
+        put_cell(writer, snapshot.bonus->cell);
         writer.u8(snapshot.bonus->ticks_left);
     }
     writer.u32(snapshot.scoring.score);
@@ -211,7 +119,7 @@ std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexce
 
 std::optional<Snapshot> decode(std::span<const std::uint8_t> bytes) noexcept
 {
-    Reader reader(bytes);
+    ByteReader reader(bytes);
     if (reader.u8() != FORMAT_VERSION)
     {
         return std::nullopt;
@@ -237,12 +145,12 @@ std::optional<Snapshot> decode(std::span<const std::uint8_t> bytes) noexcept
     }
     for (std::size_t part = 0; part < snapshot.length; ++part)
     {
-        snapshot.snake[part] = reader.cell();
+        snapshot.snake[part] = get_cell(reader);
     }
-    snapshot.food = reader.cell();
+    snapshot.food = get_cell(reader);
     if ((flags & FLAG_BONUS) != 0)
     {
-        const Cell cell = reader.cell();
+        const Cell cell = get_cell(reader);
         snapshot.bonus = Simulation::Bonus{.cell = cell, .ticks_left = reader.u8()};
     }
     snapshot.scoring.score = reader.u32();
