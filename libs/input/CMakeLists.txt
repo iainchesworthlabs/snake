@@ -9,6 +9,7 @@ add_library(snake_input
     src/direction_selector.cpp
     src/gamepad_map.cpp
     src/key_map.cpp
+    src/swipe_recogniser.cpp
     src/tilt_processor.cpp)
 add_library(snake::input ALIAS snake_input)
 

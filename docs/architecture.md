@@ -6,8 +6,8 @@ libs/sim/             portable library (see below): board cells, directions, fix
   include/snake/sim/
   src/
   tests/
-libs/input/           portable library: tilt processor, sample sources, direction selector, key and gamepad maps;
-                      public headers, sources, tests
+libs/input/           portable library: tilt processor, sample sources, swipe recogniser, direction selector, key and
+                      gamepad maps; public headers, sources, tests
   include/snake/input/
   src/
   tests/
@@ -81,6 +81,12 @@ direction in force, not an event. The caller offers it to the input buffer every
 repeats. The reading also carries the two angles, which the on-screen tilt indicator draws. A sample whose size is not
 close to 1 g (free fall, a knock, a failed read) is skipped. The library is built without RTTI, so no virtual function
 of a class that its users also derive from or instantiate is defined in a source file.
+
+`SwipeRecogniser` follows the first finger on the touch screen and gives a direction as soon as the finger has gone
+24 device-independent pixels along its larger axis, without waiting for it to lift. A finger that carries on is measured
+from where the last direction was given, so one stroke can turn the snake more than once. The platform passes touch
+presses, moves and releases, and calls `cancel()` when the system takes the touch away. The on-screen d-pad is a set of
+buttons that call the same turn function as every other input and needs no code in the library.
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code
