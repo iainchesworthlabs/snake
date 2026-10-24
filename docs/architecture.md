@@ -6,6 +6,10 @@ libs/sim/             portable library (see below): board cells, directions, fix
   include/snake/sim/
   src/
   tests/
+libs/profile/         portable library: player names, leaderboards, recent names; public headers, sources, tests
+  include/snake/profile/
+  src/
+  tests/
 libs/core/            Qt-free library: timing, logging, game state; public headers, sources, tests
   include/snake/
   src/
@@ -33,6 +37,10 @@ score and hash the game ended on, and it has its own byte form. The golden repla
 the result with the stored values on every platform leg, which is the check that the rules behave identically
 everywhere. The golden values come from the library itself, so a change to a rule makes them fail on purpose and they
 are updated in the same pull request.
+`libs/profile` is portable in the same way. It holds what a player keeps between runs: names, leaderboards, settings,
+unlocks and the versioned bytes they are saved as. It never reads or writes a file. The platform service keeps the
+bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each stores them its own
+way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## Platform code
