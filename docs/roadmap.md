@@ -45,7 +45,9 @@ libs/sim/        portable library (standard 3.1): deterministic rules. No Qt, no
 libs/input/      portable library: direction buffer, tilt processor (calibrate, dead zone, threshold,
                  hysteresis, low-pass), swipe recogniser, key and gamepad maps, sample-source interface.
 libs/audio/      portable library: synthesised sound effects and music (voices, envelopes, note tables, sequencer).
-libs/core/       leaderboard ranking and name rules, settings model, versioned persistence schema, logger.
+libs/profile/    portable library: player names, leaderboard ranking, recent names, settings model, unlocks,
+                 versioned persistence schema. It reads and writes bytes and never a file.
+libs/core/       logger, timing loop, window settings (Qt-free, not portable: it uses iostream and a mutex).
 apps/snake/      Qt Quick front end: theme from tokens, board item, screens, view-models, platform services
                  (storage, sensors, audio output, haptics, lifecycle) under src/platform/<os>/.
 apps/snake-esp/  ESP-IDF project: panel, touch and MPU-6050 drivers, renderer on LVGL. Reuses sim, input, audio.
@@ -134,7 +136,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
    dropped. (S)
 4. Speed curve, scoring, combo, bonus food, game states. (M)
 5. Input log, snapshots, state hash, golden replay tests, replay file format. (M)
-6. Leaderboard and name rules, settings model, versioned persistence schema, in `libs/core`. (M)
+6. Leaderboard and name rules, settings model, versioned persistence schema, in the new portable `libs/profile`
+   (three pull requests: names and leaderboard, settings and unlocks, the save format). It is not in `libs/core`,
+   because the ESP32-P4 needs the same rules and `libs/core` carries the iostream logger. (M)
 7. Autoplayer for attract mode. (S)
 
 **Phase 2: input library**
@@ -208,6 +212,10 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     40 on every tick the snake does not eat it, so it can be eaten on the 40th tick after it appears and is gone after
     that.
 14. Food never goes on the bonus item. A bonus item on the last empty cell gives way to the food.
+15. A name is saved without the spaces at its start and end, so "  ann " and "ANN" are one name. The same name may
+    appear on a leaderboard more than once.
+16. An entry's date is the end of the game in UTC seconds, given by the platform. It is shown, not used to rank.
+17. A score equal to the 10th entry of a full board does not get on, because the earlier entry ranks higher.
 
 ## Risks
 
