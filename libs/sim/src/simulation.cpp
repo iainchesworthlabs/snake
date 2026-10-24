@@ -61,14 +61,16 @@ Simulation::Simulation(EdgeRule edges, std::uint64_t seed) noexcept : m_Edges(ed
 
 std::optional<Simulation> Simulation::from_setup(const Setup& setup) noexcept
 {
-    if (setup.snake.empty() || setup.snake.size() > BOARD_CELLS || !on_board(setup.food))
+    if (setup.snake.empty() || setup.snake.size() > BOARD_CELLS || !on_board(setup.food) ||
+        (setup.random && (setup.random->increment & 1U) == 0) || (setup.won && setup.running) ||
+        (setup.won && setup.snake.size() != BOARD_CELLS))
     {
         return std::nullopt;
     }
     Simulation game;
     game.m_Edges = setup.edges;
     game.m_Heading = setup.heading;
-    game.m_Random = Random(setup.seed);
+    game.m_Random = setup.random ? Random(*setup.random) : Random(setup.seed);
     for (std::size_t part = 0; part < setup.snake.size(); ++part)
     {
         const Cell cell = setup.snake[part];
@@ -92,7 +94,8 @@ std::optional<Simulation> Simulation::from_setup(const Setup& setup) noexcept
             return std::nullopt;
         }
     }
-    if (game.m_Occupied.test(to_index(setup.food)) || !Scoring::valid(setup.scoring))
+    // After a win the food is the cell that was just eaten, so it is on the snake.
+    if ((game.m_Occupied.test(to_index(setup.food)) && !setup.won) || !Scoring::valid(setup.scoring))
     {
         return std::nullopt;
     }
@@ -108,6 +111,16 @@ std::optional<Simulation> Simulation::from_setup(const Setup& setup) noexcept
     game.m_Food = setup.food;
     game.m_Bonus = setup.bonus;
     game.m_Scoring = Scoring(setup.scoring);
+    game.m_Ticks = setup.ticks;
+    game.m_Running = setup.running;
+    game.m_Won = setup.won;
+    for (const Direction turn : setup.pending)
+    {
+        if (!game.m_Input.push(setup.heading, turn))
+        {
+            return std::nullopt;
+        }
+    }
     return game;
 }
 
@@ -122,6 +135,7 @@ TickOutcome Simulation::tick() noexcept
     {
         return TickOutcome::NOT_RUNNING;
     }
+    ++m_Ticks;
     m_Scoring.advance();
     if (const std::optional<Direction> next_heading = m_Input.pop())
     {

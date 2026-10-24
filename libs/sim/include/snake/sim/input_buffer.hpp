@@ -39,6 +39,12 @@ public:
         return m_Queue.empty();
     }
 
+    /// The input that is `position` places from the front, 0 being the next to be taken. Needs position < size().
+    [[nodiscard]] Direction at(std::size_t position) const noexcept
+    {
+        return m_Queue[position];
+    }
+
     /// Drops every waiting input, for a new game or after a pause.
     void clear() noexcept
     {

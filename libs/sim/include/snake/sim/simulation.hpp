@@ -63,11 +63,17 @@ public:
         std::uint64_t seed = 0;
         Scoring::State scoring{};
         std::optional<Bonus> bonus{};
+        std::uint32_t ticks = 0;               // ticks played so far
+        std::optional<Random::State> random{}; // carries the generator on from here instead of seeding it
+        std::span<const Direction> pending{};  // turns waiting in the input buffer, next first
+        bool running = true;
+        bool won = false;
     };
 
     /// Builds the game in `setup`, or returns nothing when the position is impossible: a cell off the board, a cell
-    /// used twice, cells that do not form a connected snake, a heading that points into the snake's neck, food or
-    /// a bonus item on the snake or on each other, or scoring that cannot happen.
+    /// used twice, cells that do not form a connected snake, a heading that points into the snake's neck, food (unless
+    /// the game is won) or a bonus item on the snake or on each other, scoring that cannot happen, waiting turns the
+    /// input buffer would not have taken, an even generator increment, or a win without a full board.
     [[nodiscard]] static std::optional<Simulation> from_setup(const Setup& setup) noexcept;
 
     /// Queues a direction for the next ticks. Returns false when the input is dropped (see InputBuffer).
@@ -80,6 +86,24 @@ public:
     /// after normal food, place new food, end the game as a win if there is no room for it, and add a bonus item
     /// when one is due.
     [[nodiscard]] TickOutcome tick() noexcept;
+
+    /// How many ticks have been played. A tick that ends the game counts, and later calls do not.
+    [[nodiscard]] std::uint32_t ticks() const noexcept
+    {
+        return m_Ticks;
+    }
+
+    /// The turns waiting for the next ticks.
+    [[nodiscard]] const InputBuffer& pending_turns() const noexcept
+    {
+        return m_Input;
+    }
+
+    /// Where the food generator is, so that a saved game carries on with the same food.
+    [[nodiscard]] Random::State random_state() const noexcept
+    {
+        return m_Random.state();
+    }
 
     [[nodiscard]] bool running() const noexcept
     {
@@ -174,6 +198,7 @@ private:
     Scoring m_Scoring;
     InputBuffer m_Input;
     Random m_Random{0};
+    std::uint32_t m_Ticks = 0;
     bool m_Running = true;
     bool m_Won = false;
 };
