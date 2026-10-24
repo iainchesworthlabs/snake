@@ -216,6 +216,10 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     appear on a leaderboard more than once.
 16. An entry's date is the end of the game in UTC seconds, given by the platform. It is shown, not used to rank.
 17. A score equal to the 10th entry of a full board does not get on, because the earlier entry ranks higher.
+18. When two axes tie exactly, the horizontal one wins. The left stick sets a direction at 60 percent of full push,
+    lets go below 40 percent and changes axis when the other is 15 points larger. Tilt uses the same rule in degrees.
+19. On a gamepad Start pauses and resumes, Select and the east button open the menu, and the south button confirms. A
+    d-pad press and the left stick both steer. Face buttons for later modes are added with those modes.
 
 ## Risks
 
