@@ -18,7 +18,8 @@ add_executable(snake_sim_tests
     test_simulation_properties.cpp
     test_simulation_scoring.cpp
     test_simulation_setup.cpp
-    test_snapshot.cpp)
+    test_snapshot.cpp
+    test_tick_pacer.cpp)
 target_link_libraries(snake_sim_tests
     PRIVATE snake::sim Catch2::Catch2WithMain icl::warnings icl::coverage)
 

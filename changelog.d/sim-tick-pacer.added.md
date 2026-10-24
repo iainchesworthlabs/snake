@@ -1,0 +1,1 @@
+**The game has a fixed-timestep loop.** The simulation library has a tick pacer that turns the time between frames into the ticks that are due, at the speed the game has reached. A slow frame or a stall never makes the game race to catch up, and the game plays the same whatever the frame rate.
