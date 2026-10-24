@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/version.hpp"
 #include "snake/window_settings.hpp"
+#include "theme/theme.hpp"
 
 #include <QCommandLineOption>
 #include <QCommandLineParser>
@@ -20,6 +21,10 @@ int main(int argc, char* argv[])
     QGuiApplication::setApplicationName(QStringLiteral("snake"));
     QGuiApplication::setApplicationVersion(
         QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size()));
+
+    // A font that fails to load leaves the fallback families of the font in use, so the game still runs.
+    snake::ui::load_fonts();
+    QGuiApplication::setFont(snake::ui::application_font());
 
     // The catalogues are compiled into the executable. A language without one shows the English source.
     QTranslator translator;
