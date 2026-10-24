@@ -48,3 +48,24 @@ catch_discover_tests(snake_board_tests
         LABELS ui
         TIMEOUT 60
         ENVIRONMENT "${snake_ui_test_environment}")
+
+# The theme: the token values against docs/design/tokens.json, and the bundled fonts loading.
+add_executable(snake_theme_tests
+    test_theme.cpp
+    test_board_main.cpp
+    ../src/theme/theme.cpp
+    ../src/theme/theme.hpp
+    ../src/theme/tokens.hpp)
+set_target_properties(snake_theme_tests PROPERTIES AUTOMOC ON)
+snake_add_font_resources(snake_theme_tests)
+target_include_directories(snake_theme_tests PRIVATE ../src)
+target_compile_definitions(snake_theme_tests PRIVATE
+    SNAKE_TOKENS_JSON="${PROJECT_SOURCE_DIR}/docs/design/tokens.json")
+target_link_libraries(snake_theme_tests
+    PRIVATE Qt6::Quick Catch2::Catch2 icl::warnings icl::coverage)
+icl_relax_generated_warnings(snake_theme_tests)
+catch_discover_tests(snake_theme_tests
+    PROPERTIES
+        LABELS unit
+        TIMEOUT 60
+        ENVIRONMENT "${snake_ui_test_environment}")

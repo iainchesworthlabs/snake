@@ -109,8 +109,15 @@ function the tests give. The state, score and mode are properties, and `boardCha
 and the bonus item, in the largest square that fits the item. It uses the window's rectangle nodes
 (`QQuickWindow::createRectangleNode()`) and not its own geometry, because the software renderer, which the UI tests
 and CI use, draws only the standard node types and shows nothing for a custom one. The tests draw the item into an
-off-screen window and read the pixels back. The colours are placeholders until the theme tokens arrive with the board
-art.
+off-screen window and read the pixels back. The colours are placeholders until the board art arrives.
+
+The look of the application comes from the Toybox Pixel design tokens in `docs/design/tokens.json`. `tokens.hpp` holds
+the colours and the font family as constants, and a test compares each with the JSON file, so a change to the file
+fails the build until the constants follow. The `Theme` singleton gives QML the colours (`Theme.ink`,
+`Theme.surface`) and the family name. The Pixelify Sans files from `docs/design/fonts` are compiled into the
+executable and loaded at start-up, and the application font is that family with Courier New and the system monospace
+face behind it. The files hold the Latin range only; the fonts for the other scripts come with the translations. The
+font's licence file is installed with the program.
 
 ## Platform code
 

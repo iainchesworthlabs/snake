@@ -2,6 +2,18 @@
 find_package(Qt6 6.8 REQUIRED COMPONENTS Quick LinguistTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
+# The bundled font, from the design package. The files are compiled into the executable as resources.
+set(SNAKE_FONT_DIR "${PROJECT_SOURCE_DIR}/docs/design/fonts")
+set(SNAKE_FONT_FILES
+    pixelify-sans-latin-400-normal.woff2
+    pixelify-sans-latin-500-normal.woff2
+    pixelify-sans-latin-600-normal.woff2
+    pixelify-sans-latin-700-normal.woff2)
+function(snake_add_font_resources target)
+    list(TRANSFORM SNAKE_FONT_FILES PREPEND "${SNAKE_FONT_DIR}/" OUTPUT_VARIABLE font_paths)
+    qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_FONT_DIR}" FILES ${font_paths})
+endfunction()
+
 qt_add_executable(snake_app src/main.cpp)
 # The executable is named snake while the target is snake_app, so the QML module and the target stay distinct.
 set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
@@ -18,10 +30,14 @@ qt_add_qml_module(snake_app
         src/board/board_item.hpp
         src/input/qt_keys.cpp
         src/input/qt_keys.hpp
+        src/theme/theme.cpp
+        src/theme/theme.hpp
+        src/theme/tokens.hpp
         src/viewmodel/game_view_model.cpp
         src/viewmodel/game_view_model.hpp)
 # qmltyperegistrar includes each header by its file name, so the directories of the QML types are on the path too.
-target_include_directories(snake_app PRIVATE src src/board src/viewmodel)
+target_include_directories(snake_app PRIVATE src src/board src/theme src/viewmodel)
+snake_add_font_resources(snake_app)
 
 # Translations: the source language and Simplified Chinese. `cmake --build <dir> --target update_translations`
 # refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.
@@ -43,6 +59,12 @@ icl_install_qt_app(snake_app
     BUNDLE_IDENTIFIER io.github.iainchesworthlabs.snake
     DISPLAY_NAME Snake
     NOTICE_EXCLUDE catch2)
+# The font's licence asks for its copyright notice and text to travel with the font.
+if(APPLE)
+    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" DESTINATION "snake.app/Contents/Resources/doc")
+else()
+    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" DESTINATION "share/doc/snake")
+endif()
 
 if(SNAKE_BUILD_TESTS)
     set(snake_ui_test_environment

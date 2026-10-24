@@ -11,7 +11,7 @@ Window {
     height: windowHeight
     visible: true
     title: qsTr("Snake")
-    color: "#101820"
+    color: Theme.background
 
     // A game that loses the focus waits for the player.
     onActiveChanged: {
@@ -45,30 +45,55 @@ Window {
             game: gameModel
         }
 
-        Text {
+        Column {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.margins: 16
-            color: "#e0e6ea"
-            font.pixelSize: 24
-            text: qsTr("Score %1").arg(gameModel.score)
+
+            Text {
+                color: Theme.ink
+                font.pixelSize: 16
+                font.weight: Font.Medium
+                text: qsTr("Score")
+            }
+
+            Text {
+                color: Theme.ink
+                font.pixelSize: 46
+                font.weight: Font.Bold
+                text: gameModel.score
+            }
         }
 
-        Text {
+        // What the player does next, in a panel. The screens that replace it come with the menus.
+        Rectangle {
             anchors.centerIn: parent
-            color: "#e0e6ea"
-            font.pixelSize: 24
-            visible: text !== ""
-            text: {
-                switch (gameModel.state) {
-                case GameViewModel.State.NotStarted:
-                    return qsTr("Press Enter to start");
-                case GameViewModel.State.Paused:
-                    return qsTr("Paused. Press Space to resume.");
-                case GameViewModel.State.GameOver:
-                    return qsTr("Game over. Press Enter to play again.");
-                default:
-                    return "";
+            width: message.width + 48
+            height: message.height + 32
+            visible: message.text !== ""
+            color: Theme.surface
+            radius: 14
+            border.width: 3
+            border.color: Theme.ink
+
+            Text {
+                id: message
+
+                anchors.centerIn: parent
+                color: Theme.ink
+                font.pixelSize: 26
+                font.weight: Font.Bold
+                text: {
+                    switch (gameModel.state) {
+                    case GameViewModel.State.NotStarted:
+                        return qsTr("Press Enter to start");
+                    case GameViewModel.State.Paused:
+                        return qsTr("Paused. Press Space to resume.");
+                    case GameViewModel.State.GameOver:
+                        return qsTr("Game over. Press Enter to play again.");
+                    default:
+                        return "";
+                    }
                 }
             }
         }
