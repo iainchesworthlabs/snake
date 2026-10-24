@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 add_executable(snake_sim_tests
+    test_autoplayer.cpp
     test_byte_io.cpp
     test_cell.cpp
     test_direction.cpp
     test_fnv1a.cpp
     test_input_buffer.cpp
     test_mode.cpp
+    test_movement.cpp
     test_occupancy_set.cpp
     test_random.cpp
     test_replay.cpp
