@@ -15,6 +15,23 @@ public:
     /// The seed chooses where in the sequence to start. `stream` chooses one of 2^63 independent sequences.
     explicit Random(std::uint64_t seed, std::uint64_t stream = DEFAULT_STREAM) noexcept;
 
+    /// Everything the generator remembers, to save a game and restore it. The increment is always odd.
+    struct State
+    {
+        std::uint64_t state = 0;
+        std::uint64_t increment = 1;
+
+        friend constexpr bool operator==(const State& lhs, const State& rhs) noexcept = default;
+    };
+
+    [[nodiscard]] State state() const noexcept
+    {
+        return {.state = m_State, .increment = m_Increment};
+    }
+
+    /// A generator that carries on from `state`, whose increment must be odd.
+    explicit Random(const State& state) noexcept : m_State(state.state), m_Increment(state.increment) {}
+
     /// The next 32 random bits.
     [[nodiscard]] std::uint32_t next() noexcept;
 
