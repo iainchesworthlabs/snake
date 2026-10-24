@@ -27,3 +27,24 @@ catch_discover_tests(snake_viewmodel_tests
     PROPERTIES
         LABELS unit
         ENVIRONMENT "${snake_ui_test_environment}")
+
+# The board item is drawn into an off-screen window and the pixels are read back. It needs the QML-free view-model too.
+add_executable(snake_board_tests
+    test_board_item.cpp
+    test_board_main.cpp
+    ../src/board/board_item.cpp
+    ../src/board/board_item.hpp
+    ../src/input/qt_keys.cpp
+    ../src/input/qt_keys.hpp
+    ../src/viewmodel/game_view_model.cpp
+    ../src/viewmodel/game_view_model.hpp)
+set_target_properties(snake_board_tests PROPERTIES AUTOMOC ON)
+target_include_directories(snake_board_tests PRIVATE ../src)
+target_link_libraries(snake_board_tests
+    PRIVATE snake::input snake::sim Qt6::Quick Catch2::Catch2 icl::warnings icl::coverage)
+icl_relax_generated_warnings(snake_board_tests)
+catch_discover_tests(snake_board_tests
+    PROPERTIES
+        LABELS ui
+        TIMEOUT 60
+        ENVIRONMENT "${snake_ui_test_environment}")

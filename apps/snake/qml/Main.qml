@@ -16,18 +16,18 @@ Window {
     // A game that loses the focus waits for the player.
     onActiveChanged: {
         if (!active)
-            game.pause();
+            gameModel.pause();
     }
 
     GameViewModel {
-        id: game
+        id: gameModel
     }
 
     // The frame animation runs in step with the display. Each frame it tells the game how long the frame took, and the
     // game runs the ticks that are due.
     FrameAnimation {
-        running: game.state === GameViewModel.State.Running
-        onTriggered: game.advance(frameTime)
+        running: gameModel.state === GameViewModel.State.Running
+        onTriggered: gameModel.advance(frameTime)
     }
 
     Item {
@@ -35,7 +35,14 @@ Window {
         focus: true
 
         Keys.onPressed: event => {
-            event.accepted = game.handleKey(event.key, event.isAutoRepeat);
+            event.accepted = gameModel.handleKey(event.key, event.isAutoRepeat);
+        }
+
+        BoardItem {
+            anchors.fill: parent
+            anchors.margins: 16
+            anchors.topMargin: 64
+            game: gameModel
         }
 
         Text {
@@ -44,7 +51,7 @@ Window {
             anchors.margins: 16
             color: "#e0e6ea"
             font.pixelSize: 24
-            text: qsTr("Score %1").arg(game.score)
+            text: qsTr("Score %1").arg(gameModel.score)
         }
 
         Text {
@@ -53,7 +60,7 @@ Window {
             font.pixelSize: 24
             visible: text !== ""
             text: {
-                switch (game.state) {
+                switch (gameModel.state) {
                 case GameViewModel.State.NotStarted:
                     return qsTr("Press Enter to start");
                 case GameViewModel.State.Paused:

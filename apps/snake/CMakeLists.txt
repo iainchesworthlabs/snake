@@ -14,12 +14,14 @@ qt_add_qml_module(snake_app
     VERSION 1.0
     QML_FILES qml/Main.qml
     SOURCES
+        src/board/board_item.cpp
+        src/board/board_item.hpp
         src/input/qt_keys.cpp
         src/input/qt_keys.hpp
         src/viewmodel/game_view_model.cpp
         src/viewmodel/game_view_model.hpp)
-# qmltyperegistrar includes each header by its file name, so the directory of the view-models is on the path too.
-target_include_directories(snake_app PRIVATE src src/viewmodel)
+# qmltyperegistrar includes each header by its file name, so the directories of the QML types are on the path too.
+target_include_directories(snake_app PRIVATE src src/board src/viewmodel)
 
 # Translations: the source language and Simplified Chinese. `cmake --build <dir> --target update_translations`
 # refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.

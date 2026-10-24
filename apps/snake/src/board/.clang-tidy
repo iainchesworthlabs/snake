@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Properties, signals, slots and invokable functions that QML sees are camelCase (standard D9).
+InheritParentConfig: true
+CheckOptions:
+  - { key: readability-identifier-naming.MethodCase,       value: camelBack }
+  - { key: readability-identifier-naming.PublicMemberCase, value: camelBack }
