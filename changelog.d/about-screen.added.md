@@ -1,0 +1,1 @@
+**About.** Settings has an About button. It shows the version, the licence (GPL-3.0-or-later), where the source is and which tag or commit the game was built from, and has a button for the text of the game's licence, the third-party notices and the font licence, which scroll with the finger, the wheel or the arrow and page keys.

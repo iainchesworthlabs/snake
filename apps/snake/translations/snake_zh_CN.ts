@@ -2,6 +2,53 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN">
 <context>
+    <name>AboutScreen</name>
+    <message>
+        <source>About</source>
+        <translation>关于</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Snake</source>
+        <translation>贪吃蛇</translation>
+    </message>
+    <message>
+        <source>Version %1</source>
+        <translation>版本 %1</translation>
+    </message>
+    <message>
+        <source>Free software, licensed under the %1.</source>
+        <translation>自由软件，采用 %1 许可。</translation>
+    </message>
+    <message>
+        <source>Source: %1</source>
+        <translation>源代码：%1</translation>
+    </message>
+    <message>
+        <source>Revision: %1</source>
+        <translation>修订版本：%1</translation>
+    </message>
+    <message>
+        <source>Licence</source>
+        <translation>许可证</translation>
+    </message>
+    <message>
+        <source>Third-party notices</source>
+        <translation>第三方声明</translation>
+    </message>
+    <message>
+        <source>Font licence</source>
+        <translation>字体许可证</translation>
+    </message>
+    <message>
+        <source>Open the source page</source>
+        <translation>打开源代码页面</translation>
+    </message>
+</context>
+<context>
     <name>GameOverScreen</name>
     <message>
         <source>New best!</source>
@@ -96,6 +143,18 @@
         <source>Snake</source>
         <translation>贪吃蛇</translation>
     </message>
+    <message>
+        <source>Licence</source>
+        <translation>许可证</translation>
+    </message>
+    <message>
+        <source>Third-party notices</source>
+        <translation>第三方声明</translation>
+    </message>
+    <message>
+        <source>Font licence</source>
+        <translation>字体许可证</translation>
+    </message>
 </context>
 <context>
     <name>NameEntryScreen</name>
@@ -130,6 +189,13 @@
     <message>
         <source>Save score</source>
         <translation>保存得分</translation>
+    </message>
+</context>
+<context>
+    <name>NoticeScreen</name>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
     </message>
 </context>
 <context>
@@ -220,6 +286,10 @@
     <message>
         <source>Reset a leaderboard</source>
         <translation>重置排行榜</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>关于</translation>
     </message>
     <message>
         <source>Reset the %1 leaderboard?</source>

@@ -17,9 +17,14 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
-    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard" or "settings". A game that starts
+    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "settings", "about" or "notice". A game that starts
     // clears it.
     property string overlay
+
+    // The licence text the notice screen shows: "licence", "notices" or "font".
+    property string noticeKind: "licence"
+    readonly property string noticeTitle: noticeKind === "licence" ? qsTr("Licence") : noticeKind === "notices" ? qsTr("Third-party notices") : qsTr("Font licence")
+    readonly property string noticeBody: noticeKind === "licence" ? AboutInfo.licenceText : noticeKind === "notices" ? AboutInfo.noticesText : AboutInfo.fontLicenceText
 
     function showLeaderboard() {
         overlay = "leaderboard";
@@ -122,6 +127,29 @@ Window {
         profile: profileModel
         touchDevice: root.touchDevice
         onClosed: root.overlay = ""
+        onAboutRequested: root.overlay = "about"
+    }
+
+    AboutScreen {
+        objectName: "aboutScreen"
+        anchors.fill: parent
+        visible: root.overlay === "about"
+        focus: visible
+        onClosed: root.overlay = "settings"
+        onNoticeRequested: kind => {
+            root.noticeKind = kind;
+            root.overlay = "notice";
+        }
+    }
+
+    NoticeScreen {
+        objectName: "noticeScreen"
+        anchors.fill: parent
+        visible: root.overlay === "notice"
+        focus: visible
+        title: root.noticeTitle
+        body: root.noticeBody
+        onClosed: root.overlay = "about"
     }
 
     LeaderboardScreen {

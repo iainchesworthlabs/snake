@@ -14,6 +14,7 @@ FocusScope {
 
     // The player left the screen: the title shows next.
     signal closed
+    signal aboutRequested
 
     // The mode whose leaderboard the dialog asks about.
     property int resetMode: GameViewModel.Mode.Easy
@@ -166,6 +167,16 @@ FocusScope {
                         confirm.visible = true;
                     }
                 }
+            }
+
+            ToyButton {
+                objectName: "aboutButton"
+                x: 15
+                y: 100 + switches.height + 56 + 46 + 40
+                width: 360
+                height: 50
+                text: qsTr("About")
+                onClicked: root.aboutRequested()
             }
         }
     }
