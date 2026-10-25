@@ -188,8 +188,27 @@ TEST_CASE("The window title and the screen texts are translated", "[translations
     {
         chinese[message.source] = message.translations.front();
     }
-    for (const char* source : {"Snake", "Score %1", "Press Enter to start", "Paused. Press Space to resume.",
-                               "Game over. Press Enter to play again."})
+    for (const char* source : {"Snake",
+                               "Score",
+                               "Best",
+                               "Choose a mode",
+                               "Play",
+                               "Easy",
+                               "Classic",
+                               "Portals",
+                               "Hot potato",
+                               "Unlocks at %L1 in %2",
+                               "Paused",
+                               "Resume",
+                               "Restart",
+                               "Quit to menu",
+                               "Game over",
+                               "Play again",
+                               "Menu",
+                               "New best!",
+                               "%L1 more to beat your best.",
+                               "You matched your best.",
+                               "%1 unlocked!"})
     {
         INFO(source);
         REQUIRE(chinese.contains(source));

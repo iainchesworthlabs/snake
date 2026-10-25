@@ -13,6 +13,9 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
+    // The title starts on Easy, as the design does. The mode played last will come back with the settings.
+    Component.onCompleted: gameModel.mode = GameViewModel.Mode.Easy
+
     // A game that loses the focus waits for the player.
     onActiveChanged: {
         if (!active)
@@ -21,6 +24,15 @@ Window {
 
     GameViewModel {
         id: gameModel
+
+        objectName: "game"
+    }
+
+    ProfileViewModel {
+        id: profileModel
+
+        objectName: "profile"
+        game: gameModel
     }
 
     // The frame animation runs in step with the display. Each frame it tells the game how long the frame took, and the
@@ -30,90 +42,40 @@ Window {
         onTriggered: gameModel.advance(frameTime)
     }
 
-    Item {
+    // The screen follows the state of the game: the title before a game, the board while it runs, the pause dialog over
+    // the board, and the end screen after it. The screen that shows takes the keyboard.
+    TitleScreen {
+        objectName: "titleScreen"
         anchors.fill: parent
-        focus: true
+        visible: gameModel.state === GameViewModel.State.NotStarted
+        focus: visible
+        game: gameModel
+        profile: profileModel
+    }
 
-        Keys.onPressed: event => {
-            event.accepted = gameModel.handleKey(event.key, event.isAutoRepeat);
-        }
+    GameScreen {
+        objectName: "gameScreen"
+        anchors.fill: parent
+        visible: gameModel.state === GameViewModel.State.Running || gameModel.state === GameViewModel.State.Paused
+        focus: gameModel.state === GameViewModel.State.Running
+        game: gameModel
+        profile: profileModel
+    }
 
-        BoardItem {
-            anchors.fill: parent
-            anchors.margins: 16
-            anchors.topMargin: 64
-            game: gameModel
+    PauseScreen {
+        objectName: "pauseScreen"
+        anchors.fill: parent
+        visible: gameModel.state === GameViewModel.State.Paused
+        focus: visible
+        game: gameModel
+    }
 
-            // The food bobs up and down. Each half is an ease-in-out, as in the design.
-            SequentialAnimation on foodLift {
-                loops: Animation.Infinite
-                running: gameModel.state !== GameViewModel.State.Paused
-
-                NumberAnimation {
-                    to: 1
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-
-                NumberAnimation {
-                    to: 0
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        Column {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.margins: 16
-
-            Text {
-                color: Theme.ink
-                font.pixelSize: 16
-                font.weight: Font.Medium
-                text: qsTr("Score")
-            }
-
-            Text {
-                color: Theme.ink
-                font.pixelSize: 46
-                font.weight: Font.Bold
-                text: gameModel.score
-            }
-        }
-
-        // What the player does next, in a panel. The screens that replace it come with the menus.
-        Rectangle {
-            anchors.centerIn: parent
-            width: message.width + 48
-            height: message.height + 32
-            visible: message.text !== ""
-            color: Theme.surface
-            radius: 14
-            border.width: 3
-            border.color: Theme.ink
-
-            Text {
-                id: message
-
-                anchors.centerIn: parent
-                color: Theme.ink
-                font.pixelSize: 26
-                font.weight: Font.Bold
-                text: {
-                    switch (gameModel.state) {
-                    case GameViewModel.State.NotStarted:
-                        return qsTr("Press Enter to start");
-                    case GameViewModel.State.Paused:
-                        return qsTr("Paused. Press Space to resume.");
-                    case GameViewModel.State.GameOver:
-                        return qsTr("Game over. Press Enter to play again.");
-                    default:
-                        return "";
-                    }
-                }
-            }
-        }
+    GameOverScreen {
+        objectName: "gameOverScreen"
+        anchors.fill: parent
+        visible: gameModel.state === GameViewModel.State.GameOver
+        focus: visible
+        game: gameModel
+        profile: profileModel
     }
 }
