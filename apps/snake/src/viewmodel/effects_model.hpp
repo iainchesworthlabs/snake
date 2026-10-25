@@ -24,6 +24,8 @@ class EffectsModel : public QObject
     Q_PROPERTY(bool reducedMotion READ reducedMotion WRITE setReducedMotion NOTIFY reducedMotionChanged FINAL)
     /// Something is moving and the game is not paused, so the frame animation should run.
     Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL)
+    /// The snake is dying: the game screen stays up until it is done, and then the end of the game shows.
+    Q_PROPERTY(bool dying READ dying NOTIFY dyingChanged FINAL)
 
 public:
     explicit EffectsModel(QObject* parent = nullptr);
@@ -45,10 +47,18 @@ public:
         return m_Active;
     }
 
+    [[nodiscard]] bool dying() const noexcept
+    {
+        return m_Dying;
+    }
+
     [[nodiscard]] const effects::Effects& effects() const noexcept
     {
         return m_Effects;
     }
+
+    /// Finishes the death of the snake now, for a player who does not want to wait.
+    Q_INVOKABLE void skipDeath();
 
     /// Time has passed: `seconds` since the last frame.
     Q_INVOKABLE void advance(double seconds);
@@ -57,6 +67,7 @@ signals:
     void gameChanged();
     void reducedMotionChanged();
     void activeChanged();
+    void dyingChanged();
     /// Something moved: the board item draws again.
     void changed();
 
@@ -71,6 +82,7 @@ private:
     /// The score at the last event, to know how much the food was worth.
     std::int64_t m_LastPoints = 0;
     bool m_Active = false;
+    bool m_Dying = false;
 };
 
 } // namespace snake::ui

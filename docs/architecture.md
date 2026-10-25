@@ -201,6 +201,16 @@ setting by a binding. `Main.qml` runs a frame animation while the model is `acti
 points as a third layer over the game and moves the whole scene by the shake, in whole pixels. Reduced motion turns the
 shake off; the specks and points stay, because they are not shake or flashing.
 
+The snake dies in `Effects` too. A crash gives it the cells of the snake: it flashes white for 0.6 seconds (lit for the first
+half of each 0.4 second cycle, two and a half a second, under the three that are safe), then its pieces pop off one by one
+from the tail, every 0.05 seconds or faster for a long snake so that the pops take at most a second, each with a puff of
+three specks in its stripe's colour. The head is left. `death_look()` says how far it has gone and `board_scene` leaves the
+popped pieces out and paints the rest white in a flash. A game that ended in a crash draws its head with crosses for eyes
+(a won game does not), so the game over screen shows the head that is left, which `GameOverScreen` gets by sharing the
+effects. `EffectsModel::dying` keeps the game screen up until the death is over and then the game over screen shows; a key
+or a tap on the dying board calls `skipDeath()`. With reduced motion there is no flash and no shake, and the pieces still
+pop, from the first moment.
+
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
 that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
 `"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game

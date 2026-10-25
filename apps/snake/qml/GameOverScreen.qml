@@ -9,6 +9,8 @@ FocusScope {
 
     required property GameViewModel game
     required property ProfileViewModel profile
+    // The snake as the crash left it, a head with dizzy eyes.
+    required property EffectsModel effects
 
     // The score made the top 10 and the player chose to give a name for it.
     signal nameRequested
@@ -65,6 +67,7 @@ FocusScope {
             width: 390
             height: 390
             game: root.game
+            effects: root.effects
         }
 
         Item {

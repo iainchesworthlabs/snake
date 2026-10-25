@@ -175,6 +175,8 @@ public:
             m_Game->advance(0.15);
         }
         REQUIRE(m_Game->state() == State::GameOver);
+        // The snake takes a second or so to die before the end of the game shows. These tests are not about that.
+        m_Effects->skipDeath();
         // The food is placed at random, so a snake that runs straight may eat some on the way and make the top 10.
         // The tests that follow expect the buttons of a game over without a score to save.
         m_Profile->discardScore();
@@ -1326,6 +1328,8 @@ TEST_CASE("A crash shakes the board unless reduced motion is on", "[screens][eff
         app.start_classic();
         emit app.game().tickEvent(GameViewModel::Event::Crashed);
         CHECK(app.effects().active());
+        app.effects().advance(0.01);
+        CHECK(app.effects().effects().shake() != QPoint());
     }
     {
         App app;
@@ -1333,6 +1337,57 @@ TEST_CASE("A crash shakes the board unless reduced motion is on", "[screens][eff
         CHECK(app.effects().reducedMotion());
         app.start_classic();
         emit app.game().tickEvent(GameViewModel::Event::Crashed);
-        CHECK_FALSE(app.effects().active());
+        app.effects().advance(0.01);
+        CHECK(app.effects().effects().shake() == QPoint());
+    }
+}
+
+TEST_CASE("The snake dies on the game screen before the end of the game shows", "[screens][effects]")
+{
+    App app;
+    app.start_classic();
+    for (int i = 0; i < 40 && app.game().state() == State::Running; ++i)
+    {
+        app.game().advance(0.15);
+    }
+    REQUIRE(app.game().state() == State::GameOver);
+    // The game is over, but the board is still on the screen with the snake dying.
+    CHECK(app.effects().dying());
+    CHECK(app.shows("gameScreen"));
+    CHECK_FALSE(app.shows("gameOverScreen"));
+
+    // Waiting for it is enough.
+    for (int i = 0; i < 300 && app.effects().dying(); ++i)
+    {
+        app.effects().advance(0.01);
+    }
+    CHECK_FALSE(app.shows("gameScreen"));
+    CHECK(app.shows("gameOverScreen"));
+}
+
+TEST_CASE("A key or a tap skips the death of the snake", "[screens][effects]")
+{
+    for (const bool by_key : {true, false})
+    {
+        App app;
+        app.start_classic();
+        for (int i = 0; i < 40 && app.game().state() == State::Running; ++i)
+        {
+            app.game().advance(0.15);
+        }
+        REQUIRE(app.effects().dying());
+        if (by_key)
+        {
+            app.press(Qt::Key_Space);
+        }
+        else
+        {
+            QTest::mouseClick(&app.window(), Qt::LeftButton, Qt::NoModifier, QPoint(195, 400));
+        }
+        CHECK_FALSE(app.effects().dying());
+        CHECK(app.shows("gameOverScreen"));
+        // The game over screen shows the head that is left, with the crosses of dizzy eyes: the snake is not a full
+        // one.
+        CHECK(app.effects().effects().death_look().popped > 0);
     }
 }

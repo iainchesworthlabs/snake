@@ -53,8 +53,12 @@ struct Layout
 /// segment moves into the cell of the one in front of it and the head moves into the cell it will take, facing the
 /// way it will turn. A move that ends the game, that crosses the edge of a wrapping board or that is not coming (the
 /// game is not running) is not drawn ahead. When the snake is about to eat, its tail stays and the body stretches.
+///
+/// A game that ended in a crash shows the head with dizzy eyes, crosses in place of pupils. `death` is how far the
+/// snake's death has gone: in a flash all the pieces are white, and the pieces that have popped are left out from the
+/// tail.
 [[nodiscard]] std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift,
-                                             double progress = 0.0);
+                                             double progress = 0.0, const effects::DeathLook& death = {});
 
 /// The burst of specks and the rising points of `effects`, drawn over the game. A speck is a square a fifth of a cell
 /// wide and a score is "+" and the digits of the points in a 3 by 5 pixel font, in cream on an ink shadow, which has to

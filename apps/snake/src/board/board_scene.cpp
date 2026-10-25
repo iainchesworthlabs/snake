@@ -200,7 +200,8 @@ void add_segment(std::vector<Shape>& out, const Layout& layout, QPoint at, QRgb 
                 blend(colour, opaque(tokens::INK), BEVEL_ALPHA));
 }
 
-void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Direction heading, const QRect& cells)
+void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Direction heading, const QRect& cells,
+              bool dizzy)
 {
     const int cell = layout.cell;
     add_segment(out, layout, at, opaque(tokens::ACCENT), HEAD_RADIUS);
@@ -208,7 +209,18 @@ void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Dir
     for (const int y : {4, 18})
     {
         out.push_back({turned(at, cell, heading, 16, y, 10, 10), opaque(tokens::EYE)});
-        out.push_back({turned(at, cell, heading, 21, y + 2, 5, 5), opaque(tokens::INK)});
+        if (dizzy)
+        {
+            // A cross in place of the pupil: the middle and the four corners of the eye.
+            for (const QPoint corner : {QPoint(4, 4), QPoint(1, 1), QPoint(7, 1), QPoint(1, 7), QPoint(7, 7)})
+            {
+                out.push_back({turned(at, cell, heading, 16 + corner.x(), y + corner.y(), 2, 2), opaque(tokens::INK)});
+            }
+        }
+        else
+        {
+            out.push_back({turned(at, cell, heading, 21, y + 2, 5, 5), opaque(tokens::INK)});
+        }
     }
     // The tongue reaches into the next cell and stops at the edge of the board.
     const QRect tongue = turned(at, cell, heading, UNITS, 14, 10, 3).intersected(cells);
@@ -348,7 +360,8 @@ std::vector<Shape> background_shapes(const Layout& layout)
     return shapes;
 }
 
-std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift, double progress)
+std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift, double progress,
+                               const effects::DeathLook& death)
 {
     std::vector<Shape> shapes;
     if (layout.cell <= 0)
@@ -391,11 +404,15 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
     {
         add_segment(shapes, layout, cell_corner(layout, snake.back()), stripe_colour(snake.size()), SEGMENT_RADIUS);
     }
-    for (std::size_t index = snake.size(); index > 1; --index)
+    // The pieces that have popped off the tail in a death are not drawn; the head always is.
+    const std::size_t shown = snake.size() > death.popped ? snake.size() - death.popped : 1;
+    for (std::size_t index = shown; index > 1; --index)
     {
-        add_segment(shapes, layout, position_of(index - 1), stripe_colour(index - 1), SEGMENT_RADIUS);
+        const QRgb colour = death.flash ? opaque(tokens::EYE) : stripe_colour(index - 1);
+        add_segment(shapes, layout, position_of(index - 1), colour, SEGMENT_RADIUS);
     }
-    add_head(shapes, layout, position_of(0), motion.facing, layout.cells());
+    // A snake that crashed has dizzy eyes. One that won has not.
+    add_head(shapes, layout, position_of(0), motion.facing, layout.cells(), !game.running() && !game.won());
     return shapes;
 }
 
