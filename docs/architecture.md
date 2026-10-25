@@ -112,6 +112,16 @@ screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `prof
 is locked, open or only open on paper: Portals and Hot potato can be unlocked but are not in the game yet, so they are
 never startable. The best scores are kept for the run only; the leaderboards and the file on disk come with name entry.
 
+The screens follow the state of the game, so there is no navigation to keep in step with it. `Main.qml` shows the title
+screen while the game has not started, the game screen (the score, the best score and the board) while it runs or is
+paused, the pause dialog over the game while it is paused, and the game over screen after it. Each screen takes the
+keyboard when it shows and puts it on its main button. The three screens are drawn on the 390 by 844 page of the design
+(`PhonePage`), scaled to fit the window and centred, so the phone layout is used at any window size; the design has no
+desktop title, pause or game over screen yet. The buttons (`ToyButton`) and the mode cards (`ModeCard`) are drawn from
+rectangles in the style of the design, with a hard shadow, an outline and a focus ring. The up and down arrows move
+between them along the Tab order, so a locked mode is skipped, and a mode takes the choice when it gets the focus. The
+QML files sit at the root of the `SnakeApp` module, which is where `qmllint` looks for the types of the other files.
+
 `board_scene` works out what the board looks like and `BoardItem` hands it to the scene graph. The scene builder is
 plain C++ over the simulation's state: `layout_for()` picks the largest whole-pixel cell that fits the item, with the
 frame (a quarter of a cell) and its hard shadow (twice that), centred in the item; `background_shapes()` gives the
