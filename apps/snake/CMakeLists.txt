@@ -151,10 +151,11 @@ qt_add_executable(snake_app src/main.cpp)
 set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
 snake_add_ui_module(snake_app)
 
-# Translations: the source language and Simplified Chinese. `cmake --build <dir> --target update_translations`
-# refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.
+# Translations: the source language and the others of docs/i18n.md. `cmake --build <dir> --target
+# update_translations` refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.
 qt_add_translations(snake_app
-    TS_FILES translations/snake_en.ts translations/snake_zh_CN.ts
+    TS_FILES translations/snake_en.ts translations/snake_zh_CN.ts translations/snake_fr.ts
+             translations/snake_es.ts translations/snake_de.ts
     LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app PRIVATE snake::core)
@@ -188,6 +189,9 @@ if(SNAKE_BUILD_TESTS)
     # load Main.qml in an off-screen window and press the keys and buttons.
     qt_add_executable(snake_ui_tests tests/test_screens.cpp tests/test_screens_main.cpp)
     snake_add_ui_module(snake_ui_tests OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ui_tests/SnakeApp")
+    # The language tests load the compiled catalogues that the application is built with.
+    target_compile_definitions(snake_ui_tests PRIVATE SNAKE_QM_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+    add_dependencies(snake_ui_tests release_translations)
     target_link_libraries(snake_ui_tests PRIVATE Qt6::Test Catch2::Catch2)
     catch_discover_tests(snake_ui_tests
         PROPERTIES

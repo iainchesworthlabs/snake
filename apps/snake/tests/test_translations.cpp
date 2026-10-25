@@ -21,7 +21,7 @@
 namespace
 {
 
-constexpr std::array<std::string_view, 2> LANGUAGES{"en", "zh_CN"};
+constexpr std::array<std::string_view, 5> LANGUAGES{"en", "zh_CN", "fr", "es", "de"};
 
 struct Message
 {

@@ -65,8 +65,13 @@ Item {
         border.width: root.plain || root.kind === "primary" ? 0 : 3
         border.color: Theme.ink
 
+        // A label that is wider than the button in some language is set smaller until it fits.
         Text {
             anchors.centerIn: parent
+            width: Math.min(implicitWidth, parent.width - 12)
+            horizontalAlignment: Text.AlignHCenter
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 9
             color: root.kind === "primary" ? Theme.surface : Theme.ink
             font.pixelSize: root.fontSize
             font.weight: root.plain ? Font.DemiBold : Font.Bold

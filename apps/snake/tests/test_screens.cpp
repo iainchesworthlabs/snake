@@ -15,7 +15,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <QByteArray>
 #include <QColor>
+#include <QGuiApplication>
 #include <QImage>
 #include <QLocale>
 #include <QObject>
@@ -27,8 +29,11 @@
 #include <QQuickWindow>
 #include <QSignalSpy>
 #include <QString>
+#include <QStringList>
+#include <QTranslator>
 #include <QVariantMap>
 #include <Qt>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -1444,4 +1449,179 @@ TEST_CASE("The demo does not use the seeds of the real game", "[screens][attract
     App second;
     CHECK(second.demo().session().simulation().food() == first.demo().session().simulation().food());
     static_cast<void>(food);
+}
+
+namespace
+{
+
+/// Shows the program in a language for as long as it lives: the compiled catalogue is installed and the locale set,
+/// as the program does at start-up. The screens read the language when they are created, so make it first.
+class InLanguage
+{
+public:
+    explicit InLanguage(const QString& code) : m_Previous(QLocale())
+    {
+        QLocale::setDefault(QLocale(code));
+        if (code != "en")
+        {
+            const QString file = QString("%1/snake_%2.qm").arg(QStringLiteral(SNAKE_QM_DIR), code);
+            REQUIRE(m_Translator.load(file));
+            REQUIRE(QGuiApplication::installTranslator(&m_Translator));
+            m_Installed = true;
+        }
+    }
+    InLanguage(const InLanguage&) = delete;
+    InLanguage& operator=(const InLanguage&) = delete;
+    ~InLanguage()
+    {
+        if (m_Installed)
+        {
+            QGuiApplication::removeTranslator(&m_Translator);
+        }
+        QLocale::setDefault(m_Previous);
+    }
+
+private:
+    QLocale m_Previous;
+    QTranslator m_Translator;
+    bool m_Installed = false;
+};
+
+bool is_text(const QQuickItem* item)
+{
+    return QByteArray(item->metaObject()->className()).startsWith("QQuickText");
+}
+
+/// Every visible text in the item and below it that has something to say.
+void collect_texts(QQuickItem* item, std::vector<QQuickItem*>& out)
+{
+    if (!item->isVisible())
+    {
+        return;
+    }
+    if (is_text(item) && !item->property("text").toString().isEmpty())
+    {
+        out.push_back(item);
+    }
+    for (QQuickItem* child : item->childItems())
+    {
+        collect_texts(child, out);
+    }
+}
+
+/// The nearest ancestor that is a box with a face of its own, which the text has to fit in: a button, a card, a panel.
+QQuickItem* box_around(QQuickItem* text)
+{
+    for (QQuickItem* parent = text->parentItem(); parent != nullptr; parent = parent->parentItem())
+    {
+        if (QByteArray(parent->metaObject()->className()).startsWith("QQuickRectangle") && parent->width() > 0)
+        {
+            return parent;
+        }
+    }
+    return nullptr;
+}
+
+/// Complaints about the texts of the window that run out of their box, off the page or past their own width. Empty when
+/// everything fits.
+QStringList misfits(QQuickWindow& window)
+{
+    std::vector<QQuickItem*> texts;
+    collect_texts(window.contentItem(), texts);
+    QStringList complaints;
+    const QRectF page(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+    for (QQuickItem* text : texts)
+    {
+        const QString words = text->property("text").toString();
+        const QRectF where = text->mapRectToScene(QRectF(0, 0, text->width(), text->height()));
+        const double content = text->property("contentWidth").toDouble();
+        if (content > text->width() + 0.5)
+        {
+            complaints << QString("\"%1\" is %2 wide in a space of %3").arg(words).arg(content).arg(text->width());
+        }
+        if (!page.adjusted(-1, -1, 1, 1).contains(where))
+        {
+            complaints << QString("\"%1\" is off the page").arg(words);
+        }
+        if (const QQuickItem* box = box_around(text))
+        {
+            const QRectF around = box->mapRectToScene(QRectF(0, 0, box->width(), box->height()));
+            if (!around.adjusted(-1, -1, 1, 1).contains(where))
+            {
+                complaints << QString("\"%1\" runs out of its box").arg(words);
+            }
+        }
+    }
+    return complaints;
+}
+
+/// Checks that everything on the screen fits, naming the language and the screen if it does not.
+void check_fit(App& app, const char* screen)
+{
+    const QStringList bad = misfits(app.window());
+    INFO("screen " << screen << ": " << bad.join("; ").toStdString());
+    CHECK(bad.isEmpty());
+}
+
+constexpr std::array<const char*, 4> LATIN_LANGUAGES = {"en", "fr", "es", "de"};
+
+/// What the screens are made to hold at their fullest, so that the longest text is on show.
+void fill_the_profile(App& app)
+{
+    for (const auto& [name, score] :
+         {std::pair{"GRANDMA JUNE", 2300u}, std::pair{"MAYA", 1400u}, std::pair{"LEO", 900u}})
+    {
+        app.profile().record_game(Mode::CLASSIC, score);
+        app.save_score_as(name);
+    }
+}
+
+} // namespace
+
+TEST_CASE("The title, the settings and the leaderboard fit in every language", "[screens][languages]")
+{
+    for (const char* code : LATIN_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true);
+        fill_the_profile(app);
+        check_fit(app, "title");
+
+        app.click("settingsButton");
+        check_fit(app, "settings");
+        app.click("resetClassicButton");
+        check_fit(app, "confirm");
+        app.press(Qt::Key_Escape);
+        app.click("aboutButton");
+        check_fit(app, "about");
+        app.press(Qt::Key_Escape);
+        app.press(Qt::Key_Escape);
+
+        app.click("leaderboardButton");
+        check_fit(app, "leaderboard");
+    }
+}
+
+TEST_CASE("The game screens fit in every language", "[screens][languages]")
+{
+    for (const char* code : LATIN_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true);
+        fill_the_profile(app);
+        app.start_classic();
+        check_fit(app, "game");
+        app.game().pause();
+        check_fit(app, "pause");
+        app.game().resume();
+
+        app.crash();
+        app.profile().record_game(Mode::CLASSIC, 5000);
+        check_fit(app, "game over");
+        app.click("saveScoreButton");
+        app.type("maya");
+        check_fit(app, "name entry");
+    }
 }

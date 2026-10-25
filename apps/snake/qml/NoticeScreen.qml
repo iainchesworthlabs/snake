@@ -61,6 +61,7 @@ FocusScope {
         ShadowText {
             objectName: "noticeTitle"
             x: 74
+            maxWidth: 300
             y: 26
             offset: 3
             pixelSize: 28
