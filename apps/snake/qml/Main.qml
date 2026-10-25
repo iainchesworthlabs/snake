@@ -104,8 +104,8 @@ Window {
     GameScreen {
         objectName: "gameScreen"
         anchors.fill: parent
-        visible: gameModel.state === GameViewModel.State.Running || gameModel.state === GameViewModel.State.Paused
-        focus: gameModel.state === GameViewModel.State.Running
+        visible: gameModel.state === GameViewModel.State.Running || gameModel.state === GameViewModel.State.Paused || (gameModel.state === GameViewModel.State.GameOver && effectsModel.dying)
+        focus: gameModel.state === GameViewModel.State.Running || (gameModel.state === GameViewModel.State.GameOver && effectsModel.dying)
         game: gameModel
         profile: profileModel
         effects: effectsModel
@@ -124,10 +124,11 @@ Window {
     GameOverScreen {
         objectName: "gameOverScreen"
         anchors.fill: parent
-        visible: gameModel.state === GameViewModel.State.GameOver && root.overlay === ""
+        visible: gameModel.state === GameViewModel.State.GameOver && root.overlay === "" && !effectsModel.dying
         focus: visible
         game: gameModel
         profile: profileModel
+        effects: effectsModel
         onNameRequested: root.overlay = "nameEntry"
     }
 

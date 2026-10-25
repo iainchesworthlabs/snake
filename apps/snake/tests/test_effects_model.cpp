@@ -4,6 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <QPoint>
 #include <QSignalSpy>
 #include <cstdint>
 
@@ -98,12 +99,15 @@ TEST_CASE("A crash shakes unless motion is reduced", "[effects-model]")
     game.start();
     emit game.tickEvent(Event::Crashed);
     CHECK(model.active());
+    model.advance(0.01);
+    CHECK(model.effects().shake() != QPoint());
 
     EffectsModel calm;
     calm.setGame(&game);
     calm.setReducedMotion(true);
     emit game.tickEvent(Event::Crashed);
-    CHECK_FALSE(calm.active());
+    calm.advance(0.01);
+    CHECK(calm.effects().shake() == QPoint());
 }
 
 TEST_CASE("Reduced motion can be changed and says so once", "[effects-model]")
@@ -182,4 +186,42 @@ TEST_CASE("Letting go of a game stops the model listening to it", "[effects-mode
     emit game.tickEvent(Event::Ate);
     CHECK(model.effects().particles().empty());
     CHECK_FALSE(model.active());
+}
+
+TEST_CASE("A crash starts the death of the snake, which can be waited out or skipped", "[effects-model]")
+{
+    GameViewModel game(counting_seeds());
+    game.setMode(GameViewModel::Mode::Classic);
+    EffectsModel model;
+    model.setGame(&game);
+    QSignalSpy dying(&model, &EffectsModel::dyingChanged);
+    game.start();
+    CHECK_FALSE(model.dying());
+    for (int i = 0; i < 40 && game.state() == GameViewModel::State::Running; ++i)
+    {
+        game.advance(0.15);
+    }
+    REQUIRE(game.state() == GameViewModel::State::GameOver);
+    CHECK(model.dying());
+    CHECK(dying.count() == 1);
+    // The pieces of the snake that died are what the board shows to begin with.
+    CHECK(model.effects().death_look().flash);
+
+    model.skipDeath();
+    CHECK_FALSE(model.dying());
+    CHECK(dying.count() == 2);
+    CHECK(model.effects().death_look().popped == game.session().simulation().snake().size() - 1);
+
+    // Waiting does it too.
+    game.restart();
+    for (int i = 0; i < 40 && game.state() == GameViewModel::State::Running; ++i)
+    {
+        game.advance(0.15);
+    }
+    REQUIRE(model.dying());
+    for (int i = 0; i < 300 && model.dying(); ++i)
+    {
+        model.advance(0.01);
+    }
+    CHECK_FALSE(model.dying());
 }

@@ -33,8 +33,18 @@ struct FloatingScore
     double age = 0.0;
 };
 
+/// How the snake looks while it dies: whether it is in a flash, and how many pieces have popped off its tail.
+struct DeathLook
+{
+    bool flash = false;
+    std::size_t popped = 0;
+
+    friend bool operator==(const DeathLook& lhs, const DeathLook& rhs) noexcept = default;
+};
+
 /// The short-lived show of the game: the burst of specks and the rising points when the snake eats, and the shake of
-/// the board when it crashes. It holds no game rules and takes nothing from the simulation but the cells and points it
+/// the board when it crashes, and the death of the snake: it flashes, then its pieces pop off one by one from the tail,
+/// leaving the head. It holds no game rules and takes nothing from the simulation but the cells and points it
 /// is told, and its own random numbers never touch the game's generator, so it can differ from one run to the next
 /// without changing a game. It is driven by time: advance() moves everything on.
 ///
@@ -42,6 +52,14 @@ struct FloatingScore
 class Effects
 {
 public:
+    /// The snake flashes for FLASH_END seconds, in cycles of FLASH_PERIOD that are lit for the first half (two and a
+    /// half flashes a second, under the three that are safe), then a piece pops off every POP_STEP seconds, or faster
+    /// if the snake is long, so that the whole death takes under MAX_POP_TIME after the flashing.
+    static constexpr double FLASH_PERIOD = 0.4;
+    static constexpr double FLASH_END = 0.6;
+    static constexpr double POP_STEP = 0.05;
+    static constexpr double MAX_POP_TIME = 1.0;
+
     /// The most specks alive at once, so a run of foods cannot fill the screen (and the small displays can take it).
     static constexpr std::size_t MAX_PARTICLES = 64;
     /// How long a speck lives, a floating score lives and the shake lasts, in seconds.
@@ -56,8 +74,18 @@ public:
     /// The snake ate at `cell` and scored `points`. A bonus item gives a bigger burst in gold.
     void eaten(sim::Cell cell, std::uint32_t points, bool bonus);
 
-    /// The snake crashed: the board shakes, unless motion is reduced.
-    void crashed();
+    /// The snake crashed, lying on `snake` (head first): the board shakes and the snake dies, unless motion is reduced,
+    /// which leaves out the shake and the flashing. The pieces still pop.
+    void crashed(std::span<const sim::Cell> snake);
+
+    /// True while the snake is dying: the screen waits for it before it shows the end of the game.
+    [[nodiscard]] bool dying() const noexcept;
+
+    /// How the snake looks. It stays as the death left it until clear(): the head alone, which looks dizzy.
+    [[nodiscard]] DeathLook death_look() const noexcept;
+
+    /// Finishes the death at once, for a player who does not want to wait.
+    void skip_death();
 
     /// Moves everything on by `seconds`. A time that is not above zero does nothing.
     void advance(double seconds);
@@ -95,11 +123,19 @@ public:
 
 private:
     [[nodiscard]] std::uint32_t next_random() noexcept;
+    /// How long the whole death lasts.
+    [[nodiscard]] double death_length() const noexcept;
+    [[nodiscard]] double pop_step() const noexcept;
+    /// How many pieces have popped at `age` seconds into the death.
+    [[nodiscard]] std::size_t popped_at(double age) const noexcept;
+    void burst_at(sim::Cell cell, QRgb colour);
     /// A number from 0 up to but not including 1.
     [[nodiscard]] double next_unit() noexcept;
 
     std::vector<Particle> m_Particles;
     std::vector<FloatingScore> m_Scores;
+    std::vector<sim::Cell> m_Dying; // the snake that died, head first; empty when no snake has
+    double m_DeathAge = 0.0;
     double m_ShakeAge = SHAKE_LIFE; // the shake is over when the age reaches SHAKE_LIFE
     bool m_Reduced = false;
     std::uint32_t m_Random = 0x2545F491U;

@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 namespace snake::ui::effects
 {
@@ -72,11 +73,75 @@ void Effects::eaten(sim::Cell cell, std::uint32_t points, bool bonus)
     }
 }
 
-void Effects::crashed()
+void Effects::crashed(std::span<const sim::Cell> snake)
 {
     if (!m_Reduced)
     {
         m_ShakeAge = 0.0;
+    }
+    m_Dying.assign(snake.begin(), snake.end());
+    m_DeathAge = 0.0;
+}
+
+double Effects::pop_step() const noexcept
+{
+    return std::min(POP_STEP, MAX_POP_TIME / static_cast<double>(std::max<std::size_t>(m_Dying.size(), 1)));
+}
+
+double Effects::death_length() const noexcept
+{
+    if (m_Dying.empty())
+    {
+        return 0.0;
+    }
+    // Every piece but the head pops, and the flashing comes first unless motion is reduced.
+    return (m_Reduced ? 0.0 : FLASH_END) + (static_cast<double>(m_Dying.size() - 1) * pop_step());
+}
+
+std::size_t Effects::popped_at(double age) const noexcept
+{
+    const double start = m_Reduced ? 0.0 : FLASH_END;
+    if (m_Dying.empty() || age < start)
+    {
+        return 0;
+    }
+    return std::min(m_Dying.size() - 1, static_cast<std::size_t>((age - start) / pop_step()) + 1);
+}
+
+bool Effects::dying() const noexcept
+{
+    return !m_Dying.empty() && m_DeathAge < death_length();
+}
+
+DeathLook Effects::death_look() const noexcept
+{
+    if (m_Dying.empty())
+    {
+        return {};
+    }
+    const bool flashing =
+        !m_Reduced && m_DeathAge < FLASH_END && std::fmod(m_DeathAge, FLASH_PERIOD) < FLASH_PERIOD / 2;
+    return {.flash = flashing, .popped = popped_at(m_DeathAge)};
+}
+
+void Effects::skip_death()
+{
+    m_DeathAge = death_length();
+}
+
+void Effects::burst_at(sim::Cell cell, QRgb colour)
+{
+    for (std::size_t i = 0; i < 3 && m_Particles.size() < MAX_PARTICLES; ++i)
+    {
+        const double angle = 2.0 * PI * next_unit();
+        const double speed = 3.0 + (3.0 * next_unit());
+        Particle speck;
+        speck.x = static_cast<double>(cell.x) + 0.5;
+        speck.y = static_cast<double>(cell.y) + 0.5;
+        speck.velocity_x = std::cos(angle) * speed;
+        speck.velocity_y = (std::sin(angle) * speed) - 2.0;
+        speck.colour = colour;
+        m_Particles.push_back(speck);
     }
 }
 
@@ -100,6 +165,18 @@ void Effects::advance(double seconds)
     }
     std::erase_if(m_Scores, [](const FloatingScore& score) { return score.age >= SCORE_LIFE; });
     m_ShakeAge = std::min(m_ShakeAge + seconds, SHAKE_LIFE);
+
+    if (dying())
+    {
+        // Each piece that pops puffs out a few specks in its own colour, the stripes of the snake.
+        const std::size_t before = popped_at(m_DeathAge);
+        m_DeathAge = std::min(m_DeathAge + seconds, death_length());
+        for (std::size_t popped = before; popped < popped_at(m_DeathAge); ++popped)
+        {
+            const std::size_t piece = m_Dying.size() - 1 - popped;
+            burst_at(m_Dying[piece], opaque(piece % 2 == 0 ? tokens::ACCENT : tokens::SURFACE));
+        }
+    }
 }
 
 void Effects::set_reduced_motion(bool reduced)
@@ -115,12 +192,14 @@ void Effects::clear()
 {
     m_Particles.clear();
     m_Scores.clear();
+    m_Dying.clear();
+    m_DeathAge = 0.0;
     m_ShakeAge = SHAKE_LIFE;
 }
 
 bool Effects::active() const noexcept
 {
-    return !m_Particles.empty() || !m_Scores.empty() || m_ShakeAge < SHAKE_LIFE;
+    return !m_Particles.empty() || !m_Scores.empty() || m_ShakeAge < SHAKE_LIFE || dying();
 }
 
 QPoint Effects::shake() const

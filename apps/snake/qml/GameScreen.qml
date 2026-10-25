@@ -14,7 +14,18 @@ FocusScope {
     Accessible.name: qsTr("Game")
 
     Keys.onPressed: event => {
-        event.accepted = root.game.handleKey(event.key, event.isAutoRepeat);
+        if (root.game.state === GameViewModel.State.GameOver) {
+            // The snake is dying; a key is "get on with it".
+            root.effects.skipDeath();
+            event.accepted = true;
+        } else {
+            event.accepted = root.game.handleKey(event.key, event.isAutoRepeat);
+        }
+    }
+
+    TapHandler {
+        enabled: root.game.state === GameViewModel.State.GameOver
+        onTapped: root.effects.skipDeath()
     }
 
     BoardItem {

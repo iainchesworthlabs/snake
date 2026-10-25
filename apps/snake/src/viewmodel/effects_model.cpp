@@ -3,7 +3,9 @@
 
 #include "viewmodel/game_view_model.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace snake::ui
 {
@@ -61,8 +63,17 @@ void EffectsModel::on_tick_event(GameViewModel::Event event)
         m_Effects.eaten(m_Game->session().simulation().head(), worth, true);
         break;
     case GameViewModel::Event::Crashed:
-        m_Effects.crashed();
+    {
+        const auto& snake = m_Game->session().simulation().snake();
+        std::vector<sim::Cell> cells;
+        cells.reserve(snake.size());
+        for (std::size_t i = 0; i < snake.size(); ++i)
+        {
+            cells.push_back(snake[i]);
+        }
+        m_Effects.crashed(cells);
         break;
+    }
     }
     update_active();
     emit changed();
@@ -82,6 +93,13 @@ void EffectsModel::on_state_changed()
     emit changed();
 }
 
+void EffectsModel::skipDeath()
+{
+    m_Effects.skip_death();
+    update_active();
+    emit changed();
+}
+
 void EffectsModel::advance(double seconds)
 {
     m_Effects.advance(seconds);
@@ -96,6 +114,11 @@ void EffectsModel::update_active()
     {
         m_Active = active;
         emit activeChanged();
+    }
+    if (m_Effects.dying() != m_Dying)
+    {
+        m_Dying = m_Effects.dying();
+        emit dyingChanged();
     }
 }
 

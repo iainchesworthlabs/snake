@@ -146,10 +146,11 @@ QSGNode* BoardItem::updatePaintNode(QSGNode* old_node, UpdatePaintNodeData* /*da
         set_shapes(*window(), layer_node(*root, Layer::BACKGROUND), board_scene::background_shapes(layout));
         m_DrawnLayout = layout;
     }
-    set_shapes(
-        *window(), layer_node(*root, Layer::GAME),
-        m_Game ? board_scene::game_shapes(layout, m_Game->session().simulation(), m_FoodLift, m_Game->tickProgress())
-               : std::vector<board_scene::Shape>{});
+    const effects::DeathLook death = m_Effects ? m_Effects->effects().death_look() : effects::DeathLook{};
+    set_shapes(*window(), layer_node(*root, Layer::GAME),
+               m_Game ? board_scene::game_shapes(layout, m_Game->session().simulation(), m_FoodLift,
+                                                 m_Game->tickProgress(), death)
+                      : std::vector<board_scene::Shape>{});
     if (m_Effects)
     {
         set_shapes(*window(), layer_node(*root, Layer::EFFECTS),
