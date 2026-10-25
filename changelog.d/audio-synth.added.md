@@ -1,0 +1,1 @@
+**The game has a sound library.** A new portable library, `libs/audio`, makes sound effects (eat, bonus, crash, button, start, new best) and two looping tunes from square, triangle and noise voices, with no sample files. It does not play anything yet: the game will ask it for samples in the next step.

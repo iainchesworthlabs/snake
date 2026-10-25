@@ -14,6 +14,7 @@ of a 2017 Visual Studio prototype (see [docs/migration.md](docs/migration.md)); 
 | Path | Contents |
 |---|---|
 | `libs/sim` | The rules of the game: a portable library with no Qt. Unit tested with Catch2. |
+| `libs/audio` | Sound effects and music made from square, triangle and noise voices, with no sample files: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/input` | Tilt, swipe, key and gamepad input turned into directions: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/profile` | Names, leaderboards, settings and unlocks: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/core` | Qt-free logic: logging, version and window settings. Unit tested with Catch2. |
