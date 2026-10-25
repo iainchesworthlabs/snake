@@ -1156,6 +1156,9 @@ TEST_CASE("Each licence has its text one tap away and Back returns to About", "[
     CHECK(app.text_of("noticeTitle") == "Font licence");
     CHECK(app.text_of("noticeBody").contains("SIL OPEN FONT LICENSE"));
     CHECK(app.text_of("noticeBody").contains("Pixelify Sans"));
+    // The fonts for the other scripts have their licence there too.
+    CHECK(app.text_of("noticeBody").contains("Noto Sans JP"));
+    CHECK(app.text_of("noticeBody").contains("Noto Sans Hebrew"));
 }
 
 TEST_CASE("The notice text scrolls with the arrow keys and the page keys and stops at both ends", "[screens][about]")
@@ -1563,7 +1566,7 @@ void check_fit(App& app, const char* screen)
     CHECK(bad.isEmpty());
 }
 
-constexpr std::array<const char*, 4> LATIN_LANGUAGES = {"en", "fr", "es", "de"};
+constexpr std::array<const char*, 6> TESTED_LANGUAGES = {"en", "fr", "es", "de", "ja", "zh_CN"};
 
 /// What the screens are made to hold at their fullest, so that the longest text is on show.
 void fill_the_profile(App& app)
@@ -1580,7 +1583,7 @@ void fill_the_profile(App& app)
 
 TEST_CASE("The title, the settings and the leaderboard fit in every language", "[screens][languages]")
 {
-    for (const char* code : LATIN_LANGUAGES)
+    for (const char* code : TESTED_LANGUAGES)
     {
         INFO("language " << code);
         const InLanguage language(code);
@@ -1605,7 +1608,7 @@ TEST_CASE("The title, the settings and the leaderboard fit in every language", "
 
 TEST_CASE("The game screens fit in every language", "[screens][languages]")
 {
-    for (const char* code : LATIN_LANGUAGES)
+    for (const char* code : TESTED_LANGUAGES)
     {
         INFO("language " << code);
         const InLanguage language(code);
@@ -1624,4 +1627,16 @@ TEST_CASE("The game screens fit in every language", "[screens][languages]")
         app.type("maya");
         check_fit(app, "name entry");
     }
+}
+
+TEST_CASE("A name in another script is set smaller than the pixel wordmark, to stay above the preview",
+          "[screens][languages]")
+{
+    const InLanguage language("zh_CN");
+    App app;
+    CHECK(app.text_of("wordmark") == "贪吃蛇");
+    QQuickItem* wordmark = app.item("wordmark");
+    const QQuickItem* preview = app.item("attractPreview");
+    const double bottom = wordmark->mapRectToScene(QRectF(0, 0, wordmark->width(), wordmark->height())).bottom();
+    CHECK(bottom <= preview->mapToScene(QPointF(0, 0)).y());
 }

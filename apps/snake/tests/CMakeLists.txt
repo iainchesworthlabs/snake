@@ -92,7 +92,8 @@ set_target_properties(snake_theme_tests PROPERTIES AUTOMOC ON)
 snake_add_font_resources(snake_theme_tests)
 target_include_directories(snake_theme_tests PRIVATE ../src)
 target_compile_definitions(snake_theme_tests PRIVATE
-    SNAKE_TOKENS_JSON="${PROJECT_SOURCE_DIR}/docs/design/tokens.json")
+    SNAKE_TOKENS_JSON="${PROJECT_SOURCE_DIR}/docs/design/tokens.json"
+    SNAKE_TRANSLATIONS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../translations")
 target_link_libraries(snake_theme_tests
     PRIVATE Qt6::Quick Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_theme_tests)

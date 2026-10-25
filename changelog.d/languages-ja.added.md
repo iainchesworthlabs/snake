@@ -1,0 +1,1 @@
+**The game speaks Japanese.** Every screen is translated, mostly in hiragana and katakana so that a child can read it, and the Chinese and Japanese text is drawn in Noto Sans fonts that the game carries, cut down to the characters it uses. The translation is made by machine and has not been read by a Japanese speaker.

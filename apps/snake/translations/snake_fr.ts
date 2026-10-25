@@ -130,7 +130,7 @@
     </message>
     <message>
         <source>No scores yet.</source>
-        <translation>Aucun score pour l'instant.</translation>
+        <translation>Aucun score pour l&apos;instant.</translation>
     </message>
     <message>
         <source>Play</source>
@@ -230,7 +230,7 @@
     </message>
     <message>
         <source>Recalibrate tilt</source>
-        <translation>Recalibrer l'inclinaison</translation>
+        <translation>Recalibrer l&apos;inclinaison</translation>
     </message>
     <message>
         <source>Hold it how you like to play, then tap.</source>
@@ -277,7 +277,7 @@
     </message>
     <message>
         <source>Reduced motion</source>
-        <translation>Moins d'animations</translation>
+        <translation>Moins d&apos;animations</translation>
     </message>
     <message>
         <source>Invert axes</source>

@@ -60,7 +60,10 @@ QString AboutInfo::noticesText()
 
 QString AboutInfo::fontLicenceText()
 {
-    return read_resource(QStringLiteral(":/snake/about/font-licence.txt"));
+    // The game's own font, then the fonts for the other scripts.
+    return read_resource(QStringLiteral(":/snake/about/font-licence.txt")) +
+           QStringLiteral("\n\n================================================================================\n\n") +
+           read_resource(QStringLiteral(":/snake/about/font-licence-noto.txt"));
 }
 
 } // namespace snake::ui

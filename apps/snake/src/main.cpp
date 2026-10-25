@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
     // A font that fails to load leaves the fallback families of the font in use, so the game still runs.
     snake::ui::load_fonts();
-    QGuiApplication::setFont(snake::ui::application_font());
+    QGuiApplication::setFont(snake::ui::application_font(locale));
 
     // The catalogues are compiled into the executable. A language without one shows the English source.
     QTranslator translator;
