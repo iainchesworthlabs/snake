@@ -4,6 +4,7 @@
 #include "theme/tokens.hpp"
 
 #include <QFontDatabase>
+#include <QGuiApplication>
 #include <QStringList>
 #include <array>
 #include <cstdint>
@@ -14,7 +15,7 @@ namespace snake::ui
 namespace
 {
 
-constexpr std::array<const char*, 8> FONT_FILES = {
+constexpr std::array<const char*, 10> FONT_FILES = {
     ":/snake/fonts/pixelify-sans-latin-400-normal.woff2",
     ":/snake/fonts/pixelify-sans-latin-500-normal.woff2",
     ":/snake/fonts/pixelify-sans-latin-600-normal.woff2",
@@ -23,6 +24,8 @@ constexpr std::array<const char*, 8> FONT_FILES = {
     ":/snake/fonts/noto-sans-jp-700.woff2",
     ":/snake/fonts/noto-sans-sc-400.woff2",
     ":/snake/fonts/noto-sans-sc-700.woff2",
+    ":/snake/fonts/noto-sans-hebrew-400.woff2",
+    ":/snake/fonts/noto-sans-hebrew-700.woff2",
 };
 
 QColor colour_of(std::uint32_t rgb)
@@ -50,12 +53,25 @@ QFont application_font(const QLocale& locale)
     const QString simplified = QStringLiteral("Noto Sans SC");
     QFont font;
     font.setFamilies({QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size()),
-                      chinese ? simplified : japanese, chinese ? japanese : simplified, QStringLiteral("Courier New"),
-                      QStringLiteral("monospace")});
+                      QStringLiteral("Noto Sans Hebrew"), chinese ? simplified : japanese,
+                      chinese ? japanese : simplified, QStringLiteral("Courier New"), QStringLiteral("monospace")});
     return font;
 }
 
-Theme::Theme(QObject* parent) : QObject(parent) {}
+Theme::Theme(QObject* parent) : QObject(parent)
+{
+    connect(qGuiApp, &QGuiApplication::layoutDirectionChanged, this, &Theme::rightToLeftChanged);
+}
+
+bool Theme::rightToLeft()
+{
+    return QGuiApplication::layoutDirection() == Qt::RightToLeft;
+}
+
+double Theme::mirrored(double x, double width, double container)
+{
+    return rightToLeft() ? container - x - width : x;
+}
 
 QColor Theme::background() const
 {

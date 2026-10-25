@@ -41,6 +41,7 @@ Item {
     }
 
     Text {
+        anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         color: Theme.ink
         font.pixelSize: root.fontSize
@@ -62,7 +63,8 @@ Item {
         border.color: Theme.ink
 
         Rectangle {
-            x: root.checked ? track.width - width - 7 : 7
+            // On is towards the end of the line: the right in English, the left in Hebrew.
+            x: root.checked !== LayoutMirroring.enabled ? track.width - width - 7 : 7
             anchors.verticalCenter: parent.verticalCenter
             width: 22
             height: 22

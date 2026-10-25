@@ -16,7 +16,9 @@ set(SNAKE_NOTO_FILES
     noto-sans-jp-400.woff2
     noto-sans-jp-700.woff2
     noto-sans-sc-400.woff2
-    noto-sans-sc-700.woff2)
+    noto-sans-sc-700.woff2
+    noto-sans-hebrew-400.woff2
+    noto-sans-hebrew-700.woff2)
 function(snake_add_font_resources target)
     list(TRANSFORM SNAKE_FONT_FILES PREPEND "${SNAKE_FONT_DIR}/" OUTPUT_VARIABLE font_paths)
     qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_FONT_DIR}" FILES ${font_paths})
@@ -168,6 +170,7 @@ snake_add_ui_module(snake_app)
 qt_add_translations(snake_app
     TS_FILES translations/snake_en.ts translations/snake_zh_CN.ts translations/snake_fr.ts
              translations/snake_es.ts translations/snake_de.ts translations/snake_ja.ts
+             translations/snake_he.ts translations/snake_yi.ts
     LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app PRIVATE snake::core)

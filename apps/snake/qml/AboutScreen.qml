@@ -26,19 +26,19 @@ FocusScope {
     PhonePage {
         ToyButton {
             objectName: "aboutBackButton"
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 28
             width: 46
             height: 46
             radius: 10
-            text: "<"
+            text: LayoutMirroring.enabled ? ">" : "<"
             fontSize: 24
             Accessible.name: qsTr("Back")
             onClicked: root.closed()
         }
 
         ShadowText {
-            x: 74
+            x: Theme.mirrored(74, width, 390)
             maxWidth: 300
             y: 26
             offset: 3

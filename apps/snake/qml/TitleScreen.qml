@@ -110,6 +110,7 @@ FocusScope {
             spacing: 10
 
             Text {
+                width: parent.width
                 color: Theme.ink
                 font.pixelSize: 17
                 font.weight: Font.DemiBold
@@ -154,7 +155,7 @@ FocusScope {
 
         ToyButton {
             objectName: "leaderboardButton"
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 762
             width: 300
             height: 50
@@ -164,7 +165,7 @@ FocusScope {
 
         ToyButton {
             objectName: "settingsButton"
-            x: 325
+            x: Theme.mirrored(325, width, 390)
             y: 762
             width: 50
             height: 50

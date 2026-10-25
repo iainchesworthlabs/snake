@@ -96,11 +96,14 @@ def main() -> None:
             continue
         source = download(font, sources)
         for label, weight in WEIGHTS.items():
-            variable = ttLib.TTFont(source)
+            variable = ttLib.TTFont(source, recalcTimestamp=False)
             axes = {"wght": weight}
             if any(axis.axisTag == "wdth" for axis in variable["fvar"].axes):
                 axes["wdth"] = 100
+            modified = variable["head"].modified
             static = instancer.instantiateVariableFont(variable, axes, updateFontNames=True)
+            # Keep the date of the source, so that running the script again gives the same files.
+            static["head"].modified = modified
 
             options = subset.Options()
             options.flavor = "woff2"

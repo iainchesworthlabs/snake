@@ -46,13 +46,13 @@ FocusScope {
     PhonePage {
         ToyButton {
             objectName: "noticeBackButton"
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 28
             width: 46
             height: 46
             radius: 10
             activeFocusOnTab: false
-            text: "<"
+            text: LayoutMirroring.enabled ? ">" : "<"
             fontSize: 24
             Accessible.name: qsTr("Back")
             onClicked: root.closed()
@@ -60,7 +60,7 @@ FocusScope {
 
         ShadowText {
             objectName: "noticeTitle"
-            x: 74
+            x: Theme.mirrored(74, width, 390)
             maxWidth: 300
             y: 26
             offset: 3
@@ -87,6 +87,9 @@ FocusScope {
                 width: parent.width - 24
                 height: parent.height - 24
                 clip: true
+                // The licences are in English: they read from the left whatever the language of the game is.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 contentWidth: width
                 contentHeight: bodyText.height
                 boundsBehavior: Flickable.StopAtBounds

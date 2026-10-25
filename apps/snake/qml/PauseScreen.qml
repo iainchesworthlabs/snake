@@ -108,6 +108,7 @@ FocusScope {
                     spacing: 8
 
                     Text {
+                        width: parent.width
                         color: Theme.ink
                         font.pixelSize: 16
                         font.weight: Font.Medium

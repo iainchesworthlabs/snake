@@ -16,8 +16,9 @@ FocusScope {
     signal closed
     signal aboutRequested
 
-    // The mode whose leaderboard the dialog asks about.
+    // The mode whose leaderboard the dialog asks about, and the button that asked, which gets the keyboard back.
     property int resetMode: GameViewModel.Mode.Easy
+    property Item resetOpener
     readonly property string resetModeName: resetMode === GameViewModel.Mode.Easy ? qsTr("Easy") : qsTr("Classic")
 
     onVisibleChanged: {
@@ -25,6 +26,14 @@ FocusScope {
             confirm.visible = false;
             soundToggle.forceActiveFocus();
         }
+    }
+
+    // Takes the question away and gives the keyboard back to the button that asked it: the buttons behind the question
+    // were switched off, and a switched off button loses the keyboard.
+    function closeConfirm() {
+        confirm.visible = false;
+        if (resetOpener)
+            resetOpener.forceActiveFocus();
     }
 
     Accessible.role: Accessible.Pane
@@ -40,19 +49,19 @@ FocusScope {
 
             ToyButton {
                 objectName: "settingsBackButton"
-                x: 15
+                x: Theme.mirrored(15, width, 390)
                 y: 28
                 width: 46
                 height: 46
                 radius: 10
-                text: "<"
+                text: LayoutMirroring.enabled ? ">" : "<"
                 fontSize: 24
                 Accessible.name: qsTr("Back")
                 onClicked: root.closed()
             }
 
             ShadowText {
-                x: 74
+                x: Theme.mirrored(74, width, 390)
                 maxWidth: 300
                 y: 26
                 offset: 3
@@ -133,7 +142,7 @@ FocusScope {
             }
 
             Text {
-                x: 15
+                x: Theme.mirrored(15, width, 390)
                 y: 100 + switches.height + 26
                 objectName: "resetLabel"
                 color: Theme.ink
@@ -154,6 +163,7 @@ FocusScope {
                     text: qsTr("Easy")
                     onClicked: {
                         root.resetMode = GameViewModel.Mode.Easy;
+                        root.resetOpener = this;
                         confirm.visible = true;
                     }
                 }
@@ -165,6 +175,7 @@ FocusScope {
                     text: qsTr("Classic")
                     onClicked: {
                         root.resetMode = GameViewModel.Mode.Classic;
+                        root.resetOpener = this;
                         confirm.visible = true;
                     }
                 }
@@ -194,8 +205,8 @@ FocusScope {
         cancelText: qsTr("Keep my scores")
         onConfirmed: {
             root.profile.resetLeaderboard(root.resetMode);
-            confirm.visible = false;
+            root.closeConfirm();
         }
-        onCancelled: confirm.visible = false
+        onCancelled: root.closeConfirm()
     }
 }

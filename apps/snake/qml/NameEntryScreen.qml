@@ -110,7 +110,7 @@ FocusScope {
                             color: row.modelData.mine ? Theme.accent : "transparent"
 
                             Text {
-                                x: 8
+                                x: Theme.mirrored(8, width, row.width)
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: Theme.ink
                                 font.pixelSize: 16
@@ -119,7 +119,7 @@ FocusScope {
                             }
 
                             Text {
-                                x: 44
+                                x: Theme.mirrored(44, width, row.width)
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: Theme.ink
                                 font.pixelSize: 16
@@ -143,7 +143,7 @@ FocusScope {
         }
 
         Text {
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 300
             color: Theme.ink
             font.pixelSize: 15
@@ -167,6 +167,9 @@ FocusScope {
             x: 15
             y: 326
             spacing: 5
+            // The name is letters from A to Z, whatever the language: the first letter is on the left.
+            LayoutMirroring.enabled: false
+            LayoutMirroring.childrenInherit: true
 
             Repeater {
                 model: root.slotCount
@@ -198,7 +201,7 @@ FocusScope {
 
         // The names used last, one tap each.
         Row {
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 386
             spacing: 8
 
@@ -247,6 +250,9 @@ FocusScope {
             x: 15
             y: 448
             columns: 7
+            // A to Z from the left, as on a keyboard.
+            LayoutMirroring.enabled: false
+            LayoutMirroring.childrenInherit: true
             rowSpacing: 7
             columnSpacing: 6
 

@@ -10,6 +10,10 @@ FocusScope {
     required property ProfileViewModel profile
     required property EffectsModel effects
 
+    // The score on the leading side and the best on the other: the other way round in a language read from right to left.
+    LayoutMirroring.enabled: Theme.rightToLeft
+    LayoutMirroring.childrenInherit: true
+
     Accessible.role: Accessible.Pane
     Accessible.name: qsTr("Game")
 
@@ -109,6 +113,7 @@ FocusScope {
             Text {
                 id: bestText
 
+                objectName: "bestScore"
                 anchors.centerIn: parent
                 color: Theme.surface
                 font.pixelSize: 24
