@@ -15,8 +15,11 @@ add_executable(snake_viewmodel_tests
     test_game_view_model.cpp
     test_profile_view_model.cpp
     test_qt_keys.cpp
+    test_save_file.cpp
     ../src/input/qt_keys.cpp
     ../src/input/qt_keys.hpp
+    ../src/platform/save_file.cpp
+    ../src/platform/save_file.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
     ../src/viewmodel/mode_list_model.cpp

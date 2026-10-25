@@ -40,6 +40,8 @@ set(SNAKE_UI_SOURCES
     src/board/board_scene.hpp
     src/input/qt_keys.cpp
     src/input/qt_keys.hpp
+    src/platform/save_file.cpp
+    src/platform/save_file.hpp
     src/theme/theme.cpp
     src/theme/theme.hpp
     src/theme/tokens.hpp
@@ -124,7 +126,9 @@ if(SNAKE_BUILD_TESTS)
             ENVIRONMENT "${snake_ui_test_environment}")
 
     # Starts the real application without a display, waits for the first frame and exits.
-    add_test(NAME app.smoke COMMAND snake_app --smoke-test)
+    # The save file is in the build tree, so the run neither reads nor writes the user's own.
+    add_test(NAME app.smoke
+        COMMAND snake_app --smoke-test --save-file "${CMAKE_CURRENT_BINARY_DIR}/smoke-save.snk")
     set_tests_properties(app.smoke PROPERTIES
         LABELS ui
         TIMEOUT 60

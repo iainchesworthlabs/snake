@@ -131,6 +131,16 @@ public:
         click("playButton");
     }
 
+    /// Types `name` into the profile and saves the score that waits for it.
+    void save_score_as(const QString& name)
+    {
+        for (const QChar letter : name)
+        {
+            m_Profile->typeCharacter(QString(letter));
+        }
+        REQUIRE(m_Profile->saveScore());
+    }
+
     /// Plays a Classic game straight on until the snake hits the wall.
     void crash()
     {
@@ -514,6 +524,7 @@ TEST_CASE("The game over screen says how far the game was from the best", "[scre
     const UsLocale locale;
     App app;
     app.profile().record_game(Mode::CLASSIC, 1480);
+    app.save_score_as("MUM");
     app.start_classic();
     app.crash();
     REQUIRE(app.game().points() < 1480);
@@ -532,6 +543,7 @@ TEST_CASE("The game over screen announces a new best, a matched best and a mode 
     app.profile().record_game(Mode::CLASSIC, 5000);
     CHECK(app.text_of("verdict") == "New best!");
     CHECK(app.text_of("unlocked") == "Portals unlocked!\nHot potato unlocked!");
+    app.save_score_as("MUM");
 
     app.profile().record_game(Mode::CLASSIC, 5000);
     CHECK(app.text_of("verdict") == "You matched your best.");
