@@ -29,19 +29,19 @@ FocusScope {
     PhonePage {
         ToyButton {
             objectName: "backButton"
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 28
             width: 46
             height: 46
             radius: 10
-            text: "<"
+            text: LayoutMirroring.enabled ? ">" : "<"
             fontSize: 24
             Accessible.name: qsTr("Back")
             onClicked: root.closed()
         }
 
         ShadowText {
-            x: 74
+            x: Theme.mirrored(74, width, 390)
             maxWidth: 300
             y: 26
             offset: 3
@@ -74,7 +74,7 @@ FocusScope {
         }
 
         Text {
-            x: 15
+            x: Theme.mirrored(15, width, 390)
             y: 152
             color: Theme.ink
             font.pixelSize: 15
@@ -142,7 +142,7 @@ FocusScope {
 
                             // The first three places have a coloured tile.
                             Rectangle {
-                                x: 6
+                                x: Theme.mirrored(6, width, line.width)
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 32
                                 height: 32
@@ -161,7 +161,7 @@ FocusScope {
                             }
 
                             Text {
-                                x: 52
+                                x: Theme.mirrored(52, width, line.width)
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: Theme.ink
                                 font.pixelSize: 17

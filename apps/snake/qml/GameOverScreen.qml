@@ -109,6 +109,7 @@ FocusScope {
                         Column {
                             id: scoreColumn
 
+                            anchors.left: parent.left
                             spacing: 4
 
                             Text {

@@ -37,6 +37,8 @@ class Theme : public QObject
     Q_PROPERTY(QColor medalSilver READ medalSilver CONSTANT FINAL)
     Q_PROPERTY(QColor medalBronze READ medalBronze CONSTANT FINAL)
     Q_PROPERTY(QString fontFamily READ fontFamily CONSTANT FINAL)
+    /// The language reads from right to left: the screens are mirrored.
+    Q_PROPERTY(bool rightToLeft READ rightToLeft NOTIFY rightToLeftChanged FINAL)
 
 public:
     explicit Theme(QObject* parent = nullptr);
@@ -53,6 +55,16 @@ public:
     [[nodiscard]] QColor medalSilver() const;
     [[nodiscard]] QColor medalBronze() const;
     [[nodiscard]] QString fontFamily() const;
+
+    [[nodiscard]] static bool rightToLeft();
+
+    /// The left edge of something `width` wide that is `x` from the left of a space `container` wide, or, when the
+    /// language reads right to left, the same distance from the right. QML places most things with anchors, which
+    /// mirror by themselves; this is for what has a plain x.
+    Q_INVOKABLE [[nodiscard]] static double mirrored(double x, double width, double container);
+
+signals:
+    void rightToLeftChanged();
 };
 
 } // namespace snake::ui

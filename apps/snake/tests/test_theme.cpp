@@ -163,11 +163,12 @@ TEST_CASE("the font of the language comes first for the characters Japanese and 
 {
     const QStringList japanese = snake::ui::application_font(QLocale(QLocale::Japanese)).families();
     CHECK(japanese.at(0) == QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size()));
-    CHECK(japanese.at(1) == "Noto Sans JP");
-    CHECK(japanese.at(2) == "Noto Sans SC");
+    CHECK(japanese.at(1) == "Noto Sans Hebrew");
+    CHECK(japanese.at(2) == "Noto Sans JP");
+    CHECK(japanese.at(3) == "Noto Sans SC");
     const QStringList chinese = snake::ui::application_font(QLocale(QLocale::Chinese, QLocale::China)).families();
-    CHECK(chinese.at(1) == "Noto Sans SC");
-    CHECK(chinese.at(2) == "Noto Sans JP");
+    CHECK(chinese.at(2) == "Noto Sans SC");
+    CHECK(chinese.at(3) == "Noto Sans JP");
     // Every other language gets the same fallbacks, and the monospace of the tokens last.
     CHECK(snake::ui::application_font(QLocale(QLocale::French)).families().last() == "monospace");
 }

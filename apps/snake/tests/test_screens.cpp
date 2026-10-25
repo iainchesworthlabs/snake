@@ -13,6 +13,7 @@
 
 #include <QtTest/QTest>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <QByteArray>
@@ -1014,6 +1015,28 @@ TEST_CASE("Resetting a leaderboard asks first and keeps the scores if the player
     CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).size() == 1);
 }
 
+TEST_CASE("After the question the keyboard is back on the button that asked it, so Escape leaves the settings",
+          "[screens][settings]")
+{
+    App app;
+    app.click("settingsButton");
+    app.click("resetClassicButton");
+    REQUIRE(app.shows("resetConfirm"));
+    app.press(Qt::Key_Escape);
+    CHECK_FALSE(app.shows("resetConfirm"));
+    CHECK(app.focus_name() == "resetClassicButton");
+    // The next Escape is the settings' own: it goes back to the title.
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("settingsScreen"));
+
+    // And after a yes.
+    app.click("settingsButton");
+    app.click("resetEasyButton");
+    app.click("confirmButton");
+    CHECK(app.focus_name() == "resetEasyButton");
+}
+
 TEST_CASE("Resetting a leaderboard that the player confirms empties that one only", "[screens][settings]")
 {
     App app;
@@ -1462,9 +1485,11 @@ namespace
 class InLanguage
 {
 public:
-    explicit InLanguage(const QString& code) : m_Previous(QLocale())
+    explicit InLanguage(const QString& code) : m_Previous(QLocale()), m_Direction(QGuiApplication::layoutDirection())
     {
         QLocale::setDefault(QLocale(code));
+        // As the program does, the direction is the language's: Hebrew and Yiddish read from right to left.
+        QGuiApplication::setLayoutDirection(QLocale(code).textDirection());
         if (code != "en")
         {
             const QString file = QString("%1/snake_%2.qm").arg(QStringLiteral(SNAKE_QM_DIR), code);
@@ -1482,10 +1507,12 @@ public:
             QGuiApplication::removeTranslator(&m_Translator);
         }
         QLocale::setDefault(m_Previous);
+        QGuiApplication::setLayoutDirection(m_Direction);
     }
 
 private:
     QLocale m_Previous;
+    Qt::LayoutDirection m_Direction;
     QTranslator m_Translator;
     bool m_Installed = false;
 };
@@ -1544,7 +1571,7 @@ QStringList misfits(QQuickWindow& window)
         }
         if (!page.adjusted(-1, -1, 1, 1).contains(where))
         {
-            complaints << QString("\"%1\" is off the page").arg(words);
+            complaints << QString("\"%1\" is off the page (%2 to %3)").arg(words).arg(where.left()).arg(where.right());
         }
         if (const QQuickItem* box = box_around(text))
         {
@@ -1566,7 +1593,7 @@ void check_fit(App& app, const char* screen)
     CHECK(bad.isEmpty());
 }
 
-constexpr std::array<const char*, 6> TESTED_LANGUAGES = {"en", "fr", "es", "de", "ja", "zh_CN"};
+constexpr std::array<const char*, 8> TESTED_LANGUAGES = {"en", "fr", "es", "de", "ja", "zh_CN", "he", "yi"};
 
 /// What the screens are made to hold at their fullest, so that the longest text is on show.
 void fill_the_profile(App& app)
@@ -1639,4 +1666,179 @@ TEST_CASE("A name in another script is set smaller than the pixel wordmark, to s
     const QQuickItem* preview = app.item("attractPreview");
     const double bottom = wordmark->mapRectToScene(QRectF(0, 0, wordmark->width(), wordmark->height())).bottom();
     CHECK(bottom <= preview->mapToScene(QPointF(0, 0)).y());
+}
+
+namespace
+{
+
+/// The middle of an item, across the window.
+double centre_x(App& app, const char* name)
+{
+    QQuickItem* item = app.item(name);
+    return item->mapToScene(QPointF(item->width() / 2, 0)).x();
+}
+
+} // namespace
+
+TEST_CASE("Hebrew and Yiddish read from right to left and the other languages from left to right", "[screens][rtl]")
+{
+    for (const char* code : {"he", "yi"})
+    {
+        CHECK(QLocale(code).textDirection() == Qt::RightToLeft);
+    }
+    for (const char* code : {"en", "fr", "es", "de", "ja", "zh_CN"})
+    {
+        CHECK(QLocale(code).textDirection() == Qt::LeftToRight);
+    }
+}
+
+TEST_CASE("The title mirrors: the settings button is on the left and the leaderboard on the right", "[screens][rtl]")
+{
+    {
+        const InLanguage language("en");
+        App app;
+        CHECK(centre_x(app, "leaderboardButton") < centre_x(app, "settingsButton"));
+    }
+    for (const char* code : {"he", "yi"})
+    {
+        const InLanguage language(code);
+        App app;
+        INFO("language " << code);
+        CHECK(centre_x(app, "leaderboardButton") > centre_x(app, "settingsButton"));
+        // The mode cards are the width of the page, and their words start on the right.
+        QQuickItem* card = app.item("modeCard0");
+        const QRectF where = card->mapRectToScene(QRectF(0, 0, card->width(), card->height()));
+        CHECK(where.center().x() == Catch::Approx(PAGE_WIDTH / 2.0).margin(2.0));
+    }
+}
+
+TEST_CASE("A screen with a back button has it on the right, and the heading beside it", "[screens][rtl]")
+{
+    {
+        const InLanguage language("en");
+        App app;
+        app.click("leaderboardButton");
+        CHECK(centre_x(app, "backButton") < PAGE_WIDTH / 2.0);
+    }
+    const InLanguage language("he");
+    App app;
+    app.click("leaderboardButton");
+    CHECK(centre_x(app, "backButton") > PAGE_WIDTH / 2.0);
+    // The heading is on the right too, to the left of the back button, and not off the page.
+    std::vector<QQuickItem*> texts;
+    collect_texts(app.item("leaderboardScreen"), texts);
+    QQuickItem* heading = nullptr;
+    for (QQuickItem* text : texts)
+    {
+        if (text->property("text").toString() == "לוח תוצאות")
+        {
+            heading = text;
+        }
+    }
+    REQUIRE(heading != nullptr);
+    CHECK(heading->mapToScene(QPointF(heading->width(), 0)).x() < centre_x(app, "backButton"));
+    CHECK(heading->mapToScene(QPointF(heading->width() / 2, 0)).x() > PAGE_WIDTH / 2.0);
+}
+
+TEST_CASE("The back arrow points the way back", "[screens][rtl]")
+{
+    {
+        const InLanguage language("en");
+        App app;
+        app.click("settingsButton");
+        QQuickItem* back = app.item("settingsBackButton");
+        CHECK(back->property("text").toString() == "<");
+    }
+    {
+        const InLanguage language("he");
+        App app;
+        app.click("settingsButton");
+        QQuickItem* back = app.item("settingsBackButton");
+        CHECK(back->property("text").toString() == ">");
+    }
+}
+
+TEST_CASE("The switches mirror: the label on the right, the switch on the left, and on is towards the end",
+          "[screens][rtl]")
+{
+    const auto track_of = [](App& app, const char* toggle)
+    { return app.item(toggle)->findChild<QQuickItem*>("track"); };
+    const auto label_x = [](App& app, const char* toggle)
+    {
+        // The text of the switch: the first text child.
+        std::vector<QQuickItem*> texts;
+        collect_texts(app.item(toggle), texts);
+        REQUIRE_FALSE(texts.empty());
+        return texts.front()->mapToScene(QPointF(0, 0)).x();
+    };
+    {
+        const InLanguage language("en");
+        App app;
+        app.click("settingsButton");
+        CHECK(label_x(app, "soundToggle") < track_of(app, "soundToggle")->mapToScene(QPointF(0, 0)).x());
+    }
+    const InLanguage language("he");
+    App app;
+    app.click("settingsButton");
+    CHECK(label_x(app, "soundToggle") > track_of(app, "soundToggle")->mapToScene(QPointF(0, 0)).x());
+}
+
+TEST_CASE("The score is on the right and the best on the left while a game is played", "[screens][rtl]")
+{
+    {
+        const InLanguage language("en");
+        App app;
+        app.start_classic();
+        CHECK(centre_x(app, "score") < centre_x(app, "bestScore"));
+    }
+    const InLanguage language("he");
+    App app;
+    app.start_classic();
+    CHECK(centre_x(app, "score") > centre_x(app, "bestScore"));
+}
+
+TEST_CASE("The name is typed from the left even where the page reads from the right", "[screens][rtl]")
+{
+    const InLanguage language("he");
+    App app;
+    app.start_classic();
+    app.crash();
+    app.profile().record_game(Mode::CLASSIC, 1280);
+    app.click("saveScoreButton");
+    CHECK(centre_x(app, "slot0") < centre_x(app, "slot1"));
+    CHECK(centre_x(app, "slot0") < PAGE_WIDTH / 2.0);
+    // The letters of the grid run from the left, A first.
+    CHECK(centre_x(app, "keyA") < centre_x(app, "keyB"));
+    app.type("maya");
+    CHECK(app.item("slot0")->property("letter").toString() == "M");
+}
+
+TEST_CASE("The leaderboard lines mirror: the place and the name start on the right and the score is on the left",
+          "[screens][rtl]")
+{
+    const InLanguage language("he");
+    App app;
+    fill_the_profile(app);
+    app.click("leaderboardButton");
+    app.click("classicTab");
+    QQuickItem* line = app.item("line1");
+    std::vector<QQuickItem*> texts;
+    collect_texts(line, texts);
+    REQUIRE(texts.size() == 3);
+    // Place, name and score, in the order they are made: the place and the name are to the right of the score.
+    const auto x_of = [](QQuickItem* item) { return item->mapToScene(QPointF(0, 0)).x(); };
+    CHECK(x_of(texts[0]) > x_of(texts[2]));
+    CHECK(x_of(texts[1]) > x_of(texts[2]));
+}
+
+TEST_CASE("The licence text reads from the left in a language read from the right", "[screens][rtl]")
+{
+    const InLanguage language("he");
+    App app;
+    app.click("settingsButton");
+    app.click("aboutButton");
+    app.click("licenceButton");
+    QQuickItem* body = app.item("noticeBody");
+    // Left-aligned text: its box starts at the left of the panel.
+    CHECK(body->mapToScene(QPointF(0, 0)).x() < 60);
 }
