@@ -7,6 +7,7 @@
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
 #include "theme/tokens.hpp"
+#include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/profile_view_model.hpp"
 
@@ -64,8 +65,10 @@ public:
         REQUIRE(QTest::qWaitForWindowActive(m_Window));
         m_Game = m_Window->findChild<GameViewModel*>("game");
         m_Profile = m_Window->findChild<ProfileViewModel*>("profile");
+        m_Effects = m_Window->findChild<snake::ui::EffectsModel*>("effects");
         REQUIRE(m_Game != nullptr);
         REQUIRE(m_Profile != nullptr);
+        REQUIRE(m_Effects != nullptr);
     }
 
     QQuickWindow& window()
@@ -81,6 +84,11 @@ public:
     ProfileViewModel& profile()
     {
         return *m_Profile;
+    }
+
+    snake::ui::EffectsModel& effects()
+    {
+        return *m_Effects;
     }
 
     QQuickItem* item(const char* name)
@@ -201,6 +209,7 @@ private:
     QQuickWindow* m_Window = nullptr;
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
+    snake::ui::EffectsModel* m_Effects = nullptr;
 };
 
 // Numbers in the text are written for the player's locale; the tests fix one.
@@ -1253,4 +1262,77 @@ TEST_CASE("A switch is heard, and a screen with the sound off is not", "[screens
     // Now the sound is off while the switch is pressed, so the press that turns it on is silent.
     CHECK(sink.effects.empty());
     CHECK(app.profile().sound());
+}
+
+namespace
+{
+
+/// How many pixels of `colour` the image has.
+int count_pixels(const QImage& image, QRgb colour)
+{
+    int count = 0;
+    for (int y = 0; y < image.height(); ++y)
+    {
+        for (int x = 0; x < image.width(); ++x)
+        {
+            count += image.pixel(x, y) == colour ? 1 : 0;
+        }
+    }
+    return count;
+}
+
+} // namespace
+
+TEST_CASE("The burst of a food is drawn on the board and goes", "[screens][effects]")
+{
+    App app;
+    app.start_classic();
+    const QImage before = app.render();
+    const int leaf_before = count_pixels(before, rgb_of(tokens::LEAF));
+
+    emit app.game().tickEvent(GameViewModel::Event::Ate);
+    CHECK(app.effects().active());
+    const QImage during = app.render();
+    // The specks are in the colours of the food, and the leaf green is one of them.
+    CHECK(count_pixels(during, rgb_of(tokens::LEAF)) > leaf_before);
+
+    // Time passes and the burst is over.
+    for (int i = 0; i < 120 && app.effects().active(); ++i)
+    {
+        app.effects().advance(1.0 / 60.0);
+    }
+    CHECK_FALSE(app.effects().active());
+    CHECK(count_pixels(app.render(), rgb_of(tokens::LEAF)) == leaf_before);
+}
+
+TEST_CASE("The frame animation moves the effects on", "[screens][effects]")
+{
+    App app;
+    app.start_classic();
+    emit app.game().tickEvent(GameViewModel::Event::Ate);
+    REQUIRE(app.effects().active());
+    // Real time: the burst is over within a second or so.
+    for (int i = 0; i < 100 && app.effects().active(); ++i)
+    {
+        QTest::qWait(20);
+    }
+    CHECK_FALSE(app.effects().active());
+}
+
+TEST_CASE("A crash shakes the board unless reduced motion is on", "[screens][effects]")
+{
+    {
+        App app;
+        app.start_classic();
+        emit app.game().tickEvent(GameViewModel::Event::Crashed);
+        CHECK(app.effects().active());
+    }
+    {
+        App app;
+        app.profile().setReducedMotion(true);
+        CHECK(app.effects().reducedMotion());
+        app.start_classic();
+        emit app.game().tickEvent(GameViewModel::Event::Crashed);
+        CHECK_FALSE(app.effects().active());
+    }
 }

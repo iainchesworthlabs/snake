@@ -2,6 +2,7 @@
 #pragma once
 
 #include "board/board_scene.hpp"
+#include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 
 #include <QtQml/qqmlregistration.h>
@@ -26,6 +27,8 @@ class BoardItem : public QQuickItem
     /// How far the food and the bonus item are raised, from 0 to 1. A QML animation moves it up and down so the food
     /// bobs.
     Q_PROPERTY(qreal foodLift READ foodLift WRITE setFoodLift NOTIFY foodLiftChanged FINAL)
+    /// The burst of specks, the rising points and the shake. Without it the board is drawn plain.
+    Q_PROPERTY(snake::ui::EffectsModel* effects READ effects WRITE setEffects NOTIFY effectsChanged FINAL)
 
 public:
     explicit BoardItem(QQuickItem* parent = nullptr);
@@ -44,15 +47,24 @@ public:
 
     void setFoodLift(qreal lift);
 
+    [[nodiscard]] EffectsModel* effects() const
+    {
+        return m_Effects;
+    }
+
+    void setEffects(EffectsModel* effects);
+
 signals:
     void gameChanged();
     void foodLiftChanged();
+    void effectsChanged();
 
 protected:
     QSGNode* updatePaintNode(QSGNode* old_node, UpdatePaintNodeData* data) override;
 
 private:
     QPointer<GameViewModel> m_Game;
+    QPointer<EffectsModel> m_Effects;
     qreal m_FoodLift = 0.0;
     /// The layout the background was last drawn for, so that it is drawn again only when the layout changes.
     board_scene::Layout m_DrawnLayout;

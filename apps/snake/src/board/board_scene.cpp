@@ -8,10 +8,13 @@
 #include <QPoint>
 #include <QRect>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <string>
+#include <vector>
 
 namespace snake::ui::board_scene
 {
@@ -393,6 +396,106 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
         add_segment(shapes, layout, position_of(index - 1), stripe_colour(index - 1), SEGMENT_RADIUS);
     }
     add_head(shapes, layout, position_of(0), motion.facing, layout.cells());
+    return shapes;
+}
+
+std::vector<QPoint> glyph_pixels(char glyph)
+{
+    // Three columns, five rows, row by row; '1' is a lit pixel.
+    constexpr std::array<const char*, 11> GLYPHS = {
+        "111101101101111", // 0
+        "010110010010111", // 1
+        "111001111100111", // 2
+        "111001111001111", // 3
+        "101101111001001", // 4
+        "111100111001111", // 5
+        "111100111101111", // 6
+        "111001001001001", // 7
+        "111101111101111", // 8
+        "111101111001111", // 9
+        "000010111010000", // +
+    };
+    std::vector<QPoint> pixels;
+    int index = -1;
+    if (glyph >= '0' && glyph <= '9')
+    {
+        index = glyph - '0';
+    }
+    else if (glyph == '+')
+    {
+        index = 10;
+    }
+    if (index < 0)
+    {
+        return pixels;
+    }
+    const char* rows = GLYPHS[static_cast<std::size_t>(index)];
+    for (int position = 0; position < 15; ++position)
+    {
+        if (rows[position] == '1')
+        {
+            pixels.emplace_back(position % 3, position / 3);
+        }
+    }
+    return pixels;
+}
+
+std::vector<Shape> effect_shapes(const Layout& layout, const effects::Effects& effects)
+{
+    std::vector<Shape> shapes;
+    if (layout.cell == 0)
+    {
+        return shapes;
+    }
+    const QRect cells = layout.cells();
+    const auto to_pixel = [&](double cell_x, double cell_y)
+    {
+        return QPoint(layout.origin.x() + static_cast<int>(std::lround(cell_x * layout.cell)),
+                      layout.origin.y() + static_cast<int>(std::lround(cell_y * layout.cell)));
+    };
+
+    for (const effects::Particle& speck : effects.particles())
+    {
+        // A fifth of a cell for most of a speck's life, and a little less at the end.
+        const int full = std::max(2, layout.cell / 5);
+        const int side = speck.age < effects::Effects::PARTICLE_LIFE * 0.6 ? full : std::max(1, full * 2 / 3);
+        const QPoint at = to_pixel(speck.x, speck.y);
+        const QRect rect(at.x() - (side / 2), at.y() - (side / 2), side, side);
+        if (cells.contains(rect))
+        {
+            shapes.push_back({rect, speck.colour});
+        }
+    }
+
+    const int unit = std::max(2, layout.cell / 8);
+    for (const effects::FloatingScore& score : effects.scores())
+    {
+        const std::string text = "+" + std::to_string(score.points);
+        const int shadow_offset = layout.pixel();
+        const int width = static_cast<int>(text.size()) * 4 * unit - unit + shadow_offset;
+        const double rise = effects::Effects::SCORE_RISE * effects::Effects::score_progress(score);
+        const QPoint centre =
+            to_pixel(static_cast<double>(score.cell.x) + 0.5, static_cast<double>(score.cell.y) - rise);
+        // Kept inside the cells, so the points of a food at the edge can still be read.
+        const int left =
+            std::clamp(centre.x() - (width / 2), cells.left(), std::max(cells.left(), cells.right() + 1 - width));
+        const int top = std::clamp(centre.y() - (unit * 5 / 2), cells.top(),
+                                   std::max(cells.top(), cells.bottom() + 1 - (5 * unit) - shadow_offset));
+        // The shadow first, one pixel of the art down and to the right, then the digits.
+        for (const bool shadow : {true, false})
+        {
+            const int offset = shadow ? shadow_offset : 0;
+            for (std::size_t i = 0; i < text.size(); ++i)
+            {
+                for (const QPoint pixel : glyph_pixels(text[i]))
+                {
+                    shapes.push_back({QRect(left + (static_cast<int>(i) * 4 * unit) + (pixel.x() * unit) + offset,
+                                            top + (pixel.y() * unit) + offset, unit, unit),
+                                      opaque(shadow ? tokens::INK : tokens::SURFACE)});
+                }
+            }
+        }
+    }
     return shapes;
 }
 
