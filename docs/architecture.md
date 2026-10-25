@@ -105,11 +105,21 @@ resumes, and Escape pauses until there is a menu. A held key's repeats are used 
 loses the focus pauses the game. Each new game takes its seed from the system's random number generator, or from a
 function the tests give. The state, score and mode are properties, and `boardChanged` tells the board item to redraw.
 
-`BoardItem` draws the board from the view-model's session as plain rectangles: the board, the body, the head, the food
-and the bonus item, in the largest square that fits the item. It uses the window's rectangle nodes
-(`QQuickWindow::createRectangleNode()`) and not its own geometry, because the software renderer, which the UI tests
-and CI use, draws only the standard node types and shows nothing for a custom one. The tests draw the item into an
-off-screen window and read the pixels back. The colours are placeholders until the board art arrives.
+`board_scene` works out what the board looks like and `BoardItem` hands it to the scene graph. The scene builder is
+plain C++ over the simulation's state: `layout_for()` picks the largest whole-pixel cell that fits the item, with the
+frame (a quarter of a cell) and its hard shadow (twice that), centred in the item; `background_shapes()` gives the
+shadow, the frame and the checkerboard; `game_shapes()` gives the striped snake, the head with its eyes and tongue,
+the food with its highlight and leaf, and the bonus item. Everything is rectangles on whole pixels, in the measures
+and colours of the design (rounded corners and the berries are built from rows of rectangles), so that every renderer
+draws it the same and the edges stay crisp. A cell of the body keeps its stripe colour for as long as it is on the
+snake. The shapes are tested as data, without a window.
+
+`BoardItem` turns the shapes into the window's rectangle nodes (`QQuickWindow::createRectangleNode()`) and not its own
+geometry, because the software renderer, which the UI tests and CI use, draws only the standard node types and shows
+nothing for a custom one. The background is drawn again only when the layout changes; the game's shapes are drawn
+again when the board changes or the food moves. The `foodLift` property, from 0 to 1, raises the food and the bonus
+item; `Main.qml` animates it up and down (0.9 seconds a cycle, ease in and out) so the food bobs. The tests draw the
+item into an off-screen window and read the pixels back.
 
 The look of the application comes from the Toybox Pixel design tokens in `docs/design/tokens.json`. `tokens.hpp` holds
 the colours and the font family as constants, and a test compares each with the JSON file, so a change to the file

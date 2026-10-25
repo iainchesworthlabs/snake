@@ -1,0 +1,1 @@
+**The board has its art.** The board is a framed teal checkerboard with a hard shadow. The snake is striped coral and cream, the head has eyes that look ahead and a tongue, the food is a blueberry with a leaf that bobs up and down, and the bonus item is gold. It follows the Toybox Pixel design. The window scales the board in whole-pixel cells, so the edges stay sharp.

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "board/board_item.hpp"
+#include "board/board_scene.hpp"
 #include "snake/sim/autoplayer.hpp"
 #include "snake/sim/cell.hpp"
 #include "snake/sim/direction.hpp"
+#include "theme/tokens.hpp"
 #include "viewmodel/game_view_model.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -23,13 +25,18 @@
 using snake::sim::Cell;
 using snake::ui::BoardItem;
 using snake::ui::GameViewModel;
-namespace colours = snake::ui::board_colors;
+namespace board_scene = snake::ui::board_scene;
+namespace tokens = snake::ui::tokens;
 
 namespace
 {
 
 constexpr QRgb WINDOW_COLOUR = 0xFF000000;
-constexpr int CELL = 20; // pixels, in a window 400 pixels square
+
+constexpr QRgb opaque(std::uint32_t rgb)
+{
+    return 0xFF000000U | rgb;
+}
 
 GameViewModel::SeedSource counting_seeds(std::uint64_t first = 1)
 {
@@ -71,10 +78,19 @@ private:
     BoardItem* m_Board = nullptr; // owned by the window's content item
 };
 
-/// The colour in the middle of a cell of a board that fills a window 400 pixels square.
+/// The colour in the middle of a cell, where the board is laid out as the item lays it out for the image's size.
 QRgb colour_of(const QImage& image, Cell cell)
 {
-    return image.pixel((cell.x * CELL) + (CELL / 2), (cell.y * CELL) + (CELL / 2));
+    const board_scene::Layout layout = board_scene::layout_for(image.size());
+    return image.pixel(layout.origin.x() + (cell.x * layout.cell) + (layout.cell / 2),
+                       layout.origin.y() + (cell.y * layout.cell) + (layout.cell / 2));
+}
+
+/// The colour the checkerboard has in a cell: the light squares are where the column and the row add up to an odd
+/// number.
+QRgb checker_colour(Cell cell)
+{
+    return opaque(((cell.x + cell.y) % 2 == 1) ? tokens::BOARD_LIGHT : tokens::BOARD_DARK);
 }
 
 /// A cell that is neither the snake's nor the food's, to check the board's own colour.
@@ -94,13 +110,15 @@ Cell empty_cell(const GameViewModel& model)
 
 } // namespace
 
-TEST_CASE("A board with no game draws nothing", "[board]")
+TEST_CASE("A board with no game draws the frame and the checkerboard only", "[board]")
 {
     Scene scene;
     const QImage image = scene.render();
     REQUIRE(image.width() == 400);
-    CHECK(colour_of(image, Cell{0, 0}) == WINDOW_COLOUR);
-    CHECK(colour_of(image, Cell{10, 10}) == WINDOW_COLOUR);
+    CHECK(image.pixel(0, 0) == WINDOW_COLOUR);
+    CHECK(colour_of(image, Cell{0, 0}) == checker_colour(Cell{0, 0}));
+    CHECK(colour_of(image, Cell{10, 10}) == checker_colour(Cell{10, 10}));
+    CHECK(colour_of(image, Cell{11, 10}) == checker_colour(Cell{11, 10}));
 }
 
 TEST_CASE("A new game shows the snake, the food and the board", "[board]")
@@ -111,11 +129,11 @@ TEST_CASE("A new game shows the snake, the food and the board", "[board]")
     const QImage image = scene.render();
 
     // The snake starts at the middle of the board heading right, with its body trailing to the left.
-    CHECK(colour_of(image, Cell{10, 10}) == colours::HEAD);
-    CHECK(colour_of(image, Cell{9, 10}) == colours::BODY);
-    CHECK(colour_of(image, Cell{8, 10}) == colours::BODY);
-    CHECK(colour_of(image, model.session().simulation().food()) == colours::FOOD);
-    CHECK(colour_of(image, empty_cell(model)) == colours::BACKGROUND);
+    CHECK(colour_of(image, Cell{10, 10}) == opaque(tokens::ACCENT));
+    CHECK(colour_of(image, Cell{9, 10}) == opaque(tokens::SURFACE));
+    CHECK(colour_of(image, Cell{8, 10}) == opaque(tokens::ACCENT));
+    CHECK(colour_of(image, model.session().simulation().food()) == opaque(tokens::FOOD));
+    CHECK(colour_of(image, empty_cell(model)) == checker_colour(empty_cell(model)));
 }
 
 TEST_CASE("The board is the largest square that fits, in the middle", "[board]")
@@ -125,10 +143,12 @@ TEST_CASE("The board is the largest square that fits, in the middle", "[board]")
     scene.board().setGame(&model);
     const QImage image = scene.render();
 
-    // 200 pixels square, from x = 100: cells of 10 pixels.
+    const board_scene::Layout layout = board_scene::layout_for(QSize(400, 200));
+    REQUIRE(layout.cell > 0);
+    CHECK(layout.cell * snake::sim::BOARD_ROWS <= 200);
     CHECK(image.pixel(50, 100) == WINDOW_COLOUR);
     CHECK(image.pixel(350, 100) == WINDOW_COLOUR);
-    CHECK(image.pixel(100 + (10 * 10) + 5, (10 * 10) + 5) == colours::HEAD);
+    CHECK(colour_of(image, Cell{10, 10}) == opaque(tokens::ACCENT));
 }
 
 TEST_CASE("The board follows the game", "[board]")
@@ -142,13 +162,14 @@ TEST_CASE("The board follows the game", "[board]")
     model.advance(0.15);
     const QImage image = scene.render();
     REQUIRE(model.session().simulation().head() == Cell{11, 10});
-    CHECK(colour_of(image, Cell{11, 10}) == colours::HEAD);
-    CHECK(colour_of(image, Cell{10, 10}) == colours::BODY);
-    CHECK(colour_of(image, Cell{9, 10}) == colours::BODY);
+    CHECK(colour_of(image, Cell{11, 10}) == opaque(tokens::ACCENT));
+    // Each cell of the body keeps its colour as the snake moves along it.
+    CHECK(colour_of(image, Cell{10, 10}) == opaque(tokens::ACCENT));
+    CHECK(colour_of(image, Cell{9, 10}) == opaque(tokens::SURFACE));
     // The tail has moved on, so its cell is empty again (unless the food is there).
     if (model.session().simulation().food() != Cell{8, 10})
     {
-        CHECK(colour_of(image, Cell{8, 10}) == colours::BACKGROUND);
+        CHECK(colour_of(image, Cell{8, 10}) == checker_colour(Cell{8, 10}));
     }
 }
 
@@ -171,7 +192,7 @@ TEST_CASE("The bonus item is drawn when there is one", "[board]")
     }
     REQUIRE(model.session().simulation().bonus());
     const QImage image = scene.render();
-    CHECK(colour_of(image, model.session().simulation().bonus()->cell) == colours::BONUS);
+    CHECK(colour_of(image, model.session().simulation().bonus()->cell) == opaque(tokens::MEDAL_GOLD));
 }
 
 TEST_CASE("Changing the game redraws, and a game that goes away leaves an empty board", "[board]")
@@ -186,18 +207,18 @@ TEST_CASE("Changing the game redraws, and a game that goes away leaves an empty 
     scene.board().setGame(first.get());
     CHECK(changes == 1);
     CHECK(scene.board().game() == first.get());
-    CHECK(colour_of(scene.render(), Cell{10, 10}) == colours::HEAD);
+    CHECK(colour_of(scene.render(), Cell{10, 10}) == opaque(tokens::ACCENT));
 
     scene.board().setGame(&second);
     CHECK(changes == 2);
     // The old game's signals no longer reach the board.
     first->newGame();
-    CHECK(colour_of(scene.render(), second.session().simulation().food()) == colours::FOOD);
+    CHECK(colour_of(scene.render(), second.session().simulation().food()) == opaque(tokens::FOOD));
 
     first.reset();
     scene.board().setGame(nullptr);
     CHECK(changes == 3);
-    CHECK(colour_of(scene.render(), Cell{10, 10}) == WINDOW_COLOUR);
+    CHECK(colour_of(scene.render(), Cell{10, 10}) == checker_colour(Cell{10, 10}));
 }
 
 TEST_CASE("A game that is deleted while the board shows it leaves an empty board", "[board]")
@@ -205,9 +226,44 @@ TEST_CASE("A game that is deleted while the board shows it leaves an empty board
     auto model = std::make_unique<GameViewModel>(counting_seeds());
     Scene scene;
     scene.board().setGame(model.get());
-    REQUIRE(colour_of(scene.render(), Cell{10, 10}) == colours::HEAD);
+    REQUIRE(colour_of(scene.render(), Cell{10, 10}) == opaque(tokens::ACCENT));
     model.reset();
     scene.board().update();
     CHECK(scene.board().game() == nullptr);
-    CHECK(colour_of(scene.render(), Cell{10, 10}) == WINDOW_COLOUR);
+    CHECK(colour_of(scene.render(), Cell{10, 10}) == checker_colour(Cell{10, 10}));
+}
+
+TEST_CASE("Raising the food redraws it higher, and the lift is held between 0 and 1", "[board]")
+{
+    GameViewModel model(counting_seeds());
+    Scene scene;
+    scene.board().setGame(&model);
+    int changes = 0;
+    QObject::connect(&scene.board(), &BoardItem::foodLiftChanged, [&changes] { ++changes; });
+    const QImage resting = scene.render();
+    CHECK(scene.board().foodLift() == 0.0);
+
+    scene.board().setFoodLift(0.0);
+    CHECK(changes == 0);
+    scene.board().setFoodLift(5.0);
+    CHECK(changes == 1);
+    CHECK(scene.board().foodLift() == 1.0);
+    scene.board().setFoodLift(1.0);
+    CHECK(changes == 1);
+    const QImage raised = scene.render();
+    CHECK(raised != resting);
+
+    // The berry has risen into a pixel near the top of its cell, which is empty when the berry rests.
+    const board_scene::Layout layout = board_scene::layout_for(raised.size());
+    const Cell food = model.session().simulation().food();
+    const int top = layout.origin.y() + (food.y * layout.cell);
+    const int left = layout.origin.x() + (food.x * layout.cell);
+    const int x = left + (layout.cell / 2);
+    const int y_high = top + 1;
+    CHECK(raised.pixel(x, y_high) == opaque(tokens::FOOD));
+    CHECK(resting.pixel(x, y_high) != opaque(tokens::FOOD));
+
+    scene.board().setFoodLift(-2.0);
+    CHECK(scene.board().foodLift() == 0.0);
+    CHECK(scene.render() == resting);
 }
