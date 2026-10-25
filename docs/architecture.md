@@ -119,6 +119,14 @@ A game that makes the top 10 (`Leaderboard::rank_for()`) does not go on the boar
 clock the tests can replace), and remembers the name. A game that is not saved is lost when the next one ends or the
 program closes, and does not count as the best to beat.
 
+The settings are properties of `ProfileViewModel` (`controls`, `invertAxes`, `sound`, `music`, `reducedMotion`); a change
+is written to the save file and announced once through `settingsChanged`. On a first run the reduced-motion setting
+starts on when the system asks for less motion (`system_prefers_reduced_motion()` in `src/platform/`, which reads Qt's
+accessibility hints); a choice made later is kept. `resetLeaderboard(mode)` empties one board and leaves the unlocks
+(an unlock is for good) and the recent names. `calibrateTilt()` only emits `calibrationRequested`: the tilt source of
+the mobile steps answers it. The settings that steer (`controls`, `invertAxes`) and the sound ones are stored and shown
+before anything reads them; the input and audio steps come later.
+
 `SaveFile` (`src/platform/`) is the platform service that keeps `SaveData` in one file. The profile library turns the
 data into bytes; `SaveFile` reads them, and writes them through `QSaveFile`, so a crash leaves the old file or the new
 one and never half of either. `ProfileViewModel::saveFile` names the file (`save.snk` in the user's data folder; the

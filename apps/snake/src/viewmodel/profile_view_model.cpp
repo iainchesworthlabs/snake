@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "viewmodel/profile_view_model.hpp"
 
+#include "platform/motion_preference.hpp"
 #include "platform/save_file.hpp"
 #include "snake/profile/leaderboard.hpp"
 #include "snake/profile/player_name.hpp"
@@ -65,7 +66,13 @@ ProfileViewModel::ProfileViewModel(QObject* parent)
 }
 
 ProfileViewModel::ProfileViewModel(Clock clock, QObject* parent)
-    : QObject(parent), m_Clock(std::move(clock)), m_Modes(m_Data.unlocks, this), m_Board(m_Data.leaderboards, this)
+    : ProfileViewModel(std::move(clock), &system_prefers_reduced_motion, parent)
+{
+}
+
+ProfileViewModel::ProfileViewModel(Clock clock, MotionPreference motion_preference, QObject* parent)
+    : QObject(parent), m_Clock(std::move(clock)), m_MotionPreference(std::move(motion_preference)),
+      m_Modes(m_Data.unlocks, this), m_Board(m_Data.leaderboards, this)
 {
 }
 
@@ -189,12 +196,15 @@ void ProfileViewModel::setSaveFile(const QString& path)
             switch (loaded.error())
             {
             case SaveFile::Error::MISSING:
+                // A first run: the game starts as the system asks for motion.
+                m_Data.settings.reduced_motion = m_MotionPreference();
                 m_Writing = true;
                 break;
             case SaveFile::Error::DAMAGED:
                 qWarning() << "The save file is damaged. It was moved to" << m_File->damaged_path()
                            << "and the game starts afresh.";
                 m_Data = profile::SaveData{};
+                m_Data.settings.reduced_motion = m_MotionPreference();
                 m_Writing = true;
                 break;
             case SaveFile::Error::NEWER_VERSION:
@@ -211,6 +221,7 @@ void ProfileViewModel::setSaveFile(const QString& path)
     m_Board.refresh();
     set_pending(std::nullopt);
     emit saveFileChanged();
+    emit settingsChanged();
     emit bestChanged();
     emit recentNamesChanged();
 }
@@ -225,6 +236,70 @@ void ProfileViewModel::write()
     {
         qWarning() << "The save file could not be written:" << m_File->path();
     }
+}
+
+template <typename Change>
+void ProfileViewModel::change_settings(Change change)
+{
+    const profile::Settings before = m_Data.settings;
+    change(m_Data.settings);
+    if (m_Data.settings == before)
+    {
+        return;
+    }
+    write();
+    emit settingsChanged();
+}
+
+ProfileViewModel::Controls ProfileViewModel::controls() const noexcept
+{
+    return static_cast<Controls>(m_Data.settings.controls);
+}
+
+void ProfileViewModel::setControls(Controls controls)
+{
+    change_settings([controls](profile::Settings& settings)
+                    { settings.controls = static_cast<profile::ControlScheme>(controls); });
+}
+
+void ProfileViewModel::setInvertAxes(bool invert)
+{
+    change_settings([invert](profile::Settings& settings) { settings.invert_axes = invert; });
+}
+
+void ProfileViewModel::setSound(bool on)
+{
+    change_settings([on](profile::Settings& settings) { settings.sound = on; });
+}
+
+void ProfileViewModel::setMusic(bool on)
+{
+    change_settings([on](profile::Settings& settings) { settings.music = on; });
+}
+
+void ProfileViewModel::setReducedMotion(bool reduced)
+{
+    change_settings([reduced](profile::Settings& settings) { settings.reduced_motion = reduced; });
+}
+
+void ProfileViewModel::resetLeaderboard(GameViewModel::Mode mode)
+{
+    const sim::Mode cleared = to_sim(mode);
+    m_Data.leaderboards.of(cleared).clear();
+    // A score that waited for a place on this board has lost the place it was given.
+    if (m_Pending && m_Pending->mode == cleared)
+    {
+        set_pending(std::nullopt);
+    }
+    m_Board.mark_latest(std::nullopt, 0);
+    m_Board.refresh();
+    write();
+    emit bestChanged();
+}
+
+void ProfileViewModel::calibrateTilt()
+{
+    emit calibrationRequested();
 }
 
 void ProfileViewModel::set_pending(const std::optional<Pending>& pending)
