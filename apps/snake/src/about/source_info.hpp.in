@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#pragma once
+
+#include <string_view>
+
+namespace snake
+{
+
+/// Where the source is, and the exact tag or commit this program was configured from (`git describe --tags --always
+/// --dirty`, or the commit of the CI run, or "unknown" when neither is there).
+inline constexpr std::string_view REPOSITORY_URL = "@PROJECT_HOMEPAGE_URL@";
+inline constexpr std::string_view SOURCE_REVISION = "@SNAKE_SOURCE_REVISION@";
+
+}  // namespace snake

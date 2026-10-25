@@ -14,9 +14,39 @@ function(snake_add_font_resources target)
     qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_FONT_DIR}" FILES ${font_paths})
 endfunction()
 
+# What the About screen shows. The revision is the exact tag or commit this build was configured from: `git describe`,
+# else the commit of the CI run, else "unknown". It is read when CMake configures, so a configure is needed to follow a
+# new commit; every CI and release build configures afresh.
+find_program(SNAKE_GIT git)
+set(SNAKE_SOURCE_REVISION "")
+if(SNAKE_GIT)
+    execute_process(COMMAND "${SNAKE_GIT}" -C "${PROJECT_SOURCE_DIR}" describe --tags --always --dirty
+        OUTPUT_VARIABLE SNAKE_SOURCE_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+endif()
+if(NOT SNAKE_SOURCE_REVISION AND DEFINED ENV{GITHUB_SHA})
+    set(SNAKE_SOURCE_REVISION "$ENV{GITHUB_SHA}")
+endif()
+if(NOT SNAKE_SOURCE_REVISION)
+    set(SNAKE_SOURCE_REVISION "unknown")
+endif()
+configure_file(src/about/source_info.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/generated/snake/source_info.hpp" @ONLY)
+
+# The licence texts the About screen shows are compiled into the executable: the licence of the program, the notices
+# that icl_install_qt_app() generates when CMake configures (one entry per runtime dependency, with its licence text),
+# and the licence of the bundled font.
+set(SNAKE_NOTICES_FILE "${CMAKE_CURRENT_BINARY_DIR}/snake-THIRD-PARTY-NOTICES.txt")
+set_source_files_properties("${PROJECT_SOURCE_DIR}/LICENSE" PROPERTIES QT_RESOURCE_ALIAS licence.txt)
+set_source_files_properties("${SNAKE_NOTICES_FILE}" PROPERTIES QT_RESOURCE_ALIAS notices.txt)
+set_source_files_properties("${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" PROPERTIES QT_RESOURCE_ALIAS font-licence.txt)
+function(snake_add_about_resources target)
+    qt_add_resources(${target} about PREFIX /snake/about
+        FILES "${PROJECT_SOURCE_DIR}/LICENSE" "${SNAKE_NOTICES_FILE}" "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt")
+endfunction()
+
 # The QML module of the application: the screens and the C++ types they use. The executable and the UI tests each build
 # one, so the tests run the same screens against the same types.
 set(SNAKE_QML_FILES
+    qml/AboutScreen.qml
     qml/ConfirmDialog.qml
     qml/DashedFrame.qml
     qml/GameOverScreen.qml
@@ -26,6 +56,7 @@ set(SNAKE_QML_FILES
     qml/Main.qml
     qml/ModeCard.qml
     qml/NameEntryScreen.qml
+    qml/NoticeScreen.qml
     qml/PauseScreen.qml
     qml/PhonePage.qml
     qml/SettingsScreen.qml
@@ -40,6 +71,8 @@ foreach(qml_file IN LISTS SNAKE_QML_FILES)
     set_source_files_properties("${qml_file}" PROPERTIES QT_RESOURCE_ALIAS "${qml_name}")
 endforeach()
 set(SNAKE_UI_SOURCES
+    src/about/about_info.cpp
+    src/about/about_info.hpp
     src/board/board_item.cpp
     src/board/board_item.hpp
     src/board/board_scene.cpp
@@ -80,10 +113,12 @@ function(snake_add_ui_module target)
         SOURCES ${SNAKE_UI_SOURCES}
         ${output_directory})
     # qmltyperegistrar includes each header by its file name, so the directories of the QML types are on the path too.
-    target_include_directories(${target} PRIVATE src src/board src/theme src/viewmodel)
+    target_include_directories(${target} PRIVATE src src/about src/board src/theme src/viewmodel
+        "${CMAKE_CURRENT_BINARY_DIR}/generated")
     snake_add_font_resources(${target})
+    snake_add_about_resources(${target})
     target_link_libraries(${target}
-        PRIVATE snake::input snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
+        PRIVATE snake::core snake::input snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
     # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
     icl_relax_generated_warnings(${target})
 endfunction()

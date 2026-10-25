@@ -2,6 +2,53 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en">
 <context>
+    <name>AboutScreen</name>
+    <message>
+        <source>About</source>
+        <translation>About</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <source>Snake</source>
+        <translation>Snake</translation>
+    </message>
+    <message>
+        <source>Version %1</source>
+        <translation>Version %1</translation>
+    </message>
+    <message>
+        <source>Free software, licensed under the %1.</source>
+        <translation>Free software, licensed under the %1.</translation>
+    </message>
+    <message>
+        <source>Source: %1</source>
+        <translation>Source: %1</translation>
+    </message>
+    <message>
+        <source>Revision: %1</source>
+        <translation>Revision: %1</translation>
+    </message>
+    <message>
+        <source>Licence</source>
+        <translation>Licence</translation>
+    </message>
+    <message>
+        <source>Third-party notices</source>
+        <translation>Third-party notices</translation>
+    </message>
+    <message>
+        <source>Font licence</source>
+        <translation>Font licence</translation>
+    </message>
+    <message>
+        <source>Open the source page</source>
+        <translation>Open the source page</translation>
+    </message>
+</context>
+<context>
     <name>GameOverScreen</name>
     <message>
         <source>New best!</source>
@@ -96,6 +143,18 @@
         <source>Snake</source>
         <translation>Snake</translation>
     </message>
+    <message>
+        <source>Licence</source>
+        <translation>Licence</translation>
+    </message>
+    <message>
+        <source>Third-party notices</source>
+        <translation>Third-party notices</translation>
+    </message>
+    <message>
+        <source>Font licence</source>
+        <translation>Font licence</translation>
+    </message>
 </context>
 <context>
     <name>NameEntryScreen</name>
@@ -130,6 +189,13 @@
     <message>
         <source>Save score</source>
         <translation>Save score</translation>
+    </message>
+</context>
+<context>
+    <name>NoticeScreen</name>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
     </message>
 </context>
 <context>
@@ -220,6 +286,10 @@
     <message>
         <source>Reset a leaderboard</source>
         <translation>Reset a leaderboard</translation>
+    </message>
+    <message>
+        <source>About</source>
+        <translation>About</translation>
     </message>
     <message>
         <source>Reset the %1 leaderboard?</source>

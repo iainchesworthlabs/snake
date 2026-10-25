@@ -147,9 +147,17 @@ and Recalibrate tilt, which is shown only while Tilt is chosen. With reduced mot
 it is; shake and flashing, which the setting also covers, do not exist until the juice step. The design has no Settings
 page yet: this one follows its components and is a proposal.
 
+Settings leads to About, which shows the version, the licence of the program (GPL-3.0-or-later), where the source is and
+the exact tag or commit this build came from, as standard section 7.5 asks. A button each opens `NoticeScreen` on the text
+of the program's licence, of the third-party notices (the file `icl_install_qt_app()` generates when CMake configures, one
+entry per runtime dependency with its licence text) or of the font licence. The three texts are compiled into the
+executable as resources and `AboutInfo` hands them to QML, so they are always those of the build. The revision is
+`git describe --tags --always --dirty` read when CMake configures (`source_info.hpp`), else the commit of the CI run, else
+"unknown"; a local build needs a configure to follow a new commit.
+
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
 that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
-`"nameEntry"`, `"leaderboard"` or `"settings"`) shown over the title or the game over screen; a game that starts clears it. The game
+`"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game
 over screen offers Save score in place of Play again while a score waits for a name, and Menu lets that score go. The
 leaderboard's Back goes to the title (through `newGame()` when it was reached from the end of a game). `NameEntryScreen`
 keeps the keyboard on the screen itself, so letters and Space type into the name and the buttons on it answer touch only;

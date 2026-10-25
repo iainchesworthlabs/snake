@@ -2,6 +2,8 @@
 #include "platform/motion_preference.hpp"
 #include "platform/touch_screen.hpp"
 #include "snake/sim/mode.hpp"
+#include "snake/source_info.hpp"
+#include "snake/version.hpp"
 #include "theme/tokens.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/profile_view_model.hpp"
@@ -1065,4 +1067,102 @@ TEST_CASE("The food bobs unless reduced motion is on", "[screens][settings]")
 TEST_CASE("The offscreen platform has no touch screen", "[screens][settings]")
 {
     CHECK_FALSE(snake::ui::has_touch_screen());
+}
+
+TEST_CASE("Settings has an About button that opens About and Back returns to the settings", "[screens][about]")
+{
+    App app;
+    app.click("settingsButton");
+    app.click("aboutButton");
+    CHECK(app.shows("aboutScreen"));
+    CHECK_FALSE(app.shows("settingsScreen"));
+    CHECK(app.focus_name() == "licenceButton");
+
+    app.click("aboutBackButton");
+    CHECK(app.shows("settingsScreen"));
+    CHECK_FALSE(app.shows("aboutScreen"));
+
+    app.click("aboutButton");
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("settingsScreen"));
+}
+
+TEST_CASE("About shows the version, the licence, the source and the revision", "[screens][about]")
+{
+    App app;
+    app.click("settingsButton");
+    app.click("aboutButton");
+    const QString version = QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size());
+    const QString url = QString::fromUtf8(snake::REPOSITORY_URL.data(), snake::REPOSITORY_URL.size());
+    const QString revision = QString::fromUtf8(snake::SOURCE_REVISION.data(), snake::SOURCE_REVISION.size());
+    CHECK(app.text_of("aboutVersion") == "Version " + version);
+    CHECK(app.text_of("aboutLicence") == "Free software, licensed under the GPL-3.0-or-later.");
+    CHECK(app.text_of("aboutSource") == "Source: " + url);
+    CHECK(url == "https://github.com/iainchesworthlabs/snake");
+    // The revision is a tag or a commit, or "unknown" where there is no git: never empty.
+    CHECK_FALSE(revision.isEmpty());
+    CHECK(app.text_of("aboutRevision") == "Revision: " + revision);
+}
+
+TEST_CASE("Each licence has its text one tap away and Back returns to About", "[screens][about]")
+{
+    App app;
+    app.click("settingsButton");
+    app.click("aboutButton");
+
+    app.click("licenceButton");
+    REQUIRE(app.shows("noticeScreen"));
+    CHECK_FALSE(app.shows("aboutScreen"));
+    CHECK(app.text_of("noticeTitle") == "Licence");
+    CHECK(app.text_of("noticeBody").contains("GNU GENERAL PUBLIC LICENSE"));
+    app.click("noticeBackButton");
+    CHECK(app.shows("aboutScreen"));
+
+    app.click("noticesButton");
+    CHECK(app.text_of("noticeTitle") == "Third-party notices");
+    // One entry for Qt and one for each library of the manifest that ships.
+    CHECK(app.text_of("noticeBody").contains("Third-party notices for Snake"));
+    CHECK(app.text_of("noticeBody").contains("Qt "));
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("aboutScreen"));
+
+    app.click("fontLicenceButton");
+    CHECK(app.text_of("noticeTitle") == "Font licence");
+    CHECK(app.text_of("noticeBody").contains("SIL OPEN FONT LICENSE"));
+    CHECK(app.text_of("noticeBody").contains("Pixelify Sans"));
+}
+
+TEST_CASE("The notice text scrolls with the arrow keys and the page keys and stops at both ends", "[screens][about]")
+{
+    App app;
+    app.click("settingsButton");
+    app.click("aboutButton");
+    app.click("licenceButton");
+    QQuickItem* scroller = app.item("noticeScroller");
+    const auto position = [&] { return scroller->property("contentY").toDouble(); };
+    REQUIRE(scroller->property("contentHeight").toDouble() > scroller->height() * 5);
+
+    CHECK(position() == 0.0);
+    app.press(Qt::Key_Up);
+    CHECK(position() == 0.0);
+    app.press(Qt::Key_Down);
+    CHECK(position() > 0.0);
+    const double line = position();
+    app.press(Qt::Key_PageDown);
+    CHECK(position() > line + 100.0);
+    app.press(Qt::Key_PageUp);
+    CHECK(position() == line);
+    app.press(Qt::Key_Up);
+    CHECK(position() == 0.0);
+
+    // Far past the end it stops at the last page.
+    for (int i = 0; i < 400; ++i)
+    {
+        app.press(Qt::Key_PageDown);
+    }
+    CHECK(position() == scroller->property("contentHeight").toDouble() - scroller->height());
+    // Opening it again starts at the top.
+    app.press(Qt::Key_Escape);
+    app.click("licenceButton");
+    CHECK(position() == 0.0);
 }
