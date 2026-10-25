@@ -457,3 +457,37 @@ TEST_CASE("The same seed and the same inputs play the same game", "[viewmodel]")
     };
     CHECK(play() == play());
 }
+
+TEST_CASE("Restarting begins a new game of the same mode at once", "[viewmodel]")
+{
+    GameViewModel model(counting_seeds(3));
+    model.setMode(Mode::Easy);
+    model.start();
+    model.advance(0.18);
+    REQUIRE(ticks_of(model) == 1);
+    const auto first_game = snake::sim::state_hash(model.session().simulation());
+
+    Signals emitted(model);
+    model.restart();
+    CHECK(model.state() == State::Running);
+    CHECK(model.mode() == Mode::Easy);
+    CHECK(ticks_of(model) == 0);
+    CHECK(snake::sim::state_hash(model.session().simulation()) != first_game);
+    CHECK(emitted.board == 1);
+}
+
+TEST_CASE("The points are the score as a number", "[viewmodel]")
+{
+    GameViewModel model(counting_seeds(5));
+    CHECK(model.points() == 0);
+    // Plays the autoplayer until it has eaten, so the score is not zero.
+    model.start();
+    for (int i = 0; i < 2000 && model.state() == State::Running && model.points() == 0; ++i)
+    {
+        const auto direction = snake::sim::autoplay(model.session().simulation());
+        static_cast<void>(model.handleKey(key_for(direction), false));
+        model.advance(0.15);
+    }
+    REQUIRE(model.points() > 0);
+    CHECK(model.score().toInt() == model.points());
+}

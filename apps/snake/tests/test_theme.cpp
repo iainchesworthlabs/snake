@@ -2,6 +2,7 @@
 #include "theme/theme.hpp"
 #include "theme/tokens.hpp"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <QByteArray>
@@ -93,6 +94,23 @@ TEST_CASE("every opaque colour in tokens.json has a constant", "[theme]")
             CHECK(known.contains(it.key()));
         }
     }
+}
+
+TEST_CASE("the overlay is the ink colour at the opacity of tokens.json", "[theme]")
+{
+    const QJsonObject colours = read_tokens().value(QStringLiteral("color")).toObject();
+    const QString text = colours.value(QStringLiteral("overlay")).toObject().value("value").toString();
+    // "rgba(r,g,b,a)" with the alpha as a fraction.
+    REQUIRE(text.startsWith(QStringLiteral("rgba(")));
+    const QStringList parts = text.mid(5, text.size() - 6).split(QLatin1Char(','));
+    REQUIRE(parts.size() == 4);
+    const QColor expected = QColor::fromRgb(parts[0].toInt(), parts[1].toInt(), parts[2].toInt());
+    CHECK(expected.rgb() == QColor::fromRgb(tokens::INK).rgb());
+    CHECK(tokens::OVERLAY_ALPHA == Catch::Approx(parts[3].toDouble()));
+
+    const QColor overlay = Theme().overlay();
+    CHECK(overlay.rgb() == expected.rgb());
+    CHECK(overlay.alphaF() == Catch::Approx(parts[3].toDouble()).margin(1.0 / 255.0));
 }
 
 TEST_CASE("the font family constant is the family of tokens.json", "[theme]")

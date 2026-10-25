@@ -73,6 +73,12 @@ QString GameViewModel::score() const
     return QString::fromLatin1(digits.data(), static_cast<qsizetype>(digits.size()));
 }
 
+int GameViewModel::points() const
+{
+    // A score cannot reach the limit of an int: the board holds 400 cells and the combo and bonus are small.
+    return static_cast<int>(std::min<std::uint32_t>(m_Session.simulation().score(), std::numeric_limits<int>::max()));
+}
+
 GameViewModel::Mode GameViewModel::mode() const
 {
     return from_sim(m_Session.mode());
@@ -105,6 +111,12 @@ void GameViewModel::newGame()
     m_Session = sim::Session(m_Session.mode(), m_Seeds());
     m_Pacer.reset();
     publish(state_before, score_before, true);
+}
+
+void GameViewModel::restart()
+{
+    newGame();
+    start();
 }
 
 void GameViewModel::start()
@@ -206,8 +218,7 @@ void GameViewModel::perform(input::Action action)
         switch (state)
         {
         case sim::GameState::GAME_OVER:
-            newGame();
-            start();
+            restart();
             break;
         case sim::GameState::PAUSED:
             resume();

@@ -27,6 +27,8 @@ class GameViewModel : public QObject
     Q_PROPERTY(State state READ state NOTIFY stateChanged FINAL)
     /// The score as six digits with leading zeros, such as "000420".
     Q_PROPERTY(QString score READ score NOTIFY scoreChanged FINAL)
+    /// The score as a number, for the profile to rank and compare.
+    Q_PROPERTY(int points READ points NOTIFY scoreChanged FINAL)
     /// The mode of the current game. Setting it starts a new game in that mode.
     Q_PROPERTY(Mode mode READ mode WRITE setMode NOTIFY modeChanged FINAL)
 
@@ -57,6 +59,7 @@ public:
 
     [[nodiscard]] State state() const;
     [[nodiscard]] QString score() const;
+    [[nodiscard]] int points() const;
     [[nodiscard]] Mode mode() const;
     void setMode(Mode mode);
 
@@ -71,6 +74,8 @@ public:
 
     /// A new game in the current mode, waiting to start.
     Q_INVOKABLE void newGame();
+    /// A new game in the current mode, started at once.
+    Q_INVOKABLE void restart();
     /// NOT_STARTED to running.
     Q_INVOKABLE void start();
     Q_INVOKABLE void pause();

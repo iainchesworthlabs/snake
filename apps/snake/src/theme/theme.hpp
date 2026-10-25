@@ -29,6 +29,7 @@ class Theme : public QObject
     Q_PROPERTY(QColor shadow READ shadow CONSTANT FINAL)
     Q_PROPERTY(QColor surface READ surface CONSTANT FINAL)
     Q_PROPERTY(QColor accent READ accent CONSTANT FINAL)
+    Q_PROPERTY(QColor overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QString fontFamily READ fontFamily CONSTANT FINAL)
 
 public:
@@ -39,6 +40,8 @@ public:
     [[nodiscard]] QColor shadow() const;
     [[nodiscard]] QColor surface() const;
     [[nodiscard]] QColor accent() const;
+    /// The dimming drawn over the game while it is paused.
+    [[nodiscard]] QColor overlay() const;
     [[nodiscard]] QString fontFamily() const;
 };
 

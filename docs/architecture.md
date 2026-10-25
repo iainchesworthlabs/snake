@@ -105,6 +105,13 @@ resumes, and Escape pauses until there is a menu. A held key's repeats are used 
 loses the focus pauses the game. Each new game takes its seed from the system's random number generator, or from a
 function the tests give. The state, score and mode are properties, and `boardChanged` tells the board item to redraw.
 
+`ProfileViewModel` is what QML sees of the player's record. It watches a `GameViewModel` and, when a game ends, notes
+the score against the best of the game's mode and against the unlock rules of `libs/profile`, which gives the game-over
+screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `profile::SaveData` in memory and a
+`ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
+is locked, open or only open on paper: Portals and Hot potato can be unlocked but are not in the game yet, so they are
+never startable. The best scores are kept for the run only; the leaderboards and the file on disk come with name entry.
+
 `board_scene` works out what the board looks like and `BoardItem` hands it to the scene graph. The scene builder is
 plain C++ over the simulation's state: `layout_for()` picks the largest whole-pixel cell that fits the item, with the
 frame (a quarter of a cell) and its hard shadow (twice that), centred in the item; `background_shapes()` gives the
