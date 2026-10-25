@@ -110,7 +110,23 @@ the score against the best of the game's mode and against the unlock rules of `l
 screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `profile::SaveData` in memory and a
 `ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
 is locked, open or only open on paper: Portals and Hot potato can be unlocked but are not in the game yet, so they are
-never startable. The best scores are kept for the run only; the leaderboards and the file on disk come with name entry.
+never startable. The best score of a mode is the top of its leaderboard.
+
+A game that makes the top 10 (`Leaderboard::rank_for()`) does not go on the board at once: it waits as the pending score
+(`qualifies`, `pendingScore`, `pendingRank`) while the player types a name. `typeCharacter()`, `eraseCharacter()` and
+`chooseRecent()` build a `profile::PlayerName`, `standing` gives the lines around the place the score will take, and
+`saveScore()` puts the entry on the board under the name without its outer spaces, with the time the game ended (a
+clock the tests can replace), and remembers the name. A game that is not saved is lost when the next one ends or the
+program closes, and does not count as the best to beat.
+
+`SaveFile` (`src/platform/`) is the platform service that keeps `SaveData` in one file. The profile library turns the
+data into bytes; `SaveFile` reads them, and writes them through `QSaveFile`, so a crash leaves the old file or the new
+one and never half of either. `ProfileViewModel::saveFile` names the file (`save.snk` in the user's data folder; the
+`--save-file` option of the program changes it; empty keeps everything in memory, which is what the tests use). Setting
+it loads the file. A missing file is a first run. A file that fails its checks is renamed `save.snk.damaged` and the
+profile starts afresh. A file from a newer version, or one that cannot be read, is left alone and the profile stops
+writing, so an older program never destroys what a newer one saved. The profile is written after each game that ends
+(the unlocks may have changed) and after each score is saved; a write that fails is logged and tried again next time.
 
 The screens follow the state of the game, so there is no navigation to keep in step with it. `Main.qml` shows the title
 screen while the game has not started, the game screen (the score, the best score and the board) while it runs or is

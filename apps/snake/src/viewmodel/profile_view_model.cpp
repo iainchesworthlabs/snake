@@ -1,14 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "viewmodel/profile_view_model.hpp"
 
+#include "platform/save_file.hpp"
 #include "snake/profile/leaderboard.hpp"
+#include "snake/profile/player_name.hpp"
 #include "snake/profile/unlocks.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/sim/scoring.hpp"
 #include "viewmodel/game_view_model.hpp"
 
+#include <QDateTime>
+#include <QDebug>
 #include <QString>
+#include <QStringList>
+#include <QVariantList>
+#include <QVariantMap>
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
 
 namespace snake::ui
 {
@@ -32,9 +44,30 @@ QString six_digits(std::uint32_t score)
     return QString::fromLatin1(digits.data(), static_cast<qsizetype>(digits.size()));
 }
 
+QString name_text(const profile::PlayerName& name)
+{
+    return QString::fromLatin1(name.view().data(), static_cast<qsizetype>(name.view().size()));
+}
+
+QVariantMap line(std::size_t place, const profile::PlayerName& name, std::uint32_t score, bool mine)
+{
+    return {{QStringLiteral("place"), static_cast<int>(place)},
+            {QStringLiteral("name"), name_text(name)},
+            {QStringLiteral("score"), six_digits(score)},
+            {QStringLiteral("mine"), mine}};
+}
+
 } // namespace
 
-ProfileViewModel::ProfileViewModel(QObject* parent) : QObject(parent), m_Modes(m_Data.unlocks, this) {}
+ProfileViewModel::ProfileViewModel(QObject* parent)
+    : ProfileViewModel([] { return static_cast<std::int64_t>(QDateTime::currentSecsSinceEpoch()); }, parent)
+{
+}
+
+ProfileViewModel::ProfileViewModel(Clock clock, QObject* parent)
+    : QObject(parent), m_Clock(std::move(clock)), m_Modes(m_Data.unlocks, this)
+{
+}
 
 void ProfileViewModel::setGame(GameViewModel* game)
 {
@@ -62,7 +95,13 @@ QString ProfileViewModel::best() const
     {
         return six_digits(0);
     }
-    return six_digits(m_Best[profile::mode_index(to_sim(m_Game->mode()))]);
+    return six_digits(best_of(to_sim(m_Game->mode())));
+}
+
+std::uint32_t ProfileViewModel::best_of(sim::Mode mode) const noexcept
+{
+    const std::uint32_t saved = m_Data.leaderboards.of(mode).best_score();
+    return m_Pending && m_Pending->mode == mode ? std::max(saved, m_Pending->score) : saved;
 }
 
 void ProfileViewModel::on_state_changed()
@@ -75,12 +114,13 @@ void ProfileViewModel::on_state_changed()
 
 void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score)
 {
-    std::uint32_t& best = m_Best[profile::mode_index(mode)];
+    // The score of the board before this game: a game that was never saved does not count.
+    const profile::Leaderboard& board = m_Data.leaderboards.of(mode);
+    const std::uint32_t best = board.best_score();
 
     m_NewBest = score > best;
     if (m_NewBest)
     {
-        best = score;
         m_PointsToBest = 0;
     }
     else
@@ -102,8 +142,189 @@ void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score)
         m_Modes.refresh();
     }
 
+    const std::optional<std::size_t> place = board.rank_for(score);
+    set_pending(place ? std::optional(Pending{.mode = mode, .score = score, .unix_seconds = m_Clock(), .place = *place})
+                      : std::nullopt);
+    write();
+
     emit bestChanged();
     emit resultChanged();
+}
+
+QString ProfileViewModel::saveFile() const
+{
+    return m_File ? m_File->path() : QString();
+}
+
+void ProfileViewModel::setSaveFile(const QString& path)
+{
+    if (path == saveFile())
+    {
+        return;
+    }
+    m_File.reset();
+    m_Writing = false;
+    if (!path.isEmpty())
+    {
+        m_File = std::make_unique<SaveFile>(path);
+        const auto loaded = m_File->load();
+        if (loaded)
+        {
+            m_Data = *loaded;
+            m_Writing = true;
+        }
+        else
+        {
+            switch (loaded.error())
+            {
+            case SaveFile::Error::MISSING:
+                m_Writing = true;
+                break;
+            case SaveFile::Error::DAMAGED:
+                qWarning() << "The save file is damaged. It was moved to" << m_File->damaged_path()
+                           << "and the game starts afresh.";
+                m_Data = profile::SaveData{};
+                m_Writing = true;
+                break;
+            case SaveFile::Error::NEWER_VERSION:
+                qWarning() << "The save file was written by a newer version of the game and is left alone:" << path;
+                break;
+            case SaveFile::Error::UNREADABLE:
+                qWarning() << "The save file could not be read and is left alone:" << path;
+                break;
+            }
+        }
+    }
+    m_Modes.refresh();
+    set_pending(std::nullopt);
+    emit saveFileChanged();
+    emit bestChanged();
+    emit recentNamesChanged();
+}
+
+void ProfileViewModel::write()
+{
+    if (!m_Writing)
+    {
+        return;
+    }
+    if (!m_File->save(m_Data))
+    {
+        qWarning() << "The save file could not be written:" << m_File->path();
+    }
+}
+
+void ProfileViewModel::set_pending(const std::optional<Pending>& pending)
+{
+    m_Pending = pending;
+    m_Name.clear();
+    emit pendingChanged();
+    emit entryChanged();
+    emit standingChanged();
+}
+
+QString ProfileViewModel::pendingScore() const
+{
+    return m_Pending ? six_digits(m_Pending->score) : QString();
+}
+
+QString ProfileViewModel::entryName() const
+{
+    return name_text(m_Name);
+}
+
+QStringList ProfileViewModel::recentNames() const
+{
+    QStringList names;
+    for (const profile::PlayerName& name : m_Data.recent_names.names())
+    {
+        names.push_back(name_text(name));
+    }
+    return names;
+}
+
+QVariantList ProfileViewModel::standing() const
+{
+    QVariantList lines;
+    if (!m_Pending)
+    {
+        return lines;
+    }
+    const profile::Leaderboard& board = m_Data.leaderboards.of(m_Pending->mode);
+    const std::size_t place = m_Pending->place;
+    if (place > 0)
+    {
+        lines.push_back(line(place, board.at(place - 1).name, board.at(place - 1).score, false));
+    }
+    lines.push_back(line(place + 1, m_Name, m_Pending->score, true));
+    if (place < board.size() && place + 1 < profile::Leaderboard::CAPACITY)
+    {
+        lines.push_back(line(place + 2, board.at(place).name, board.at(place).score, false));
+    }
+    return lines;
+}
+
+void ProfileViewModel::typeCharacter(const QString& character)
+{
+    if (!m_Pending || character.size() != 1 || !m_Name.append(character.front().toLatin1()))
+    {
+        return;
+    }
+    emit entryChanged();
+    emit standingChanged();
+}
+
+void ProfileViewModel::eraseCharacter()
+{
+    if (!m_Pending || m_Name.empty())
+    {
+        return;
+    }
+    m_Name.remove_last();
+    emit entryChanged();
+    emit standingChanged();
+}
+
+void ProfileViewModel::chooseRecent(int index)
+{
+    if (!m_Pending || index < 0 || static_cast<std::size_t>(index) >= m_Data.recent_names.size())
+    {
+        return;
+    }
+    m_Name = m_Data.recent_names.at(static_cast<std::size_t>(index));
+    emit entryChanged();
+    emit standingChanged();
+}
+
+bool ProfileViewModel::saveScore()
+{
+    if (!canSave())
+    {
+        return false;
+    }
+    const profile::PlayerName saved = *m_Name.saved();
+    const bool inserted =
+        m_Data.leaderboards.of(m_Pending->mode)
+            .insert({.name = saved, .score = m_Pending->score, .unix_seconds = m_Pending->unix_seconds})
+            .has_value();
+    // The place was worked out against this board and nothing has changed it since.
+    Q_ASSERT(inserted);
+    Q_UNUSED(inserted)
+    m_Data.recent_names.remember(saved);
+    set_pending(std::nullopt);
+    write();
+    emit recentNamesChanged();
+    emit bestChanged();
+    return true;
+}
+
+void ProfileViewModel::discardScore()
+{
+    if (m_Pending)
+    {
+        set_pending(std::nullopt);
+        emit bestChanged();
+    }
 }
 
 } // namespace snake::ui

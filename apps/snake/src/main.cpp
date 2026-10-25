@@ -10,6 +10,7 @@
 #include <QLocale>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
+#include <QStandardPaths>
 #include <QString>
 #include <QSurfaceFormat>
 #include <QTranslator>
@@ -40,6 +41,11 @@ int main(int argc, char* argv[])
     const QCommandLineOption smoke_test(QStringLiteral("smoke-test"),
                                         QStringLiteral("Exit after the first frame has been shown."));
     parser.addOption(smoke_test);
+    const QCommandLineOption save_file(
+        QStringLiteral("save-file"),
+        QStringLiteral("Keep the leaderboards and settings in <file> instead of the user's data folder."),
+        QStringLiteral("file"));
+    parser.addOption(save_file);
     parser.process(app);
 
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
@@ -50,8 +56,14 @@ int main(int argc, char* argv[])
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); },
         Qt::QueuedConnection);
+    // The leaderboards, recent names, unlocks and settings live in one file in the user's data folder.
+    const QString save_path =
+        parser.isSet(save_file)
+            ? parser.value(save_file)
+            : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QStringLiteral("/save.snk");
     engine.setInitialProperties({{QStringLiteral("windowWidth"), snake::MAIN_WINDOW.width},
-                                 {QStringLiteral("windowHeight"), snake::MAIN_WINDOW.height}});
+                                 {QStringLiteral("windowHeight"), snake::MAIN_WINDOW.height},
+                                 {QStringLiteral("saveFile"), save_path}});
     engine.loadFromModule("SnakeApp", "Main");
 
     if (parser.isSet(smoke_test))

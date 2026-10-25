@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "platform/save_file.hpp"
+#include "snake/profile/player_name.hpp"
 #include "snake/profile/save_data.hpp"
 #include "snake/sim/mode.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -11,16 +13,21 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <array>
+#include <QVariantList>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
 
 namespace snake::ui
 {
 
 /// What the player keeps and the screens show of it: the list of modes with the ones still locked, the best score of
 /// the mode being played, and what the last game came to. It watches a GameViewModel and notes each game that ends.
-/// The profile lives in memory for now; the platform service that reads and writes the save file comes later and
-/// fills the same data.
+/// Without a save file the profile lives in memory. Once a file is set the profile loads it and writes it after every
+/// change, so the leaderboards, the recent names and the unlocks last between runs. A game that makes the top 10
+/// waits for its name (see the name entry properties) and goes on the leaderboard when it is saved.
 class ProfileViewModel : public QObject
 {
     Q_OBJECT
@@ -37,9 +44,38 @@ class ProfileViewModel : public QObject
     Q_PROPERTY(int pointsToBest READ pointsToBest NOTIFY resultChanged FINAL)
     /// The names of the modes the last game opened, in the order of the list. Empty when it opened none.
     Q_PROPERTY(QStringList unlockedNow READ unlockedNow NOTIFY resultChanged FINAL)
+    /// The file the profile is kept in, or empty for none. Setting it loads the file when there is one.
+    Q_PROPERTY(QString saveFile READ saveFile WRITE setSaveFile NOTIFY saveFileChanged FINAL)
+    /// True while changes are being written to the save file: false without a file, and after the file was found to
+    /// come from a newer program, which this one must not overwrite.
+    Q_PROPERTY(bool persistent READ persistent NOTIFY saveFileChanged FINAL)
+
+    /// The last game made the top 10 of its mode and waits for a name.
+    Q_PROPERTY(bool qualifies READ qualifies NOTIFY pendingChanged FINAL)
+    /// The score that waits for a name, as six digits. Empty when none waits.
+    Q_PROPERTY(QString pendingScore READ pendingScore NOTIFY pendingChanged FINAL)
+    /// The place the waiting score will take, counting from 1. 0 when none waits.
+    Q_PROPERTY(int pendingRank READ pendingRank NOTIFY pendingChanged FINAL)
+    /// The name being typed, in capitals.
+    Q_PROPERTY(QString entryName READ entryName NOTIFY entryChanged FINAL)
+    /// The name has a letter, so it can be saved.
+    Q_PROPERTY(bool canSave READ canSave NOTIFY entryChanged FINAL)
+    /// The longest name there can be.
+    Q_PROPERTY(int nameLength READ nameLength CONSTANT FINAL)
+    /// The names used last, newest first: at most three.
+    Q_PROPERTY(QStringList recentNames READ recentNames NOTIFY recentNamesChanged FINAL)
+    /// Up to three lines of the leaderboard as it will be with the waiting score in: the entry above it, the score with
+    /// the name typed so far, and the entry it pushes down. Each is a map of place, name, score (six digits) and mine.
+    Q_PROPERTY(QVariantList standing READ standing NOTIFY standingChanged FINAL)
 
 public:
+    /// The time of the end of a game, in seconds since 1 January 1970 UTC.
+    using Clock = std::function<std::int64_t()>;
+
+    /// The clock is the system's.
     explicit ProfileViewModel(QObject* parent = nullptr);
+    /// Tests give the time.
+    explicit ProfileViewModel(Clock clock, QObject* parent = nullptr);
 
     [[nodiscard]] GameViewModel* game() const noexcept
     {
@@ -66,6 +102,47 @@ public:
         return m_UnlockedNow;
     }
 
+    [[nodiscard]] QString saveFile() const;
+    void setSaveFile(const QString& path);
+    [[nodiscard]] bool persistent() const noexcept
+    {
+        return m_Writing;
+    }
+
+    [[nodiscard]] bool qualifies() const noexcept
+    {
+        return m_Pending.has_value();
+    }
+    [[nodiscard]] QString pendingScore() const;
+    [[nodiscard]] int pendingRank() const noexcept
+    {
+        return m_Pending ? static_cast<int>(m_Pending->place) + 1 : 0;
+    }
+    [[nodiscard]] QString entryName() const;
+    [[nodiscard]] bool canSave() const noexcept
+    {
+        return m_Pending.has_value() && m_Name.can_save();
+    }
+    [[nodiscard]] static int nameLength() noexcept
+    {
+        return static_cast<int>(profile::PlayerName::MAX_LENGTH);
+    }
+    [[nodiscard]] QStringList recentNames() const;
+    [[nodiscard]] QVariantList standing() const;
+
+    /// Adds the letter or the space in `character` to the end of the name. Anything else, and a letter that does not
+    /// fit, is ignored.
+    Q_INVOKABLE void typeCharacter(const QString& character);
+    /// Takes the last letter off the name.
+    Q_INVOKABLE void eraseCharacter();
+    /// Puts the recent name in place `index` (0 is the newest) in the place of the name typed.
+    Q_INVOKABLE void chooseRecent(int index);
+    /// Puts the waiting score on the leaderboard under the name and remembers the name. Returns false, changing
+    /// nothing, when no score waits or the name has no letter.
+    Q_INVOKABLE bool saveScore();
+    /// Lets the waiting score go.
+    Q_INVOKABLE void discardScore();
+
     [[nodiscard]] const profile::SaveData& data() const noexcept
     {
         return m_Data;
@@ -78,17 +155,39 @@ public:
 signals:
     void gameChanged();
     void bestChanged();
+    void saveFileChanged();
+    /// A score began to wait for a name, or stopped.
+    void pendingChanged();
+    void entryChanged();
+    void recentNamesChanged();
+    void standingChanged();
     /// A game ended and its result is in newBest, pointsToBest and unlockedNow.
     void resultChanged();
 
 private:
+    /// A game that made the top 10 and has not been saved.
+    struct Pending
+    {
+        sim::Mode mode = sim::Mode::EASY;
+        std::uint32_t score = 0;
+        std::int64_t unix_seconds = 0;
+        std::size_t place = 0;
+    };
+
     void on_state_changed();
+    /// The best score of `mode`: the leaderboard's, or the waiting score when that is higher.
+    [[nodiscard]] std::uint32_t best_of(sim::Mode mode) const noexcept;
+    void write();
+    void set_pending(const std::optional<Pending>& pending);
 
     GameViewModel* m_Game = nullptr;
+    Clock m_Clock;
     profile::SaveData m_Data;
     ModeListModel m_Modes;
-    /// Best scores of this run, by mode, until the leaderboards are kept (they need a name for each entry).
-    std::array<std::uint32_t, profile::MODE_COUNT> m_Best{};
+    std::unique_ptr<SaveFile> m_File;
+    bool m_Writing = false;
+    std::optional<Pending> m_Pending;
+    profile::PlayerName m_Name;
     bool m_NewBest = false;
     int m_PointsToBest = -1;
     QStringList m_UnlockedNow;

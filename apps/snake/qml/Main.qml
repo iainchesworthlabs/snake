@@ -6,6 +6,8 @@ Window {
 
     required property int windowWidth
     required property int windowHeight
+    // Where the profile is kept. Empty keeps it in memory only, as the tests do.
+    property string saveFile
 
     width: windowWidth
     height: windowHeight
@@ -33,6 +35,7 @@ Window {
 
         objectName: "profile"
         game: gameModel
+        saveFile: root.saveFile
     }
 
     // The frame animation runs in step with the display. Each frame it tells the game how long the frame took, and the
