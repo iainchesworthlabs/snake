@@ -84,6 +84,7 @@ add_library(snake::miniaudio ALIAS snake_miniaudio)
 set(SNAKE_UI_SOURCES
     src/platform/audio_output.cpp
     src/platform/audio_output.hpp
+    src/platform/sound_sink.cpp
     src/platform/sound_sink.hpp
     src/about/about_info.cpp
     src/about/about_info.hpp
@@ -109,7 +110,11 @@ set(SNAKE_UI_SOURCES
     src/viewmodel/mode_list_model.cpp
     src/viewmodel/mode_list_model.hpp
     src/viewmodel/profile_view_model.cpp
-    src/viewmodel/profile_view_model.hpp)
+    src/viewmodel/profile_view_model.hpp
+    src/viewmodel/sound_director.cpp
+    src/viewmodel/sound_director.hpp
+    src/viewmodel/ui_events.cpp
+    src/viewmodel/ui_events.hpp)
 # QML is compiled ahead of time by qmlcachegen; no QML file is parsed from source at run time.
 # The URI must differ from the executable name: the module gets a directory of that name in the build tree,
 # and on a case-insensitive file system (macOS, Windows) "Snake" and "snake" are the same path.

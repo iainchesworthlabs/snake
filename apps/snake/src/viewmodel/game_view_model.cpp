@@ -115,8 +115,14 @@ void GameViewModel::newGame()
 
 void GameViewModel::restart()
 {
-    newGame();
-    start();
+    // One change of state, from wherever the game was to running: the title is not passed through, so nothing that
+    // watches the state (the music, the screens) sees a pause at the start.
+    const sim::GameState state_before = m_Session.state();
+    const std::uint32_t score_before = m_Session.simulation().score();
+    m_Session = sim::Session(m_Session.mode(), m_Seeds());
+    static_cast<void>(m_Session.start());
+    m_Pacer.reset();
+    publish(state_before, score_before, true);
 }
 
 void GameViewModel::start()
@@ -149,6 +155,26 @@ void GameViewModel::resume()
     }
 }
 
+std::optional<GameViewModel::Event> GameViewModel::event_of(sim::TickOutcome outcome) noexcept
+{
+    switch (outcome)
+    {
+    case sim::TickOutcome::ATE:
+        return Event::Ate;
+    case sim::TickOutcome::ATE_BONUS:
+        return Event::AteBonus;
+    case sim::TickOutcome::HIT_WALL:
+    case sim::TickOutcome::HIT_SELF:
+        return Event::Crashed;
+    case sim::TickOutcome::WON:
+        return Event::Won;
+    case sim::TickOutcome::MOVED:
+    case sim::TickOutcome::NOT_RUNNING:
+        break;
+    }
+    return std::nullopt;
+}
+
 void GameViewModel::advance(double seconds)
 {
     if (m_Session.state() != sim::GameState::RUNNING || !(seconds > 0.0))
@@ -163,7 +189,11 @@ void GameViewModel::advance(double seconds)
     bool ticked = false;
     while (m_Session.state() == sim::GameState::RUNNING && m_Pacer.due(m_Session.tick_interval_ms()))
     {
-        static_cast<void>(m_Session.tick());
+        const auto event = event_of(m_Session.tick());
+        if (event)
+        {
+            emit tickEvent(*event);
+        }
         ticked = true;
     }
     if (ticked)

@@ -11,6 +11,7 @@
 #include <QString>
 #include <cstdint>
 #include <functional>
+#include <optional>
 
 namespace snake::ui
 {
@@ -48,6 +49,19 @@ public:
         Classic,
     };
     Q_ENUM(Mode)
+
+    /// What a tick did besides move the snake. The sound and the effects react to these.
+    enum class Event : std::uint8_t
+    {
+        Ate,      // the snake ate the food
+        AteBonus, // the snake ate the bonus item
+        Crashed,  // the snake hit the wall or itself and the game ended
+        Won,      // the snake ate the last food and filled the board
+    };
+    Q_ENUM(Event)
+
+    /// The event that a tick with `outcome` is, or nothing when the snake only moved or the game was not running.
+    [[nodiscard]] static std::optional<Event> event_of(sim::TickOutcome outcome) noexcept;
 
     /// Gives the seed of each new game.
     using SeedSource = std::function<std::uint64_t()>;
@@ -90,6 +104,8 @@ public:
     Q_INVOKABLE bool handleKey(int qtKey, bool autoRepeat);
 
 signals:
+    /// A tick ate, crashed or won. It is sent as the tick happens, before the state changes.
+    void tickEvent(snake::ui::GameViewModel::Event event);
     /// The state changed.
     void stateChanged();
     void scoreChanged();

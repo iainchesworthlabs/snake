@@ -152,6 +152,17 @@ asks at the speed of a real one: the tests use it to drive the callback path und
 no audio device leaves `start()` returning false and the game silent. `SoundSink` is the small interface the game talks
 to, so the game does not depend on the platform and tests can record what it plays.
 
+`SoundDirector` decides what is heard when and tells a `SoundSink`; it holds no sound and does nothing without a sink.
+`GameViewModel` sends `tickEvent` (ate, ate the bonus item, crashed, won) as a tick happens, before the state changes.
+The director plays an effect for each, a jingle when a game starts from the title or the end of another (not when it
+resumes from a pause), a jingle when `ProfileViewModel` reports a new best, and a button sound when `UiEvents` says a
+button was pressed. It plays the title tune on the title and the game tune while a game runs, and stops the music while
+the game is paused or over. It follows the sound and music settings as they change: with sound off no effect plays, with
+music off no tune does, and turning music back on brings back the tune for the moment. `UiEvents` is the one QML
+singleton that every `ToyButton`, `ToggleSwitch` and mode card tells when it is pressed. `restart()` is one change of
+state, from wherever the game was to running, so the title tune never starts between games. The program gives the
+director its sink through `set_default_sound_sink()` before the user interface is created.
+
 `SaveFile` (`src/platform/`) is the platform service that keeps `SaveData` in one file. The profile library turns the
 data into bytes; `SaveFile` reads them, and writes them through `QSaveFile`, so a crash leaves the old file or the new
 one and never half of either. `ProfileViewModel::saveFile` names the file (`save.snk` in the user's data folder; the

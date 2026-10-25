@@ -14,19 +14,25 @@ Item {
 
     signal clicked
 
+    // A press, by touch, mouse or key: the program hears it (for the button sound) and then the owner gets `clicked`.
+    function activate() {
+        UiEvents.buttonPressed();
+        clicked();
+    }
+
     implicitHeight: 44
 
     activeFocusOnTab: true
     Accessible.role: Accessible.CheckBox
     Accessible.name: text
     Accessible.checked: checked
-    Accessible.onToggleAction: root.clicked()
-    Accessible.onPressAction: root.clicked()
+    Accessible.onToggleAction: root.activate()
+    Accessible.onPressAction: root.activate()
 
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
             if (!event.isAutoRepeat)
-                root.clicked();
+                root.activate();
             event.accepted = true;
         } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
             root.nextItemInFocusChain(event.key === Qt.Key_Down).forceActiveFocus(Qt.TabFocusReason);
@@ -78,6 +84,6 @@ Item {
     }
 
     TapHandler {
-        onTapped: root.clicked()
+        onTapped: root.activate()
     }
 }

@@ -382,8 +382,8 @@ TEST_CASE("Running into the wall ends the game, and Enter starts a new one", "[v
     CHECK(model.state() == State::Running);
     CHECK(ticks_of(model) == 0);
     CHECK(snake::sim::state_hash(model.session().simulation()) != first_game);
-    // A different seed gives a game of its own.
-    CHECK(emitted.state == 4);
+    // A different seed gives a game of its own. The new game goes from the end to running in one change of state.
+    CHECK(emitted.state == 3);
 }
 
 TEST_CASE("The score is six digits and changes when food is eaten", "[viewmodel]")

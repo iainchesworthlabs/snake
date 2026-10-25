@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "platform/audio_output.hpp"
+#include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
 #include "snake/version.hpp"
 #include "snake/window_settings.hpp"
@@ -7,6 +9,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QGuiApplication>
 #include <QLocale>
 #include <QQmlApplicationEngine>
@@ -53,6 +56,20 @@ int main(int argc, char* argv[])
     format.setSamples(snake::MAIN_WINDOW.multisample_count);
     QSurfaceFormat::setDefaultFormat(format);
 
+    // The sound. A machine with no audio device leaves the game silent. The smoke test opens a device that plays
+    // nothing, so it does not depend on the machine, but still runs the audio thread.
+    snake::ui::AudioOutput audio;
+    const auto device =
+        parser.isSet(smoke_test) ? snake::ui::AudioOutput::Device::NONE : snake::ui::AudioOutput::Device::SYSTEM;
+    if (audio.start(device))
+    {
+        snake::ui::set_default_sound_sink(&audio);
+    }
+    else
+    {
+        qWarning() << "No audio output could be opened. The game is silent.";
+    }
+
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); },
@@ -79,5 +96,8 @@ int main(int argc, char* argv[])
         QObject::connect(window, &QQuickWindow::frameSwapped, &app, [] { QCoreApplication::quit(); });
     }
 
-    return QGuiApplication::exec();
+    const int status = QGuiApplication::exec();
+    // The user interface is gone: nothing may play on the sink, which goes with this function.
+    snake::ui::set_default_sound_sink(nullptr);
+    return status;
 }

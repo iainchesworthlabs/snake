@@ -147,6 +147,7 @@ Item {
     TapHandler {
         enabled: root.selectable
         onTapped: {
+            UiEvents.buttonPressed();
             root.picked();
             root.forceActiveFocus(Qt.MouseFocusReason);
         }
