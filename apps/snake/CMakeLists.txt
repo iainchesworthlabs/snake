@@ -28,6 +28,8 @@ qt_add_qml_module(snake_app
     SOURCES
         src/board/board_item.cpp
         src/board/board_item.hpp
+        src/board/board_scene.cpp
+        src/board/board_scene.hpp
         src/input/qt_keys.cpp
         src/input/qt_keys.hpp
         src/theme/theme.cpp

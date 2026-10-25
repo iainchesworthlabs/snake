@@ -34,6 +34,8 @@ add_executable(snake_board_tests
     test_board_main.cpp
     ../src/board/board_item.cpp
     ../src/board/board_item.hpp
+    ../src/board/board_scene.cpp
+    ../src/board/board_scene.hpp
     ../src/input/qt_keys.cpp
     ../src/input/qt_keys.hpp
     ../src/viewmodel/game_view_model.cpp
@@ -69,3 +71,14 @@ catch_discover_tests(snake_theme_tests
         LABELS unit
         TIMEOUT 60
         ENVIRONMENT "${snake_ui_test_environment}")
+
+# The shapes of the board art, checked without a window: the layout, the stripes, the head, the food and the frame.
+add_executable(snake_board_scene_tests
+    test_board_scene.cpp
+    ../src/board/board_scene.cpp
+    ../src/board/board_scene.hpp)
+target_include_directories(snake_board_scene_tests PRIVATE ../src)
+target_link_libraries(snake_board_scene_tests
+    PRIVATE snake::sim Qt6::Gui Catch2::Catch2WithMain icl::warnings icl::coverage)
+icl_relax_generated_warnings(snake_board_scene_tests)
+catch_discover_tests(snake_board_scene_tests PROPERTIES LABELS unit)

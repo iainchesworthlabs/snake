@@ -43,6 +43,24 @@ Window {
             anchors.margins: 16
             anchors.topMargin: 64
             game: gameModel
+
+            // The food bobs up and down. Each half is an ease-in-out, as in the design.
+            SequentialAnimation on foodLift {
+                loops: Animation.Infinite
+                running: gameModel.state !== GameViewModel.State.Paused
+
+                NumberAnimation {
+                    to: 1
+                    duration: 450
+                    easing.type: Easing.InOutQuad
+                }
+
+                NumberAnimation {
+                    to: 0
+                    duration: 450
+                    easing.type: Easing.InOutQuad
+                }
+            }
         }
 
         Column {
