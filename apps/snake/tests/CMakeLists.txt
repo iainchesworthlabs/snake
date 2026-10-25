@@ -22,6 +22,8 @@ add_executable(snake_viewmodel_tests
     ../src/platform/motion_preference.hpp
     ../src/platform/save_file.cpp
     ../src/platform/save_file.hpp
+    ../src/platform/touch_screen.cpp
+    ../src/platform/touch_screen.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
     ../src/viewmodel/leaderboard_model.cpp

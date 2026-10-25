@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 // The pause dialog over the dimmed game: resume, restart or leave for the menu.
@@ -6,6 +8,9 @@ FocusScope {
     id: root
 
     required property GameViewModel game
+    required property ProfileViewModel profile
+    // True on a device with a touch screen, where the way of steering can be chosen.
+    required property bool touchDevice
 
     // Each time the screen shows, the keyboard starts on its main button.
     onVisibleChanged: {
@@ -93,6 +98,102 @@ FocusScope {
                         kind: "accent"
                         text: qsTr("Restart")
                         onClicked: root.game.restart()
+                    }
+                }
+
+                // How to steer: only where there is a touch screen to steer with.
+                Column {
+                    visible: root.touchDevice
+                    width: parent.width
+                    spacing: 8
+
+                    Text {
+                        color: Theme.ink
+                        font.pixelSize: 16
+                        font.weight: Font.Medium
+                        text: qsTr("Controls")
+                    }
+
+                    Row {
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                {
+                                    name: "Tilt",
+                                    label: qsTr("Tilt"),
+                                    value: ProfileViewModel.Controls.Tilt
+                                },
+                                {
+                                    name: "Swipe",
+                                    label: qsTr("Swipe"),
+                                    value: ProfileViewModel.Controls.Swipe
+                                },
+                                {
+                                    name: "Dpad",
+                                    label: qsTr("D-pad"),
+                                    value: ProfileViewModel.Controls.Dpad
+                                }
+                            ]
+
+                            ToyButton {
+                                id: choice
+
+                                required property var modelData
+
+                                objectName: "controls" + choice.modelData.name
+                                width: 88
+                                height: 42
+                                kind: root.profile.controls === choice.modelData.value ? "chosen" : "secondary"
+                                activeFocusOnTab: false
+                                fontSize: 16
+                                drop: 3
+                                text: choice.modelData.label
+                                onClicked: root.profile.controls = choice.modelData.value
+                            }
+                        }
+                    }
+
+                    ToyButton {
+                        objectName: "recalibrateButton"
+                        visible: root.profile.controls === ProfileViewModel.Controls.Tilt
+                        width: parent.width
+                        height: 44
+                        fontSize: 17
+                        text: qsTr("Recalibrate tilt")
+                        onClicked: root.profile.calibrateTilt()
+                    }
+
+                    Text {
+                        visible: root.profile.controls === ProfileViewModel.Controls.Tilt
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        color: Theme.ink
+                        font.pixelSize: 14
+                        font.weight: Font.Medium
+                        text: qsTr("Hold it how you like to play, then tap.")
+                    }
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 10
+
+                    ToggleSwitch {
+                        objectName: "pauseSoundToggle"
+                        width: parent.width
+                        text: qsTr("Sound")
+                        checked: root.profile.sound
+                        onClicked: root.profile.sound = !root.profile.sound
+                    }
+
+                    ToggleSwitch {
+                        objectName: "pauseMusicToggle"
+                        width: parent.width
+                        text: qsTr("Music")
+                        checked: root.profile.music
+                        onClicked: root.profile.music = !root.profile.music
                     }
                 }
 

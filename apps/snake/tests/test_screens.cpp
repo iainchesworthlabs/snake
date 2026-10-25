@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "platform/motion_preference.hpp"
+#include "platform/touch_screen.hpp"
 #include "snake/sim/mode.hpp"
 #include "theme/tokens.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -19,6 +20,7 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QSignalSpy>
 #include <QString>
 #include <QVariantMap>
 #include <Qt>
@@ -42,13 +44,13 @@ constexpr int PAGE_HEIGHT = 844;
 class App
 {
 public:
-    App()
+    explicit App(bool touch_device = false)
     {
         QQmlComponent component(&m_Engine, "SnakeApp", "Main");
         INFO(component.errorString().toStdString());
         REQUIRE(component.isReady());
-        m_Root.reset(
-            component.createWithInitialProperties({{"windowWidth", PAGE_WIDTH}, {"windowHeight", PAGE_HEIGHT}}));
+        m_Root.reset(component.createWithInitialProperties(
+            {{"windowWidth", PAGE_WIDTH}, {"windowHeight", PAGE_HEIGHT}, {"touchDevice", touch_device}}));
         m_Window = qobject_cast<QQuickWindow*>(m_Root.get());
         REQUIRE(m_Window != nullptr);
         m_Window->show();
@@ -160,6 +162,9 @@ public:
             m_Game->advance(0.15);
         }
         REQUIRE(m_Game->state() == State::GameOver);
+        // The food is placed at random, so a snake that runs straight may eat some on the way and make the top 10.
+        // The tests that follow expect the buttons of a game over without a score to save.
+        m_Profile->discardScore();
     }
 
     /// What the window looks like now.
@@ -453,10 +458,15 @@ TEST_CASE("The arrow keys move between the pause buttons", "[screens][pause]")
     REQUIRE(app.focus_name() == "resumeButton");
     app.press(Qt::Key_Down);
     CHECK(app.focus_name() == "restartButton");
+    // The sound and music switches are between Restart and Quit to menu.
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "pauseSoundToggle");
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "pauseMusicToggle");
     app.press(Qt::Key_Down);
     CHECK(app.focus_name() == "quitButton");
     app.press(Qt::Key_Up);
-    CHECK(app.focus_name() == "restartButton");
+    CHECK(app.focus_name() == "pauseMusicToggle");
 }
 
 TEST_CASE("A click on the dimmed game does not reach it", "[screens][pause]")
@@ -677,7 +687,8 @@ TEST_CASE("A game over that does not make the top 10 offers Play again", "[scree
     App app;
     app.start_classic();
     app.crash();
-    REQUIRE(app.game().points() == 0);
+    // A score of nothing never gets on the board, however the food lay.
+    app.profile().record_game(Mode::CLASSIC, 0);
     CHECK(app.shows("playAgainButton"));
     CHECK_FALSE(app.shows("saveScoreButton"));
     CHECK(app.focus_name() == "playAgainButton");
@@ -854,4 +865,204 @@ TEST_CASE("The motion preference is read from the GUI application", "[screens][s
 {
     // The off-screen platform has no accessibility settings, so it asks for nothing.
     CHECK_FALSE(snake::ui::system_prefers_reduced_motion());
+}
+
+namespace
+{
+
+/// The colour of a switch's track at a place the knob is not: the left part when on, the right part when off.
+QRgb track_colour(App& app, const char* toggle, const QImage& image)
+{
+    QQuickItem* item = app.item(toggle);
+    const bool on = item->property("checked").toBool();
+    const qreal track_left = item->width() - 60;
+    return image.pixel(item->mapToScene(QPointF(track_left + (on ? 15 : 45), item->height() / 2)).toPoint());
+}
+
+} // namespace
+
+TEST_CASE("The title has a Settings button that opens the settings and Back closes them", "[screens][settings]")
+{
+    App app;
+    app.click("settingsButton");
+    CHECK(app.shows("settingsScreen"));
+    CHECK_FALSE(app.shows("titleScreen"));
+    CHECK(app.focus_name() == "soundToggle");
+
+    app.click("settingsBackButton");
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("settingsScreen"));
+
+    app.click("settingsButton");
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("titleScreen"));
+}
+
+TEST_CASE("The settings show the switches and a touch tap or a key flips each one", "[screens][settings]")
+{
+    App app;
+    app.click("settingsButton");
+    CHECK(app.item("soundToggle")->property("checked").toBool());
+    CHECK(app.item("musicToggle")->property("checked").toBool());
+    CHECK_FALSE(app.item("reducedMotionToggle")->property("checked").toBool());
+
+    app.click("soundToggle");
+    CHECK_FALSE(app.profile().sound());
+    CHECK_FALSE(app.item("soundToggle")->property("checked").toBool());
+    app.click("soundToggle");
+    CHECK(app.profile().sound());
+
+    // The keyboard starts on Sound; Down goes on to Music, and Space or Enter flips it.
+    REQUIRE(app.focus_name() == "soundToggle");
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "musicToggle");
+    app.press(Qt::Key_Space);
+    CHECK_FALSE(app.profile().music());
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "reducedMotionToggle");
+    app.press(Qt::Key_Return);
+    CHECK(app.profile().reducedMotion());
+    app.press(Qt::Key_Up);
+    CHECK(app.focus_name() == "musicToggle");
+}
+
+TEST_CASE("A switch is coral with the knob at the right when on and cream with the knob at the left when off",
+          "[screens][settings]")
+{
+    App app;
+    app.click("settingsButton");
+    QImage image = app.render();
+    CHECK(track_colour(app, "soundToggle", image) == rgb_of(tokens::ACCENT));
+    CHECK(track_colour(app, "reducedMotionToggle", image) == rgb_of(tokens::SURFACE));
+    app.click("soundToggle");
+    image = app.render();
+    CHECK(track_colour(app, "soundToggle", image) == rgb_of(tokens::SURFACE));
+}
+
+TEST_CASE("Inverted axes are offered only on a device with a touch screen", "[screens][settings]")
+{
+    {
+        App app;
+        app.click("settingsButton");
+        CHECK_FALSE(app.shows("invertAxesToggle"));
+    }
+    {
+        App app(true);
+        app.click("settingsButton");
+        REQUIRE(app.shows("invertAxesToggle"));
+        app.click("invertAxesToggle");
+        CHECK(app.profile().invertAxes());
+    }
+}
+
+TEST_CASE("Resetting a leaderboard asks first and keeps the scores if the player says no", "[screens][settings]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 1480);
+    app.save_score_as("MUM");
+    app.profile().record_game(Mode::EASY, 300);
+    app.save_score_as("LEO");
+    app.click("settingsButton");
+    CHECK_FALSE(app.shows("resetConfirm"));
+
+    app.click("resetClassicButton");
+    REQUIRE(app.shows("resetConfirm"));
+    CHECK(app.text_of("confirmTitle") == "Reset the Classic leaderboard?");
+    // The question starts on the safe answer.
+    CHECK(app.focus_name() == "cancelButton");
+
+    // Nothing behind the dialog answers while it is up.
+    app.click("resetEasyButton");
+    CHECK(app.text_of("confirmTitle") == "Reset the Classic leaderboard?");
+    app.press(Qt::Key_Return);
+    CHECK_FALSE(app.shows("resetConfirm"));
+    CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).size() == 1);
+
+    // Escape is no as well.
+    app.click("resetClassicButton");
+    app.press(Qt::Key_Escape);
+    CHECK_FALSE(app.shows("resetConfirm"));
+    CHECK(app.shows("settingsScreen"));
+    CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).size() == 1);
+}
+
+TEST_CASE("Resetting a leaderboard that the player confirms empties that one only", "[screens][settings]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 1480);
+    app.save_score_as("MUM");
+    app.profile().record_game(Mode::EASY, 300);
+    app.save_score_as("LEO");
+    app.click("settingsButton");
+
+    app.click("resetEasyButton");
+    CHECK(app.text_of("confirmTitle") == "Reset the Easy leaderboard?");
+    app.click("confirmButton");
+    CHECK_FALSE(app.shows("resetConfirm"));
+    CHECK(app.profile().data().leaderboards.of(Mode::EASY).empty());
+    CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).size() == 1);
+}
+
+TEST_CASE("The pause dialog has the sound and music switches", "[screens][settings]")
+{
+    App app;
+    app.start_classic();
+    app.game().pause();
+    REQUIRE(app.shows("pauseScreen"));
+    CHECK_FALSE(app.shows("controlsTilt"));
+    CHECK_FALSE(app.shows("recalibrateButton"));
+
+    app.click("pauseSoundToggle");
+    CHECK_FALSE(app.profile().sound());
+    app.click("pauseMusicToggle");
+    CHECK_FALSE(app.profile().music());
+    // The game is still paused.
+    CHECK(app.game().state() == State::Paused);
+}
+
+TEST_CASE("On a touch device the pause dialog has the controls and recalibrates tilt", "[screens][settings]")
+{
+    App app(true);
+    app.start_classic();
+    app.game().pause();
+    REQUIRE(app.shows("controlsTilt"));
+    CHECK(app.shows("recalibrateButton"));
+    QSignalSpy asked(&app.profile(), &ProfileViewModel::calibrationRequested);
+    app.click("recalibrateButton");
+    CHECK(asked.count() == 1);
+
+    // The choice is coral. Only tilt has anything to recalibrate.
+    const QImage image = app.render();
+    CHECK(image.pixel(app.face_of("controlsTilt")) == rgb_of(tokens::ACCENT));
+    CHECK(image.pixel(app.face_of("controlsSwipe")) == rgb_of(tokens::SURFACE));
+    app.click("controlsSwipe");
+    CHECK(app.profile().controls() == ProfileViewModel::Controls::Swipe);
+    CHECK_FALSE(app.shows("recalibrateButton"));
+    app.click("controlsDpad");
+    CHECK(app.profile().controls() == ProfileViewModel::Controls::Dpad);
+    app.click("controlsTilt");
+    CHECK(app.profile().controls() == ProfileViewModel::Controls::Tilt);
+    CHECK(app.shows("recalibrateButton"));
+}
+
+TEST_CASE("The food bobs unless reduced motion is on", "[screens][settings]")
+{
+    {
+        App app;
+        app.start_classic();
+        QTest::qWait(300);
+        CHECK(app.item("board")->property("foodLift").toDouble() > 0.0);
+    }
+    {
+        App app;
+        app.profile().setReducedMotion(true);
+        app.start_classic();
+        QTest::qWait(300);
+        CHECK(app.item("board")->property("foodLift").toDouble() == 0.0);
+    }
+}
+
+TEST_CASE("The offscreen platform has no touch screen", "[screens][settings]")
+{
+    CHECK_FALSE(snake::ui::has_touch_screen());
 }

@@ -17,6 +17,7 @@ endfunction()
 # The QML module of the application: the screens and the C++ types they use. The executable and the UI tests each build
 # one, so the tests run the same screens against the same types.
 set(SNAKE_QML_FILES
+    qml/ConfirmDialog.qml
     qml/DashedFrame.qml
     qml/GameOverScreen.qml
     qml/GameScreen.qml
@@ -27,8 +28,10 @@ set(SNAKE_QML_FILES
     qml/NameEntryScreen.qml
     qml/PauseScreen.qml
     qml/PhonePage.qml
+    qml/SettingsScreen.qml
     qml/ShadowText.qml
     qml/TitleScreen.qml
+    qml/ToggleSwitch.qml
     qml/ToyButton.qml)
 # The QML files sit at the root of the module (SnakeApp/Main.qml), as the tools expect: qmllint finds the types of the
 # other files in the directory only then.
@@ -47,6 +50,8 @@ set(SNAKE_UI_SOURCES
     src/platform/motion_preference.hpp
     src/platform/save_file.cpp
     src/platform/save_file.hpp
+    src/platform/touch_screen.cpp
+    src/platform/touch_screen.hpp
     src/theme/theme.cpp
     src/theme/theme.hpp
     src/theme/tokens.hpp

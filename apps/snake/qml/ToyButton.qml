@@ -3,9 +3,10 @@ import QtQuick
 
 // A button of the Toybox Pixel style: a face on a hard drop shadow that the face sinks into when pressed. The kind
 // sets the colours: "primary" is an ink face with cream text, "secondary" a cream face with an outline, "accent" the
-// background colour with an outline, and "link" plain underlined text. The keyboard reaches it with Tab or the up and
-// down arrows, and Enter or Space press it. The focus shows as a ring. A screen that takes its own keys sets
-// activeFocusOnTab to false on its buttons, so they answer touch only.
+// background colour with an outline, "chosen" the coral of a selected state with an outline, and "link" plain
+// underlined text. The keyboard reaches it with Tab or the up and down arrows, and Enter or Space press it. The focus
+// shows as a ring. A screen that takes its own keys sets activeFocusOnTab to false on its buttons, so they answer
+// touch only.
 Item {
     id: root
 
@@ -54,7 +55,7 @@ Item {
         width: root.width
         height: root.height
         radius: root.radius
-        color: root.plain ? "transparent" : root.kind === "primary" ? Theme.ink : root.kind === "accent" ? Theme.background : Theme.surface
+        color: root.plain ? "transparent" : root.kind === "primary" ? Theme.ink : root.kind === "accent" ? Theme.background : root.kind === "chosen" ? Theme.accent : Theme.surface
         border.width: root.plain || root.kind === "primary" ? 0 : 3
         border.color: Theme.ink
 

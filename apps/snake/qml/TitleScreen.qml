@@ -11,6 +11,7 @@ FocusScope {
     required property ProfileViewModel profile
 
     signal leaderboardRequested
+    signal settingsRequested
 
     // Each time the screen shows, the keyboard starts on its main button.
     onVisibleChanged: {
@@ -91,10 +92,55 @@ FocusScope {
             objectName: "leaderboardButton"
             x: 15
             y: 762
-            width: 360
+            width: 300
             height: 50
             text: qsTr("Leaderboard")
             onClicked: root.leaderboardRequested()
+        }
+
+        ToyButton {
+            objectName: "settingsButton"
+            x: 325
+            y: 762
+            width: 50
+            height: 50
+            Accessible.name: qsTr("Settings")
+            onClicked: root.settingsRequested()
+
+            // The sliders of the design: two bars with a square on each.
+            Item {
+                anchors.centerIn: parent
+                width: 28
+                height: 22
+
+                Repeater {
+                    model: 2
+
+                    Item {
+                        id: slider
+
+                        required property int index
+
+                        y: slider.index * 14
+                        width: 28
+                        height: 8
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width
+                            height: 3
+                            color: Theme.ink
+                        }
+
+                        Rectangle {
+                            x: slider.index === 0 ? 4 : 16
+                            width: 8
+                            height: 8
+                            color: Theme.ink
+                        }
+                    }
+                }
+            }
         }
     }
 }

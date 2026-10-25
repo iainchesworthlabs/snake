@@ -139,9 +139,17 @@ writing, so an older program never destroys what a newer one saved. The profile 
 The leaderboard is a `LeaderboardModel` (place, name, score as six digits, and whether the line is the one saved last) of
 the mode in `boardMode`; saving a score sets the mode and marks its line, and loading a save file clears the mark.
 
-The screens follow the state of the game, so there is almost no navigation to keep in step with it. The two screens
-that are not states of the game, name entry and the leaderboard, are an `overlay` property of `Main.qml` (`""`,
-`"nameEntry"` or `"leaderboard"`) shown over the title or the game over screen; a game that starts clears it. The game
+`SettingsScreen` shows the sound, music and reduced-motion switches (`ToggleSwitch`), the inverted-axes switch on a device
+with a touch screen (`has_touch_screen()`, passed to `Main.qml` as `touchDevice`), and one reset button for each
+leaderboard. A reset asks first through `ConfirmDialog`, whose keyboard starts on the answer that keeps the scores. The
+pause dialog has the same sound and music switches and, on a touch device, the choice of controls (Tilt, Swipe, D-pad)
+and Recalibrate tilt, which is shown only while Tilt is chosen. With reduced motion the food in `GameScreen` stays where
+it is; shake and flashing, which the setting also covers, do not exist until the juice step. The design has no Settings
+page yet: this one follows its components and is a proposal.
+
+The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
+that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
+`"nameEntry"`, `"leaderboard"` or `"settings"`) shown over the title or the game over screen; a game that starts clears it. The game
 over screen offers Save score in place of Play again while a score waits for a name, and Menu lets that score go. The
 leaderboard's Back goes to the title (through `newGame()` when it was reached from the end of a game). `NameEntryScreen`
 keeps the keyboard on the screen itself, so letters and Space type into the name and the buttons on it answer touch only;
