@@ -22,6 +22,8 @@ add_executable(snake_viewmodel_tests
     ../src/platform/save_file.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
+    ../src/viewmodel/leaderboard_model.cpp
+    ../src/viewmodel/leaderboard_model.hpp
     ../src/viewmodel/mode_list_model.cpp
     ../src/viewmodel/mode_list_model.hpp
     ../src/viewmodel/profile_view_model.cpp

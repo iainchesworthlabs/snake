@@ -65,7 +65,7 @@ ProfileViewModel::ProfileViewModel(QObject* parent)
 }
 
 ProfileViewModel::ProfileViewModel(Clock clock, QObject* parent)
-    : QObject(parent), m_Clock(std::move(clock)), m_Modes(m_Data.unlocks, this)
+    : QObject(parent), m_Clock(std::move(clock)), m_Modes(m_Data.unlocks, this), m_Board(m_Data.leaderboards, this)
 {
 }
 
@@ -87,6 +87,17 @@ void ProfileViewModel::setGame(GameViewModel* game)
     }
     emit gameChanged();
     emit bestChanged();
+}
+
+void ProfileViewModel::setBoardMode(GameViewModel::Mode mode)
+{
+    if (mode == m_BoardMode)
+    {
+        return;
+    }
+    m_BoardMode = mode;
+    m_Board.show(to_sim(mode));
+    emit boardModeChanged();
 }
 
 QString ProfileViewModel::best() const
@@ -196,6 +207,8 @@ void ProfileViewModel::setSaveFile(const QString& path)
         }
     }
     m_Modes.refresh();
+    m_Board.mark_latest(std::nullopt, 0);
+    m_Board.refresh();
     set_pending(std::nullopt);
     emit saveFileChanged();
     emit bestChanged();
@@ -303,14 +316,18 @@ bool ProfileViewModel::saveScore()
         return false;
     }
     const profile::PlayerName saved = *m_Name.saved();
-    const bool inserted =
-        m_Data.leaderboards.of(m_Pending->mode)
-            .insert({.name = saved, .score = m_Pending->score, .unix_seconds = m_Pending->unix_seconds})
-            .has_value();
+    const Pending pending = *m_Pending;
+    const std::optional<std::size_t> place =
+        m_Data.leaderboards.of(pending.mode)
+            .insert({.name = saved, .score = pending.score, .unix_seconds = pending.unix_seconds});
     // The place was worked out against this board and nothing has changed it since.
-    Q_ASSERT(inserted);
-    Q_UNUSED(inserted)
+    Q_ASSERT(place.has_value());
     m_Data.recent_names.remember(saved);
+    // The leaderboard opens on the mode just played, with the new line marked.
+    m_BoardMode = pending.mode == sim::Mode::EASY ? GameViewModel::Mode::Easy : GameViewModel::Mode::Classic;
+    m_Board.show(pending.mode);
+    m_Board.mark_latest(pending.mode, place.value_or(0));
+    emit boardModeChanged();
     set_pending(std::nullopt);
     write();
     emit recentNamesChanged();

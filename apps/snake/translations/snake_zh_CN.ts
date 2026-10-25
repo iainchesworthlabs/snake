@@ -32,6 +32,10 @@
         <translation>已解锁 %1！</translation>
     </message>
     <message>
+        <source>Save score</source>
+        <translation>保存得分</translation>
+    </message>
+    <message>
         <source>Play again</source>
         <translation>再玩一次</translation>
     </message>
@@ -56,10 +60,76 @@
     </message>
 </context>
 <context>
+    <name>LeaderboardScreen</name>
+    <message>
+        <source>Leaderboard</source>
+        <translation>排行榜</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>简单</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>经典</translation>
+    </message>
+    <message>
+        <source>Top 10 on this device</source>
+        <translation>本设备前十名</translation>
+    </message>
+    <message>
+        <source>No scores yet.</source>
+        <translation>还没有得分。</translation>
+    </message>
+    <message>
+        <source>Play</source>
+        <translation>开始</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>Snake</source>
         <translation>贪吃蛇</translation>
+    </message>
+</context>
+<context>
+    <name>NameEntryScreen</name>
+    <message>
+        <source>New high score</source>
+        <translation>新高分</translation>
+    </message>
+    <message>
+        <source>New high score!</source>
+        <translation>新高分！</translation>
+    </message>
+    <message>
+        <source>Your name</source>
+        <translation>你的名字</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>Recent</source>
+        <translation>最近</translation>
+    </message>
+    <message>
+        <source>Spc</source>
+        <translation>空格</translation>
+    </message>
+    <message>
+        <source>Del</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <source>Save score</source>
+        <translation>保存得分</translation>
     </message>
 </context>
 <context>
@@ -94,6 +164,10 @@
     <message>
         <source>Play</source>
         <translation>开始</translation>
+    </message>
+    <message>
+        <source>Leaderboard</source>
+        <translation>排行榜</translation>
     </message>
 </context>
 <context>

@@ -80,6 +80,21 @@ QColor Theme::overlay() const
     return colour;
 }
 
+QColor Theme::medalGold() const
+{
+    return colour_of(tokens::MEDAL_GOLD);
+}
+
+QColor Theme::medalSilver() const
+{
+    return colour_of(tokens::MEDAL_SILVER);
+}
+
+QColor Theme::medalBronze() const
+{
+    return colour_of(tokens::MEDAL_BRONZE);
+}
+
 QString Theme::fontFamily() const
 {
     return QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size());

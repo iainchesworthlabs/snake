@@ -10,6 +10,8 @@ FocusScope {
     required property GameViewModel game
     required property ProfileViewModel profile
 
+    signal leaderboardRequested
+
     // Each time the screen shows, the keyboard starts on its main button.
     onVisibleChanged: {
         if (visible)
@@ -73,7 +75,7 @@ FocusScope {
 
             objectName: "playButton"
             x: 15
-            y: 750
+            y: 686
             width: 360
             height: 62
             focus: true
@@ -83,6 +85,16 @@ FocusScope {
             radius: 14
             text: qsTr("Play")
             onClicked: root.game.start()
+        }
+
+        ToyButton {
+            objectName: "leaderboardButton"
+            x: 15
+            y: 762
+            width: 360
+            height: 50
+            text: qsTr("Leaderboard")
+            onClicked: root.leaderboardRequested()
         }
     }
 }

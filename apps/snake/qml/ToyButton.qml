@@ -4,7 +4,8 @@ import QtQuick
 // A button of the Toybox Pixel style: a face on a hard drop shadow that the face sinks into when pressed. The kind
 // sets the colours: "primary" is an ink face with cream text, "secondary" a cream face with an outline, "accent" the
 // background colour with an outline, and "link" plain underlined text. The keyboard reaches it with Tab or the up and
-// down arrows, and Enter or Space press it. The focus shows as a ring.
+// down arrows, and Enter or Space press it. The focus shows as a ring. A screen that takes its own keys sets
+// activeFocusOnTab to false on its buttons, so they answer touch only.
 Item {
     id: root
 
@@ -19,6 +20,8 @@ Item {
     readonly property bool pressed: tap.pressed
     readonly property bool plain: kind === "link"
 
+    // A button that is not enabled is faded and takes no touch or key.
+    opacity: enabled ? 1 : 0.4
     activeFocusOnTab: true
     Accessible.role: Accessible.Button
     Accessible.name: text

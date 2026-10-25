@@ -20,8 +20,11 @@ set(SNAKE_QML_FILES
     qml/DashedFrame.qml
     qml/GameOverScreen.qml
     qml/GameScreen.qml
+    qml/LeaderboardScreen.qml
+    qml/LetterKey.qml
     qml/Main.qml
     qml/ModeCard.qml
+    qml/NameEntryScreen.qml
     qml/PauseScreen.qml
     qml/PhonePage.qml
     qml/ShadowText.qml
@@ -47,6 +50,8 @@ set(SNAKE_UI_SOURCES
     src/theme/tokens.hpp
     src/viewmodel/game_view_model.cpp
     src/viewmodel/game_view_model.hpp
+    src/viewmodel/leaderboard_model.cpp
+    src/viewmodel/leaderboard_model.hpp
     src/viewmodel/mode_list_model.cpp
     src/viewmodel/mode_list_model.hpp
     src/viewmodel/profile_view_model.cpp

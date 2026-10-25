@@ -144,3 +144,11 @@ TEST_CASE("the theme gives the colours and the family to QML", "[theme]")
     CHECK(theme.accent() == QColor::fromRgb(tokens::ACCENT));
     CHECK(theme.fontFamily() == QStringLiteral("Pixelify Sans"));
 }
+
+TEST_CASE("the medal colours are the tokens of the leaderboard tiles", "[theme]")
+{
+    const Theme theme;
+    CHECK(theme.medalGold().rgb() == QColor::fromRgb(tokens::MEDAL_GOLD).rgb());
+    CHECK(theme.medalSilver().rgb() == QColor::fromRgb(tokens::MEDAL_SILVER).rgb());
+    CHECK(theme.medalBronze().rgb() == QColor::fromRgb(tokens::MEDAL_BRONZE).rgb());
+}

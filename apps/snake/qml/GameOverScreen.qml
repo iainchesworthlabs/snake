@@ -10,6 +10,9 @@ FocusScope {
     required property GameViewModel game
     required property ProfileViewModel profile
 
+    // The score made the top 10 and the player chose to give a name for it.
+    signal nameRequested
+
     // What the game came to, in words: a new best, how far short it fell, or nothing when there is no best to speak of.
     readonly property string verdict: {
         if (profile.newBest)
@@ -21,10 +24,27 @@ FocusScope {
         return "";
     }
 
-    // Each time the screen shows, the keyboard starts on its main button.
+    // The main button is the one that saves a score that made the top 10, and Play again otherwise. The keyboard
+    // starts on it each time the screen shows and when the score turns out to qualify.
+    function focusMainButton() {
+        if (profile.qualifies)
+            saveScoreButton.forceActiveFocus();
+        else
+            playAgainButton.forceActiveFocus();
+    }
+
     onVisibleChanged: {
         if (visible)
-            playAgainButton.forceActiveFocus();
+            focusMainButton();
+    }
+
+    Connections {
+        target: root.profile
+
+        function onPendingChanged() {
+            if (root.visible)
+                root.focusMainButton();
+        }
     }
 
     Accessible.role: Accessible.Pane
@@ -162,9 +182,27 @@ FocusScope {
         }
 
         ToyButton {
+            id: saveScoreButton
+
+            objectName: "saveScoreButton"
+            visible: root.profile.qualifies
+            x: 15
+            y: 690
+            width: 360
+            height: 60
+            kind: "primary"
+            fontSize: 26
+            drop: 6
+            radius: 14
+            text: qsTr("Save score")
+            onClicked: root.nameRequested()
+        }
+
+        ToyButton {
             id: playAgainButton
 
             objectName: "playAgainButton"
+            visible: !root.profile.qualifies
             x: 15
             y: 690
             width: 360
@@ -185,7 +223,10 @@ FocusScope {
             width: 360
             height: 50
             text: qsTr("Menu")
-            onClicked: root.game.newGame()
+            onClicked: {
+                root.profile.discardScore();
+                root.game.newGame();
+            }
         }
     }
 }

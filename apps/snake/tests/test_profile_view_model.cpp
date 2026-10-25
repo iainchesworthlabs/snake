@@ -2,6 +2,7 @@
 #include "snake/profile/unlocks.hpp"
 #include "snake/sim/mode.hpp"
 #include "viewmodel/game_view_model.hpp"
+#include "viewmodel/leaderboard_model.hpp"
 #include "viewmodel/mode_list_model.hpp"
 #include "viewmodel/profile_view_model.hpp"
 
@@ -676,4 +677,99 @@ TEST_CASE("Choosing another file drops the score that waited for a name", "[prof
     REQUIRE(profile.qualifies());
     profile.setSaveFile(folder.filePath("save.snk"));
     CHECK_FALSE(profile.qualifies());
+}
+
+namespace
+{
+
+QVariant line_value(const snake::ui::LeaderboardModel& model, int row, snake::ui::LeaderboardModel::Role role)
+{
+    return model.data(model.index(row), role);
+}
+
+} // namespace
+
+TEST_CASE("The leaderboard model lists the lines of the mode shown, best first", "[profile][leaderboard]")
+{
+    using snake::ui::LeaderboardModel;
+    ProfileViewModel profile;
+    const LeaderboardModel& board = *profile.leaderboard();
+    CHECK(board.rowCount() == 0);
+    CHECK(board.rowCount(board.index(0)) == 0);
+    CHECK(board.roleNames().size() == 4);
+
+    profile.record_game(Mode::EASY, 300);
+    save_as(profile, "LEO");
+    profile.record_game(Mode::CLASSIC, 1480);
+    save_as(profile, "MUM");
+    profile.record_game(Mode::CLASSIC, 1310);
+    save_as(profile, "DAD");
+
+    // The leaderboard is on the mode just played.
+    CHECK(profile.boardMode() == GameViewModel::Mode::Classic);
+    REQUIRE(board.rowCount() == 2);
+    CHECK(line_value(board, 0, LeaderboardModel::PlaceRole) == 1);
+    CHECK(line_value(board, 0, LeaderboardModel::NameRole) == "MUM");
+    CHECK(line_value(board, 0, LeaderboardModel::ScoreRole) == "001480");
+    CHECK(line_value(board, 1, LeaderboardModel::PlaceRole) == 2);
+    CHECK(line_value(board, 1, LeaderboardModel::NameRole) == "DAD");
+
+    QSignalSpy mode(&profile, &ProfileViewModel::boardModeChanged);
+    profile.setBoardMode(GameViewModel::Mode::Easy);
+    CHECK(mode.count() == 1);
+    profile.setBoardMode(GameViewModel::Mode::Easy);
+    CHECK(mode.count() == 1);
+    REQUIRE(board.rowCount() == 1);
+    CHECK(line_value(board, 0, LeaderboardModel::NameRole) == "LEO");
+}
+
+TEST_CASE("Only the line saved last is marked, and only on its own mode's board", "[profile][leaderboard]")
+{
+    using snake::ui::LeaderboardModel;
+    ProfileViewModel profile;
+    const LeaderboardModel& board = *profile.leaderboard();
+    profile.record_game(Mode::CLASSIC, 500);
+    save_as(profile, "MUM");
+    profile.record_game(Mode::CLASSIC, 900);
+    save_as(profile, "DAD");
+
+    // DAD went in above MUM.
+    CHECK(line_value(board, 0, LeaderboardModel::NameRole) == "DAD");
+    CHECK(line_value(board, 0, LeaderboardModel::LatestRole).toBool());
+    CHECK_FALSE(line_value(board, 1, LeaderboardModel::LatestRole).toBool());
+
+    profile.setBoardMode(GameViewModel::Mode::Easy);
+    CHECK(board.rowCount() == 0);
+}
+
+TEST_CASE("The leaderboard model gives nothing for a row that is not there", "[profile][leaderboard]")
+{
+    using snake::ui::LeaderboardModel;
+    ProfileViewModel profile;
+    profile.record_game(Mode::EASY, 10);
+    save_as(profile, "A");
+    const LeaderboardModel& board = *profile.leaderboard();
+    CHECK_FALSE(board.data(QModelIndex{}, LeaderboardModel::NameRole).isValid());
+    CHECK_FALSE(board.data(board.index(1), LeaderboardModel::NameRole).isValid());
+    CHECK_FALSE(board.data(board.index(0), Qt::DisplayRole).isValid());
+}
+
+TEST_CASE("The leaderboard comes back from the save file with no line marked", "[profile][leaderboard]")
+{
+    using snake::ui::LeaderboardModel;
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile;
+        profile.setSaveFile(path);
+        profile.record_game(Mode::EASY, 70);
+        save_as(profile, "MAYA");
+    }
+    ProfileViewModel again;
+    again.setSaveFile(path);
+    again.setBoardMode(GameViewModel::Mode::Easy);
+    const LeaderboardModel& board = *again.leaderboard();
+    REQUIRE(board.rowCount() == 1);
+    CHECK(line_value(board, 0, LeaderboardModel::NameRole) == "MAYA");
+    CHECK_FALSE(line_value(board, 0, LeaderboardModel::LatestRole).toBool());
 }

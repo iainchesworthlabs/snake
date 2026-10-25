@@ -32,6 +32,10 @@
         <translation>%1 unlocked!</translation>
     </message>
     <message>
+        <source>Save score</source>
+        <translation>Save score</translation>
+    </message>
+    <message>
         <source>Play again</source>
         <translation>Play again</translation>
     </message>
@@ -56,10 +60,76 @@
     </message>
 </context>
 <context>
+    <name>LeaderboardScreen</name>
+    <message>
+        <source>Leaderboard</source>
+        <translation>Leaderboard</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Easy</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>Classic</translation>
+    </message>
+    <message>
+        <source>Top 10 on this device</source>
+        <translation>Top 10 on this device</translation>
+    </message>
+    <message>
+        <source>No scores yet.</source>
+        <translation>No scores yet.</translation>
+    </message>
+    <message>
+        <source>Play</source>
+        <translation>Play</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>Snake</source>
         <translation>Snake</translation>
+    </message>
+</context>
+<context>
+    <name>NameEntryScreen</name>
+    <message>
+        <source>New high score</source>
+        <translation>New high score</translation>
+    </message>
+    <message>
+        <source>New high score!</source>
+        <translation>New high score!</translation>
+    </message>
+    <message>
+        <source>Your name</source>
+        <translation>Your name</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 of %2</translation>
+    </message>
+    <message>
+        <source>Recent</source>
+        <translation>Recent</translation>
+    </message>
+    <message>
+        <source>Spc</source>
+        <translation>Spc</translation>
+    </message>
+    <message>
+        <source>Del</source>
+        <translation>Del</translation>
+    </message>
+    <message>
+        <source>Save score</source>
+        <translation>Save score</translation>
     </message>
 </context>
 <context>
@@ -94,6 +164,10 @@
     <message>
         <source>Play</source>
         <translation>Play</translation>
+    </message>
+    <message>
+        <source>Leaderboard</source>
+        <translation>Leaderboard</translation>
     </message>
 </context>
 <context>
