@@ -4,6 +4,7 @@
 #include "snake/sim/snapshot.hpp"
 #include "viewmodel/game_view_model.hpp"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <QChar>
@@ -46,6 +47,7 @@ struct Signals
     int score = 0;
     int mode = 0;
     int board = 0;
+    int progress = 0;
 
     explicit Signals(GameViewModel& model)
     {
@@ -53,6 +55,7 @@ struct Signals
         QObject::connect(&model, &GameViewModel::scoreChanged, [this] { ++score; });
         QObject::connect(&model, &GameViewModel::modeChanged, [this] { ++mode; });
         QObject::connect(&model, &GameViewModel::boardChanged, [this] { ++board; });
+        QObject::connect(&model, &GameViewModel::progressChanged, [this] { ++progress; });
     }
 };
 
@@ -185,7 +188,7 @@ TEST_CASE("Times that are not times are ignored", "[viewmodel]")
     CHECK(ticks_of(model) == 1);
 }
 
-TEST_CASE("A paused game does not tick, and the pause is not counted when it resumes", "[viewmodel]")
+TEST_CASE("A paused game does not tick, and only the time before the pause counts when it resumes", "[viewmodel]")
 {
     GameViewModel model(counting_seeds());
     Signals emitted(model);
@@ -199,11 +202,41 @@ TEST_CASE("A paused game does not tick, and the pause is not counted when it res
     model.resume();
     CHECK(model.state() == State::Running);
     CHECK(emitted.state == 3);
-    // The 0.1 s before the pause were forgotten with it.
-    model.advance(0.1);
+    // The 0.1 s before the pause are kept, and the 5 s of the pause are not counted: 0.05 s more make the interval.
+    model.advance(0.04);
     CHECK(ticks_of(model) == 0);
-    model.advance(0.05);
+    model.advance(0.01);
     CHECK(ticks_of(model) == 1);
+}
+
+TEST_CASE("The progress is how far the game is between ticks", "[viewmodel]")
+{
+    GameViewModel model(counting_seeds());
+    Signals emitted(model);
+    CHECK(model.tickProgress() == 0.0);
+    model.start();
+    CHECK(model.tickProgress() == 0.0);
+
+    // The first interval of Classic is 150 ms.
+    model.advance(0.075);
+    CHECK(model.tickProgress() == Catch::Approx(0.5));
+    CHECK(emitted.progress == 1);
+    model.advance(0.1);
+    CHECK(ticks_of(model) == 1);
+    CHECK(model.tickProgress() == Catch::Approx(0.025 / 0.15));
+    CHECK(emitted.progress == 2);
+
+    // The picture stays where it was while the game is paused and carries on from there.
+    const double paused_at = model.tickProgress();
+    model.pause();
+    model.advance(1.0);
+    CHECK(model.tickProgress() == paused_at);
+    CHECK(emitted.progress == 2);
+    model.resume();
+    CHECK(model.tickProgress() == paused_at);
+
+    model.newGame();
+    CHECK(model.tickProgress() == 0.0);
 }
 
 TEST_CASE("Pause and resume do nothing in the wrong state", "[viewmodel]")

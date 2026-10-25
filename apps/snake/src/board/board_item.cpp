@@ -88,11 +88,13 @@ void BoardItem::setGame(GameViewModel* game)
     if (m_Game)
     {
         disconnect(m_Game, &GameViewModel::boardChanged, this, nullptr);
+        disconnect(m_Game, &GameViewModel::progressChanged, this, nullptr);
     }
     m_Game = game;
     if (m_Game)
     {
         connect(m_Game, &GameViewModel::boardChanged, this, [this] { update(); });
+        connect(m_Game, &GameViewModel::progressChanged, this, [this] { update(); });
     }
     update();
     emit gameChanged();
@@ -120,9 +122,10 @@ QSGNode* BoardItem::updatePaintNode(QSGNode* old_node, UpdatePaintNodeData* /*da
         set_shapes(*window(), layer_node(*root, Layer::BACKGROUND), board_scene::background_shapes(layout));
         m_DrawnLayout = layout;
     }
-    set_shapes(*window(), layer_node(*root, Layer::GAME),
-               m_Game ? board_scene::game_shapes(layout, m_Game->session().simulation(), m_FoodLift)
-                      : std::vector<board_scene::Shape>{});
+    set_shapes(
+        *window(), layer_node(*root, Layer::GAME),
+        m_Game ? board_scene::game_shapes(layout, m_Game->session().simulation(), m_FoodLift, m_Game->tickProgress())
+               : std::vector<board_scene::Shape>{});
     return root;
 }
 

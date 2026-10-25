@@ -47,7 +47,12 @@ struct Layout
 [[nodiscard]] std::vector<Shape> background_shapes(const Layout& layout);
 
 /// The snake, the food and the bonus item of `game`, in the order they are drawn. `lift` is how far the food and the
-/// bonus item are raised, from 0 (resting) to 1 (the top of the bob).
-[[nodiscard]] std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift);
+/// bonus item are raised, from 0 (resting) to 1 (the top of the bob). `progress` is how far the game is from this tick
+/// to the next, from 0 to 1: the snake is drawn that far into its next move, so that it glides from cell to cell. Each
+/// segment moves into the cell of the one in front of it and the head moves into the cell it will take, facing the
+/// way it will turn. A move that ends the game, that crosses the edge of a wrapping board or that is not coming (the
+/// game is not running) is not drawn ahead. When the snake is about to eat, its tail stays and the body stretches.
+[[nodiscard]] std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift,
+                                             double progress = 0.0);
 
 } // namespace snake::ui::board_scene

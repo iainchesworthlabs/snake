@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 
 namespace snake::ui::board_scene
 {
@@ -181,12 +182,10 @@ void add_leaf(std::vector<Shape>& out, const Layout& layout, QPoint at, int rise
     add_rounded(out, leaf, leaf.height() / 2, opaque(tokens::LEAF));
 }
 
-QRgb stripe_colour(std::int64_t ticks, std::size_t index)
+/// The stripes alternate along the snake from the head, and a segment keeps its place in the snake as it moves.
+QRgb stripe_colour(std::size_t index)
 {
-    // A cell keeps its colour for as long as it is on the snake: it was the head at tick `ticks - index` and every
-    // later tick moves it one place down the snake.
-    const std::int64_t born = ticks - static_cast<std::int64_t>(index);
-    return opaque(born % 2 == 0 ? tokens::ACCENT : tokens::SURFACE);
+    return opaque(index % 2 == 0 ? tokens::ACCENT : tokens::SURFACE);
 }
 
 void add_segment(std::vector<Shape>& out, const Layout& layout, QPoint at, QRgb colour, int radius_units)
@@ -214,6 +213,59 @@ void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Dir
     {
         out.push_back({tongue, opaque(tokens::TONGUE)});
     }
+}
+
+/// What the snake does on the next tick, as far as the picture needs to know.
+struct Motion
+{
+    sim::Direction facing = sim::Direction::RIGHT; ///< Where the head looks.
+    bool moving = false;                           ///< The head moves into `next` without the game ending.
+    bool eating = false;                           ///< It eats there, so the tail stays.
+    sim::Cell next;
+};
+
+Motion motion_of(const sim::Simulation& game)
+{
+    const auto& turns = game.pending_turns();
+    Motion motion;
+    motion.facing = turns.empty() ? game.heading() : turns.at(0);
+    if (!game.running() || game.won())
+    {
+        return motion;
+    }
+    const sim::Cell head = game.head();
+    const int x = head.x + (motion.facing == sim::Direction::RIGHT  ? 1
+                            : motion.facing == sim::Direction::LEFT ? -1
+                                                                    : 0);
+    const int y = head.y + (motion.facing == sim::Direction::DOWN ? 1 : motion.facing == sim::Direction::UP ? -1 : 0);
+    // Off the board the game ends, or the snake comes out of the other side, which is not drawn as a glide.
+    if (x < 0 || y < 0 || x >= sim::BOARD_COLUMNS || y >= sim::BOARD_ROWS)
+    {
+        return motion;
+    }
+    motion.next = sim::Cell{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
+    const bool bonus = game.bonus() && game.bonus()->cell == motion.next;
+    motion.eating = motion.next == game.food() || bonus;
+
+    // The body stops the snake, except for the tail when it moves away.
+    const auto& snake = game.snake();
+    const std::size_t blocking = motion.eating ? snake.size() : snake.size() - 1;
+    for (std::size_t index = 0; index < blocking; ++index)
+    {
+        if (snake[index] == motion.next)
+        {
+            return motion;
+        }
+    }
+    motion.moving = true;
+    return motion;
+}
+
+/// `progress` of the way from one pixel position to another, on whole pixels.
+QPoint glide(QPoint from, QPoint to, double progress)
+{
+    return QPoint(from.x() + static_cast<int>(std::lround(static_cast<double>(to.x() - from.x()) * progress)),
+                  from.y() + static_cast<int>(std::lround(static_cast<double>(to.y() - from.y()) * progress)));
 }
 
 } // namespace
@@ -293,7 +345,7 @@ std::vector<Shape> background_shapes(const Layout& layout)
     return shapes;
 }
 
-std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift)
+std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift, double progress)
 {
     std::vector<Shape> shapes;
     if (layout.cell <= 0)
@@ -314,14 +366,33 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
         add_food(shapes, layout, cell_corner(layout, game.bonus()->cell), rise, tokens::MEDAL_GOLD);
     }
 
-    // The tail first, so the head is on top.
+    const Motion motion = motion_of(game);
+    const double along = motion.moving ? std::clamp(progress, 0.0, 1.0) : 0.0;
     const auto& snake = game.snake();
+    // A piece of the snake moves into the cell of the piece in front of it, unless that is across the edge.
+    const auto position_of = [&](std::size_t index)
+    {
+        const QPoint from = cell_corner(layout, snake[index]);
+        if (index == 0)
+        {
+            return glide(from, cell_corner(layout, motion.next), along);
+        }
+        const sim::Cell ahead = snake[index - 1];
+        const bool adjacent = std::abs(ahead.x - snake[index].x) + std::abs(ahead.y - snake[index].y) == 1;
+        return adjacent ? glide(from, cell_corner(layout, ahead), along) : from;
+    };
+
+    // The tail first, so the head is on top. A snake that eats grows a piece behind its tail, which the tail uncovers
+    // as it moves on.
+    if (motion.moving && motion.eating && along > 0.0)
+    {
+        add_segment(shapes, layout, cell_corner(layout, snake.back()), stripe_colour(snake.size()), SEGMENT_RADIUS);
+    }
     for (std::size_t index = snake.size(); index > 1; --index)
     {
-        add_segment(shapes, layout, cell_corner(layout, snake[index - 1]), stripe_colour(game.ticks(), index - 1),
-                    SEGMENT_RADIUS);
+        add_segment(shapes, layout, position_of(index - 1), stripe_colour(index - 1), SEGMENT_RADIUS);
     }
-    add_head(shapes, layout, cell_corner(layout, game.head()), game.heading(), layout.cells());
+    add_head(shapes, layout, position_of(0), motion.facing, layout.cells());
     return shapes;
 }
 

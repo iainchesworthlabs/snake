@@ -111,8 +111,17 @@ frame (a quarter of a cell) and its hard shadow (twice that), centred in the ite
 shadow, the frame and the checkerboard; `game_shapes()` gives the striped snake, the head with its eyes and tongue,
 the food with its highlight and leaf, and the bonus item. Everything is rectangles on whole pixels, in the measures
 and colours of the design (rounded corners and the berries are built from rows of rectangles), so that every renderer
-draws it the same and the edges stay crisp. A cell of the body keeps its stripe colour for as long as it is on the
-snake. The shapes are tested as data, without a window.
+draws it the same and the edges stay crisp. The shapes are tested as data, without a window.
+
+The snake glides between cells. The view-model gives `tickProgress()`, the time since the last tick as a fraction of
+the interval, and the scene draws each piece of the snake that far into its next move: the head into the cell it will
+take, facing the way it will turn, and every other piece into the cell of the piece in front of it. The stripes
+alternate by place in the snake, so they travel with it. A move that ends the game, that crosses the edge of a
+wrapping board or that is not coming (the game is paused or over) is not drawn ahead. When the next cell has food, the
+tail stays and a new piece is uncovered behind it, so the body stretches. At the end of a tick the picture is the one
+the next tick starts from, so nothing jumps. This draws the game a fraction of a tick ahead of the simulation, which
+adds no delay to the controls. Pausing keeps the picture where it is and resuming carries on from there. The board
+item redraws on `progressChanged`, which the view-model emits each frame that the game runs.
 
 `BoardItem` turns the shapes into the window's rectangle nodes (`QQuickWindow::createRectangleNode()`) and not its own
 geometry, because the software renderer, which the UI tests and CI use, draws only the standard node types and shows

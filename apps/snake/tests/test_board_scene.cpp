@@ -34,7 +34,8 @@ constexpr QRgb opaque(std::uint32_t rgb)
     return 0xFF000000U | rgb;
 }
 
-/// The layout of a board in an item 672 pixels square (the frame and the shadow around 640), which gives the 32 pixel cells of the design.
+/// The layout of a board in an item 672 pixels square (the frame and the shadow around 640), which gives the 32 pixel
+/// cells of the design.
 Layout desktop_layout()
 {
     return board_scene::layout_for(QSize(672, 672));
@@ -242,7 +243,7 @@ TEST_CASE("The tongue stops at the edge of the board", "[board-scene]")
     }
 }
 
-TEST_CASE("The body is striped, and a cell keeps its colour as the snake moves", "[board-scene]")
+TEST_CASE("The body is striped, and a stripe keeps its place in the snake as it moves", "[board-scene]")
 {
     const Layout layout = desktop_layout();
     Simulation game = three_cells(Direction::RIGHT);
@@ -250,17 +251,15 @@ TEST_CASE("The body is striped, and a cell keeps its colour as the snake moves",
     CHECK(colour_at(shapes, in_cell(layout, Cell{9, 10}, 16, 10)) == opaque(tokens::SURFACE));
     CHECK(colour_at(shapes, in_cell(layout, Cell{8, 10}, 16, 10)) == opaque(tokens::ACCENT));
 
-    for (int tick = 0; tick < 2; ++tick)
+    for (int tick = 0; tick < 3; ++tick)
     {
         REQUIRE(game.tick() != snake::sim::TickOutcome::HIT_WALL);
         shapes = board_scene::game_shapes(layout, game, 0.0);
-        // The cell the head was on keeps the colour of the head as the body moves along it.
-        CHECK(colour_at(shapes, in_cell(layout, Cell{10, 10}, 16, 10)) == opaque(tokens::ACCENT));
+        const auto& snake = game.snake();
+        REQUIRE(snake.size() == 3);
+        CHECK(colour_at(shapes, in_cell(layout, snake[1], 16, 10)) == opaque(tokens::SURFACE));
+        CHECK(colour_at(shapes, in_cell(layout, snake[2], 16, 10)) == opaque(tokens::ACCENT));
     }
-    // Neighbouring body segments differ.
-    const auto& snake = game.snake();
-    REQUIRE(snake.size() == 3);
-    CHECK(colour_at(shapes, in_cell(layout, snake[1], 16, 10)) != colour_at(shapes, in_cell(layout, snake[2], 16, 10)));
 }
 
 TEST_CASE("A segment has a darker lower edge", "[board-scene]")
@@ -370,4 +369,133 @@ TEST_CASE("Small cells still draw every part of the art", "[board-scene]")
     {
         CHECK_FALSE(shape.rect.isEmpty());
     }
+}
+
+namespace
+{
+
+/// The left edge of the rectangle of `colour` that is nearest the left, which for the head's eye is the head's left.
+int left_of(const std::vector<Shape>& shapes, QRgb colour)
+{
+    int left = 1'000'000;
+    for (const Shape& shape : shapes)
+    {
+        if (shape.colour == colour)
+        {
+            left = std::min(left, shape.rect.left());
+        }
+    }
+    return left;
+}
+
+} // namespace
+
+TEST_CASE("Between ticks the snake glides into the cells ahead of it", "[board-scene]")
+{
+    const Layout layout = desktop_layout();
+    const Simulation game = three_cells(Direction::RIGHT);
+    const std::vector<Shape> still = board_scene::game_shapes(layout, game, 0.0, 0.0);
+    const std::vector<Shape> half = board_scene::game_shapes(layout, game, 0.0, 0.5);
+    const std::vector<Shape> done = board_scene::game_shapes(layout, game, 0.0, 1.0);
+
+    // The head's eye is half a cell further right, and a whole cell at the end of the tick.
+    const int eye = left_of(still, opaque(tokens::EYE));
+    CHECK(left_of(half, opaque(tokens::EYE)) == eye + (layout.cell / 2));
+    CHECK(left_of(done, opaque(tokens::EYE)) == eye + layout.cell);
+
+    // The tail has left half of its cell, and the cell behind it is empty.
+    CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 4, 16)) == 0);
+    CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 24, 10)) == opaque(tokens::ACCENT));
+    CHECK(colour_at(half, in_cell(layout, Cell{9, 10}, 4, 10)) == opaque(tokens::ACCENT));
+    CHECK(colour_at(half, in_cell(layout, Cell{9, 10}, 20, 10)) == opaque(tokens::SURFACE));
+
+    // At the end of the tick the picture is the one the next tick draws at its start, so nothing jumps.
+    Simulation next = game;
+    REQUIRE(next.tick() == snake::sim::TickOutcome::MOVED);
+    const std::vector<Shape> after = board_scene::game_shapes(layout, next, 0.0, 0.0);
+    for (const Cell cell : {Cell{11, 10}, Cell{10, 10}, Cell{9, 10}, Cell{8, 10}})
+    {
+        INFO(int(cell.x));
+        CHECK(colour_at(done, in_cell(layout, cell, 16, 10)) == colour_at(after, in_cell(layout, cell, 16, 10)));
+    }
+    CHECK(left_of(done, opaque(tokens::EYE)) == left_of(after, opaque(tokens::EYE)));
+    // The progress is held between 0 and 1.
+    CHECK(left_of(board_scene::game_shapes(layout, game, 0.0, 3.0), opaque(tokens::EYE)) ==
+          left_of(done, opaque(tokens::EYE)));
+    CHECK(left_of(board_scene::game_shapes(layout, game, 0.0, -1.0), opaque(tokens::EYE)) == eye);
+}
+
+TEST_CASE("A turn that is waiting is drawn as the head turns into it", "[board-scene]")
+{
+    const Layout layout = desktop_layout();
+    Simulation game = three_cells(Direction::RIGHT);
+    REQUIRE(game.turn(Direction::DOWN));
+    const std::vector<Shape> shapes = board_scene::game_shapes(layout, game, 0.0, 0.5);
+
+    // The head moves down into (10, 11) and faces down; the segment behind it moves right into the head's cell.
+    const QRect head = QRect(layout.origin.x() + (10 * layout.cell),
+                             layout.origin.y() + (10 * layout.cell) + (layout.cell / 2), layout.cell, layout.cell);
+    CHECK(colour_at(shapes, head.center()) == opaque(tokens::ACCENT));
+    // The tongue is below the head.
+    CHECK(colour_at(shapes, QPoint(head.center().x(), head.bottom() + 2)) == opaque(tokens::TONGUE));
+    CHECK(colour_at(shapes, in_cell(layout, Cell{9, 10}, 28, 16)) == opaque(tokens::SURFACE));
+}
+
+TEST_CASE("The snake does not glide into a wall, into itself or across the edge, or when the game is not running",
+          "[board-scene]")
+{
+    const Layout layout = desktop_layout();
+    const auto eye_at = [&](const Simulation& game, double progress)
+    { return left_of(board_scene::game_shapes(layout, game, 0.0, progress), opaque(tokens::EYE)); };
+
+    const Simulation wall = game_with({{19, 10}, {18, 10}, {17, 10}}, Direction::RIGHT, {3, 3});
+    CHECK(eye_at(wall, 0.8) == eye_at(wall, 0.0));
+
+    // A snake curled so that its next cell is its own body.
+    const Simulation curled = game_with({{5, 5}, {5, 6}, {6, 6}, {6, 5}, {6, 4}}, Direction::RIGHT, {3, 3});
+    CHECK(eye_at(curled, 0.8) == eye_at(curled, 0.0));
+    // The same snake with its tail on that cell, which moves away, glides.
+    const Simulation chasing = game_with({{5, 5}, {5, 6}, {6, 6}, {6, 5}}, Direction::RIGHT, {3, 3});
+    CHECK(eye_at(chasing, 0.8) > eye_at(chasing, 0.0));
+
+    Simulation::Setup stopped;
+    stopped.heading = Direction::RIGHT;
+    const std::array<Cell, 3> cells = {{{10, 10}, {9, 10}, {8, 10}}};
+    stopped.snake = cells;
+    stopped.food = Cell{3, 3};
+    stopped.running = false;
+    const auto over = Simulation::from_setup(stopped);
+    REQUIRE(over.has_value());
+    CHECK(eye_at(*over, 0.8) == eye_at(*over, 0.0));
+}
+
+TEST_CASE("A snake that is about to eat keeps its tail and grows a piece behind it", "[board-scene]")
+{
+    const Layout layout = desktop_layout();
+    const Simulation game = game_with({{10, 10}, {9, 10}, {8, 10}}, Direction::RIGHT, {11, 10});
+    const std::vector<Shape> half = board_scene::game_shapes(layout, game, 0.0, 0.5);
+
+    // The tail's cell is never empty: the tail has moved half a cell on, and the new piece shows behind it.
+    CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 4, 16)) == opaque(tokens::SURFACE));
+    CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 24, 10)) == opaque(tokens::ACCENT));
+
+    // When the tick comes the body is that long.
+    Simulation next = game;
+    REQUIRE(next.tick() == snake::sim::TickOutcome::ATE);
+    CHECK(next.snake().size() == 4);
+    const std::vector<Shape> after = board_scene::game_shapes(layout, next, 0.0, 0.0);
+    const std::vector<Shape> done = board_scene::game_shapes(layout, game, 0.0, 1.0);
+    for (const Cell cell : {Cell{11, 10}, Cell{10, 10}, Cell{9, 10}, Cell{8, 10}})
+    {
+        CHECK(colour_at(done, in_cell(layout, cell, 16, 10)) == colour_at(after, in_cell(layout, cell, 16, 10)));
+    }
+}
+
+TEST_CASE("A snake that is about to eat the bonus item grows as well", "[board-scene]")
+{
+    const Layout layout = desktop_layout();
+    const Simulation game =
+        game_with({{10, 10}, {9, 10}, {8, 10}}, Direction::RIGHT, {3, 3}, 0, Simulation::Bonus{Cell{11, 10}, 20});
+    const std::vector<Shape> half = board_scene::game_shapes(layout, game, 0.0, 0.5);
+    CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 4, 16)) == opaque(tokens::SURFACE));
 }
