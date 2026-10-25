@@ -30,6 +30,12 @@ class GameViewModel : public QObject
     Q_PROPERTY(QString score READ score NOTIFY scoreChanged FINAL)
     /// The score as a number, for the profile to rank and compare.
     Q_PROPERTY(int points READ points NOTIFY scoreChanged FINAL)
+    /// The game plays itself, as the title screen shows it. Games then take their seeds from a sequence of the demo's
+    /// own, so a real game's seeds are never used up, and a game that ends starts again by itself. Setting it starts
+    /// a new game.
+    Q_PROPERTY(bool autoplay READ autoplay WRITE setAutoplay NOTIFY autoplayChanged FINAL)
+    /// The row of the board the head is in, from 0 at the top. The title's preview scrolls to keep it in view.
+    Q_PROPERTY(int headRow READ headRow NOTIFY boardChanged FINAL)
     /// The mode of the current game. Setting it starts a new game in that mode.
     Q_PROPERTY(Mode mode READ mode WRITE setMode NOTIFY modeChanged FINAL)
 
@@ -77,6 +83,17 @@ public:
     [[nodiscard]] Mode mode() const;
     void setMode(Mode mode);
 
+    [[nodiscard]] bool autoplay() const noexcept
+    {
+        return m_Autoplay;
+    }
+    void setAutoplay(bool on);
+
+    [[nodiscard]] int headRow() const;
+
+    /// The seed of the first game the demo plays. Each game after it takes the next number.
+    static constexpr std::uint64_t DEMO_SEED = 0x5EED5EED;
+
     [[nodiscard]] const sim::Session& session() const noexcept
     {
         return m_Session;
@@ -108,6 +125,7 @@ signals:
     void tickEvent(snake::ui::GameViewModel::Event event);
     /// The state changed.
     void stateChanged();
+    void autoplayChanged();
     void scoreChanged();
     void modeChanged();
     /// The board is different: a tick ran or a new game began.
@@ -121,7 +139,12 @@ private:
     /// when `board_changed`.
     void publish(sim::GameState state_before, std::uint32_t score_before, bool board_changed);
 
+    /// The seed of the next game: the demo's own sequence while it plays itself, else from the seed source.
+    [[nodiscard]] std::uint64_t next_seed();
+
     SeedSource m_Seeds;
+    bool m_Autoplay = false;
+    std::uint64_t m_DemoSeed = DEMO_SEED;
     sim::Session m_Session;
     sim::TickPacer m_Pacer;
 };

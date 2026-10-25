@@ -211,6 +211,13 @@ effects. `EffectsModel::dying` keeps the game screen up until the death is over 
 or a tap on the dying board calls `skipDeath()`. With reduced motion there is no flash and no shake, and the pieces still
 pop, from the first moment.
 
+The head reacts to food: from one to three cells ahead of the way it faces, and no more than one to a side, it opens its
+mouth (a dark square at the front, in place of the tongue). The title shows the attract mode, as the design does: a second
+`GameViewModel` with `autoplay` on plays Easy by `sim::autoplay()`, steering before each tick, starting again by itself
+when a game ends, and taking its seeds from a sequence of its own (`DEMO_SEED`), so a real game's seeds are never used up
+and the demo is the same every time. A frame animation runs it only while the title shows. The preview is the board in a
+frame, clipped to a window about ten rows high that scrolls to keep the head's row (`headRow`) in view.
+
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
 that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
 `"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game

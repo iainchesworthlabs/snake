@@ -39,9 +39,71 @@ FocusScope {
             text: qsTr("Snake")
         }
 
+        // The attract mode: the game playing itself on a board that scrolls to keep the head in view, in the frame of
+        // the design. It plays only while the title shows.
+        GameViewModel {
+            id: demo
+
+            objectName: "demoGame"
+            autoplay: true
+        }
+
+        FrameAnimation {
+            running: root.visible
+            onTriggered: demo.advance(frameTime)
+        }
+
+        Item {
+            objectName: "attractPreview"
+            x: 15
+            y: 118
+            width: 360
+            height: 168
+
+            Rectangle {
+                y: 6
+                width: parent.width
+                height: parent.height
+                radius: 18
+                color: Theme.shadow
+            }
+
+            Rectangle {
+                width: parent.width
+                height: parent.height
+                radius: 18
+                color: Theme.ink
+            }
+
+            Item {
+                x: 6
+                y: 6
+                width: parent.width - 12
+                height: parent.height - 12
+                clip: true
+
+                BoardItem {
+                    id: demoBoard
+
+                    objectName: "demoBoard"
+                    width: parent.width
+                    height: parent.width
+                    // The head's row in the middle of the window, as far as the board goes.
+                    y: Math.max(parent.height - height, Math.min(0, parent.height / 2 - (demo.headRow + 0.5) * height / 20))
+                    game: demo
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 200
+                        }
+                    }
+                }
+            }
+        }
+
         Column {
             x: 15
-            y: 150
+            y: 300
             width: 360
             spacing: 10
 

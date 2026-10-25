@@ -4,6 +4,7 @@
 #include "input/qt_keys.hpp"
 #include "snake/input/action.hpp"
 #include "snake/input/key_map.hpp"
+#include "snake/sim/autoplayer.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/sim/scoring.hpp"
 #include "snake/sim/session.hpp"
@@ -58,7 +59,7 @@ std::uint64_t system_seed()
 GameViewModel::GameViewModel(QObject* parent) : GameViewModel(&system_seed, parent) {}
 
 GameViewModel::GameViewModel(SeedSource seeds, QObject* parent)
-    : QObject(parent), m_Seeds(std::move(seeds)), m_Session(sim::Mode::CLASSIC, m_Seeds())
+    : QObject(parent), m_Seeds(std::move(seeds)), m_Session(sim::Mode::CLASSIC, next_seed())
 {
 }
 
@@ -98,7 +99,7 @@ void GameViewModel::setMode(Mode mode)
     }
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
-    m_Session = sim::Session(to_sim(mode), m_Seeds());
+    m_Session = sim::Session(to_sim(mode), next_seed());
     m_Pacer.reset();
     emit modeChanged();
     publish(state_before, score_before, true);
@@ -108,7 +109,7 @@ void GameViewModel::newGame()
 {
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
-    m_Session = sim::Session(m_Session.mode(), m_Seeds());
+    m_Session = sim::Session(m_Session.mode(), next_seed());
     m_Pacer.reset();
     publish(state_before, score_before, true);
 }
@@ -119,7 +120,7 @@ void GameViewModel::restart()
     // watches the state (the music, the screens) sees a pause at the start.
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
-    m_Session = sim::Session(m_Session.mode(), m_Seeds());
+    m_Session = sim::Session(m_Session.mode(), next_seed());
     static_cast<void>(m_Session.start());
     m_Pacer.reset();
     publish(state_before, score_before, true);
@@ -153,6 +154,31 @@ void GameViewModel::resume()
         // when the game stopped is kept, so that the snake carries on from where the picture showed it.
         publish(state_before, m_Session.simulation().score(), false);
     }
+}
+
+std::uint64_t GameViewModel::next_seed()
+{
+    return m_Autoplay ? m_DemoSeed++ : m_Seeds();
+}
+
+void GameViewModel::setAutoplay(bool on)
+{
+    if (on == m_Autoplay)
+    {
+        return;
+    }
+    m_Autoplay = on;
+    m_DemoSeed = DEMO_SEED;
+    emit autoplayChanged();
+    if (on)
+    {
+        restart();
+    }
+}
+
+int GameViewModel::headRow() const
+{
+    return m_Session.simulation().head().y;
 }
 
 std::optional<GameViewModel::Event> GameViewModel::event_of(sim::TickOutcome outcome) noexcept
@@ -189,6 +215,10 @@ void GameViewModel::advance(double seconds)
     bool ticked = false;
     while (m_Session.state() == sim::GameState::RUNNING && m_Pacer.due(m_Session.tick_interval_ms()))
     {
+        if (m_Autoplay && m_Session.simulation().pending_turns().empty())
+        {
+            static_cast<void>(m_Session.turn(sim::autoplay(m_Session.simulation())));
+        }
         const auto event = event_of(m_Session.tick());
         if (event)
         {
@@ -199,6 +229,11 @@ void GameViewModel::advance(double seconds)
     if (ticked)
     {
         publish(state_before, score_before, true);
+    }
+    // The demo has no game over screen: it begins again.
+    if (m_Autoplay && m_Session.state() == sim::GameState::GAME_OVER)
+    {
+        restart();
     }
     emit progressChanged();
 }

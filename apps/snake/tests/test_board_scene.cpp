@@ -499,3 +499,62 @@ TEST_CASE("A snake that is about to eat the bonus item grows as well", "[board-s
     const std::vector<Shape> half = board_scene::game_shapes(layout, game, 0.0, 0.5);
     CHECK(colour_at(half, in_cell(layout, Cell{8, 10}, 4, 16)) == opaque(tokens::SURFACE));
 }
+
+namespace
+{
+
+/// A running game with the snake heading right from (10, 10) and the food at `food`.
+Simulation heading_right_with_food(Cell food)
+{
+    return game_with({Cell{10, 10}, Cell{9, 10}, Cell{8, 10}}, Direction::RIGHT, food);
+}
+
+bool mouth_is_open(const Simulation& game)
+{
+    const Layout layout = desktop_layout();
+    const auto shapes = board_scene::game_shapes(layout, game, 0.0);
+    // An open mouth takes the place of the tongue.
+    return count_of(shapes, opaque(tokens::TONGUE)) == 0;
+}
+
+} // namespace
+
+TEST_CASE("The head opens its mouth when food is close ahead", "[board-scene][food]")
+{
+    // A tongue as long as nothing is near, for food far ahead, behind the head, or off to one side.
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{18, 10})));
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{2, 10})));
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{10, 15})));
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{12, 13})));
+
+    // From one to three cells ahead and no more than one off to the side, the mouth is open.
+    CHECK(mouth_is_open(heading_right_with_food(Cell{11, 10})));
+    CHECK(mouth_is_open(heading_right_with_food(Cell{12, 10})));
+    CHECK(mouth_is_open(heading_right_with_food(Cell{13, 10})));
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{14, 10})));
+    CHECK(mouth_is_open(heading_right_with_food(Cell{12, 9})));
+    CHECK(mouth_is_open(heading_right_with_food(Cell{12, 11})));
+    CHECK_FALSE(mouth_is_open(heading_right_with_food(Cell{12, 12})));
+}
+
+TEST_CASE("The mouth opens towards the way the head faces, whichever way that is", "[board-scene][food]")
+{
+    const auto going = [](Direction heading, std::vector<Cell> snake, Cell food)
+    { return game_with(std::move(snake), heading, food); };
+    CHECK(mouth_is_open(going(Direction::LEFT, {Cell{10, 10}, Cell{11, 10}, Cell{12, 10}}, Cell{8, 10})));
+    CHECK_FALSE(mouth_is_open(going(Direction::LEFT, {Cell{10, 10}, Cell{11, 10}, Cell{12, 10}}, Cell{12, 9})));
+    CHECK(mouth_is_open(going(Direction::DOWN, {Cell{10, 10}, Cell{10, 9}, Cell{10, 8}}, Cell{10, 12})));
+    CHECK_FALSE(mouth_is_open(going(Direction::DOWN, {Cell{10, 10}, Cell{10, 9}, Cell{10, 8}}, Cell{10, 5})));
+    CHECK(mouth_is_open(going(Direction::UP, {Cell{10, 10}, Cell{10, 11}, Cell{10, 12}}, Cell{9, 8})));
+    CHECK_FALSE(mouth_is_open(going(Direction::UP, {Cell{10, 10}, Cell{10, 11}, Cell{10, 12}}, Cell{10, 13})));
+}
+
+TEST_CASE("The mouth is dark, between the eyes, at the front of the head", "[board-scene][food]")
+{
+    const Layout layout = desktop_layout();
+    const auto near_food = board_scene::game_shapes(layout, heading_right_with_food(Cell{12, 10}), 0.0);
+    // The front of the head (the right side, in the middle) is ink where the tongue root would be.
+    CHECK(colour_at(near_food, in_cell(layout, Cell{10, 10}, 27, 16)) == opaque(tokens::INK));
+    const auto far_food = board_scene::game_shapes(layout, heading_right_with_food(Cell{18, 10}), 0.0);
+    CHECK(colour_at(far_food, in_cell(layout, Cell{10, 10}, 27, 16)) == opaque(tokens::ACCENT));
+}

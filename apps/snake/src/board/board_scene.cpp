@@ -201,7 +201,7 @@ void add_segment(std::vector<Shape>& out, const Layout& layout, QPoint at, QRgb 
 }
 
 void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Direction heading, const QRect& cells,
-              bool dizzy)
+              bool dizzy, bool mouth_open)
 {
     const int cell = layout.cell;
     add_segment(out, layout, at, opaque(tokens::ACCENT), HEAD_RADIUS);
@@ -222,12 +222,57 @@ void add_head(std::vector<Shape>& out, const Layout& layout, QPoint at, sim::Dir
             out.push_back({turned(at, cell, heading, 21, y + 2, 5, 5), opaque(tokens::INK)});
         }
     }
+    if (mouth_open)
+    {
+        // Food is close ahead: the mouth opens, a dark square between the eyes at the front of the head, in place of
+        // the tongue.
+        out.push_back({turned(at, cell, heading, 25, 11, 7, 10), opaque(tokens::INK)});
+        return;
+    }
     // The tongue reaches into the next cell and stops at the edge of the board.
     const QRect tongue = turned(at, cell, heading, UNITS, 14, 10, 3).intersected(cells);
     if (!tongue.isEmpty())
     {
         out.push_back({tongue, opaque(tokens::TONGUE)});
     }
+}
+
+/// How far ahead the head looks for food, in cells, and how far to the side it still counts as ahead.
+constexpr int FOOD_REACH = 3;
+constexpr int FOOD_SIDE = 1;
+
+/// True when food is close in front of the head: from one to FOOD_REACH cells ahead along the way it faces, and no more
+/// than FOOD_SIDE cells off to a side. The edge of a wrapping board is not looked across.
+bool food_ahead(const sim::Simulation& game, sim::Direction facing)
+{
+    if (game.won())
+    {
+        return false;
+    }
+    const int dx = game.food().x - game.head().x;
+    const int dy = game.food().y - game.head().y;
+    int ahead = 0;
+    int aside = 0;
+    switch (facing)
+    {
+    case sim::Direction::RIGHT:
+        ahead = dx;
+        aside = dy;
+        break;
+    case sim::Direction::LEFT:
+        ahead = -dx;
+        aside = dy;
+        break;
+    case sim::Direction::DOWN:
+        ahead = dy;
+        aside = dx;
+        break;
+    case sim::Direction::UP:
+        ahead = -dy;
+        aside = dx;
+        break;
+    }
+    return ahead >= 1 && ahead <= FOOD_REACH && std::abs(aside) <= FOOD_SIDE;
 }
 
 /// What the snake does on the next tick, as far as the picture needs to know.
@@ -412,7 +457,8 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
         add_segment(shapes, layout, position_of(index - 1), colour, SEGMENT_RADIUS);
     }
     // A snake that crashed has dizzy eyes. One that won has not.
-    add_head(shapes, layout, position_of(0), motion.facing, layout.cells(), !game.running() && !game.won());
+    add_head(shapes, layout, position_of(0), motion.facing, layout.cells(), !game.running() && !game.won(),
+             game.running() && food_ahead(game, motion.facing));
     return shapes;
 }
 
