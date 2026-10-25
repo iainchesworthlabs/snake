@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "board/effects.hpp"
 #include "snake/sim/simulation.hpp"
 
 #include <QRect>
@@ -54,5 +55,14 @@ struct Layout
 /// game is not running) is not drawn ahead. When the snake is about to eat, its tail stays and the body stretches.
 [[nodiscard]] std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game, double lift,
                                              double progress = 0.0);
+
+/// The burst of specks and the rising points of `effects`, drawn over the game. A speck is a square a fifth of a cell
+/// wide and a score is "+" and the digits of the points in a 3 by 5 pixel font, in cream on an ink shadow, which has to
+/// read on the teal board. Things outside the cells are left out.
+[[nodiscard]] std::vector<Shape> effect_shapes(const Layout& layout, const effects::Effects& effects);
+
+/// The squares of one glyph of the pixel font ("0" to "9" and "+"), as columns and rows from the top left of a 3 by 5
+/// grid. Other characters have none.
+[[nodiscard]] std::vector<QPoint> glyph_pixels(char glyph);
 
 } // namespace snake::ui::board_scene

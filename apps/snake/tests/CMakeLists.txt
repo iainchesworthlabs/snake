@@ -15,6 +15,7 @@ add_executable(snake_viewmodel_tests
     test_game_view_model.cpp
     test_profile_view_model.cpp
     test_qt_keys.cpp
+    test_effects_model.cpp
     test_save_file.cpp
     test_sound_director.cpp
     ../src/input/qt_keys.cpp
@@ -27,6 +28,10 @@ add_executable(snake_viewmodel_tests
     ../src/platform/sound_sink.hpp
     ../src/platform/touch_screen.cpp
     ../src/platform/touch_screen.hpp
+    ../src/board/effects.cpp
+    ../src/board/effects.hpp
+    ../src/viewmodel/effects_model.cpp
+    ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
     ../src/viewmodel/leaderboard_model.cpp
@@ -57,8 +62,12 @@ add_executable(snake_board_tests
     ../src/board/board_item.hpp
     ../src/board/board_scene.cpp
     ../src/board/board_scene.hpp
+    ../src/board/effects.cpp
+    ../src/board/effects.hpp
     ../src/input/qt_keys.cpp
     ../src/input/qt_keys.hpp
+    ../src/viewmodel/effects_model.cpp
+    ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp)
 set_target_properties(snake_board_tests PROPERTIES AUTOMOC ON)
@@ -96,8 +105,11 @@ catch_discover_tests(snake_theme_tests
 # The shapes of the board art, checked without a window: the layout, the stripes, the head, the food and the frame.
 add_executable(snake_board_scene_tests
     test_board_scene.cpp
+    test_effects.cpp
     ../src/board/board_scene.cpp
-    ../src/board/board_scene.hpp)
+    ../src/board/board_scene.hpp
+    ../src/board/effects.cpp
+    ../src/board/effects.hpp)
 target_include_directories(snake_board_scene_tests PRIVATE ../src)
 target_link_libraries(snake_board_scene_tests
     PRIVATE snake::sim Qt6::Gui Catch2::Catch2WithMain icl::warnings icl::coverage)

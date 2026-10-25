@@ -8,6 +8,7 @@ FocusScope {
 
     required property GameViewModel game
     required property ProfileViewModel profile
+    required property EffectsModel effects
 
     Accessible.role: Accessible.Pane
     Accessible.name: qsTr("Game")
@@ -24,6 +25,7 @@ FocusScope {
         anchors.margins: 16
         anchors.topMargin: 64
         game: root.game
+        effects: root.effects
 
         // With reduced motion the food stays where it is.
         Binding {

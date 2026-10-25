@@ -191,6 +191,16 @@ executable as resources and `AboutInfo` hands them to QML, so they are always th
 `git describe --tags --always --dirty` read when CMake configures (`source_info.hpp`), else the commit of the CI run, else
 "unknown"; a local build needs a configure to follow a new commit.
 
+`effects::Effects` (`src/board/`) is the short-lived show of the game: eating throws eight specks (fourteen, in gold, for
+the bonus item) from the middle of the cell and raises the points as "+10" in a 3 by 5 pixel font, and a crash shakes the
+board by up to three art pixels for a third of a second. It holds no game rules and has its own random numbers, so it never
+touches the generator of a game. At most 64 specks live at once, which the small displays can take. `EffectsModel` is its
+QML face: it starts the effects from `GameViewModel::tickEvent`, works out the points of a food from how the score grew,
+clears them when a new game starts (a pause and its resume leave them where they were), and takes the reduced-motion
+setting by a binding. `Main.qml` runs a frame animation while the model is `active`. `BoardItem` draws the specks and
+points as a third layer over the game and moves the whole scene by the shake, in whole pixels. Reduced motion turns the
+shake off; the specks and points stay, because they are not shake or flashing.
+
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
 that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
 `"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game

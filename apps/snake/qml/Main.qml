@@ -64,6 +64,20 @@ Window {
         saveFile: root.saveFile
     }
 
+    // The burst when the snake eats, the points that rise, and the shake of a crash.
+    EffectsModel {
+        id: effectsModel
+
+        objectName: "effects"
+        game: gameModel
+        reducedMotion: profileModel.reducedMotion
+    }
+
+    FrameAnimation {
+        running: effectsModel.active
+        onTriggered: effectsModel.advance(frameTime)
+    }
+
     // The frame animation runs in step with the display. Each frame it tells the game how long the frame took, and the
     // game runs the ticks that are due.
     FrameAnimation {
@@ -94,6 +108,7 @@ Window {
         focus: gameModel.state === GameViewModel.State.Running
         game: gameModel
         profile: profileModel
+        effects: effectsModel
     }
 
     PauseScreen {

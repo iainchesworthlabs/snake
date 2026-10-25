@@ -92,6 +92,8 @@ set(SNAKE_UI_SOURCES
     src/board/board_item.hpp
     src/board/board_scene.cpp
     src/board/board_scene.hpp
+    src/board/effects.cpp
+    src/board/effects.hpp
     src/input/qt_keys.cpp
     src/input/qt_keys.hpp
     src/platform/motion_preference.cpp
@@ -103,6 +105,8 @@ set(SNAKE_UI_SOURCES
     src/theme/theme.cpp
     src/theme/theme.hpp
     src/theme/tokens.hpp
+    src/viewmodel/effects_model.cpp
+    src/viewmodel/effects_model.hpp
     src/viewmodel/game_view_model.cpp
     src/viewmodel/game_view_model.hpp
     src/viewmodel/leaderboard_model.cpp

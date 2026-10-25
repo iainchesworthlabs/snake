@@ -4,6 +4,8 @@
 #include "board/board_scene.hpp"
 #include "viewmodel/game_view_model.hpp"
 
+#include <QMatrix4x4>
+
 #include <QColor>
 #include <QQuickWindow>
 #include <QRect>
@@ -25,6 +27,7 @@ enum class Layer : std::uint8_t
 {
     BACKGROUND,
     GAME,
+    EFFECTS,
 };
 
 QSGNode& layer_node(QSGNode& root, Layer layer)
@@ -37,9 +40,11 @@ QSGNode& layer_node(QSGNode& root, Layer layer)
     return *node;
 }
 
+/// The root moves the whole board, which is how it shakes.
 QSGNode* make_root()
 {
-    auto* root = new QSGNode;
+    auto* root = new QSGTransformNode;
+    root->appendChildNode(new QSGNode);
     root->appendChildNode(new QSGNode);
     root->appendChildNode(new QSGNode);
     return root;
@@ -100,6 +105,25 @@ void BoardItem::setGame(GameViewModel* game)
     emit gameChanged();
 }
 
+void BoardItem::setEffects(EffectsModel* effects)
+{
+    if (effects == m_Effects)
+    {
+        return;
+    }
+    if (m_Effects)
+    {
+        disconnect(m_Effects, &EffectsModel::changed, this, nullptr);
+    }
+    m_Effects = effects;
+    if (m_Effects)
+    {
+        connect(m_Effects, &EffectsModel::changed, this, [this] { update(); });
+    }
+    update();
+    emit effectsChanged();
+}
+
 void BoardItem::setFoodLift(qreal lift)
 {
     lift = std::clamp(lift, 0.0, 1.0);
@@ -126,6 +150,20 @@ QSGNode* BoardItem::updatePaintNode(QSGNode* old_node, UpdatePaintNodeData* /*da
         *window(), layer_node(*root, Layer::GAME),
         m_Game ? board_scene::game_shapes(layout, m_Game->session().simulation(), m_FoodLift, m_Game->tickProgress())
                : std::vector<board_scene::Shape>{});
+    if (m_Effects)
+    {
+        set_shapes(*window(), layer_node(*root, Layer::EFFECTS),
+                   board_scene::effect_shapes(layout, m_Effects->effects()));
+        const QPoint shake = m_Effects->effects().shake() * layout.pixel();
+        QMatrix4x4 matrix;
+        matrix.translate(static_cast<float>(shake.x()), static_cast<float>(shake.y()));
+        static_cast<QSGTransformNode*>(root)->setMatrix(matrix);
+    }
+    else
+    {
+        set_shapes(*window(), layer_node(*root, Layer::EFFECTS), {});
+        static_cast<QSGTransformNode*>(root)->setMatrix(QMatrix4x4());
+    }
     return root;
 }
 
