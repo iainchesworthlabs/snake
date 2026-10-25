@@ -9,9 +9,19 @@ set(SNAKE_FONT_FILES
     pixelify-sans-latin-500-normal.woff2
     pixelify-sans-latin-600-normal.woff2
     pixelify-sans-latin-700-normal.woff2)
+# The fonts for the scripts Pixelify Sans does not have, cut down to the characters of the translations by
+# tools/fonts/subset_fonts.py.
+set(SNAKE_NOTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts")
+set(SNAKE_NOTO_FILES
+    noto-sans-jp-400.woff2
+    noto-sans-jp-700.woff2
+    noto-sans-sc-400.woff2
+    noto-sans-sc-700.woff2)
 function(snake_add_font_resources target)
     list(TRANSFORM SNAKE_FONT_FILES PREPEND "${SNAKE_FONT_DIR}/" OUTPUT_VARIABLE font_paths)
     qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_FONT_DIR}" FILES ${font_paths})
+    list(TRANSFORM SNAKE_NOTO_FILES PREPEND "${SNAKE_NOTO_DIR}/" OUTPUT_VARIABLE noto_paths)
+    qt_add_resources(${target} noto_fonts PREFIX /snake/fonts BASE "${SNAKE_NOTO_DIR}" FILES ${noto_paths})
 endfunction()
 
 # What the About screen shows. The revision is the exact tag or commit this build was configured from: `git describe`,
@@ -38,9 +48,11 @@ set(SNAKE_NOTICES_FILE "${CMAKE_CURRENT_BINARY_DIR}/snake-THIRD-PARTY-NOTICES.tx
 set_source_files_properties("${PROJECT_SOURCE_DIR}/LICENSE" PROPERTIES QT_RESOURCE_ALIAS licence.txt)
 set_source_files_properties("${SNAKE_NOTICES_FILE}" PROPERTIES QT_RESOURCE_ALIAS notices.txt)
 set_source_files_properties("${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" PROPERTIES QT_RESOURCE_ALIAS font-licence.txt)
+set_source_files_properties("${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt" PROPERTIES QT_RESOURCE_ALIAS font-licence-noto.txt)
 function(snake_add_about_resources target)
     qt_add_resources(${target} about PREFIX /snake/about
-        FILES "${PROJECT_SOURCE_DIR}/LICENSE" "${SNAKE_NOTICES_FILE}" "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt")
+        FILES "${PROJECT_SOURCE_DIR}/LICENSE" "${SNAKE_NOTICES_FILE}" "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt"
+             "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt")
 endfunction()
 
 # The QML module of the application: the screens and the C++ types they use. The executable and the UI tests each build
@@ -155,7 +167,7 @@ snake_add_ui_module(snake_app)
 # update_translations` refreshes the .ts files from the sources. docs/i18n.md records where each translation came from.
 qt_add_translations(snake_app
     TS_FILES translations/snake_en.ts translations/snake_zh_CN.ts translations/snake_fr.ts
-             translations/snake_es.ts translations/snake_de.ts
+             translations/snake_es.ts translations/snake_de.ts translations/snake_ja.ts
     LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app PRIVATE snake::core)
@@ -170,9 +182,11 @@ icl_install_qt_app(snake_app
     NOTICE_EXCLUDE catch2)
 # The font's licence asks for its copyright notice and text to travel with the font.
 if(APPLE)
-    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" DESTINATION "snake.app/Contents/Resources/doc")
+    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
+        DESTINATION "snake.app/Contents/Resources/doc")
 else()
-    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" DESTINATION "share/doc/snake")
+    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
+        DESTINATION "share/doc/snake")
 endif()
 
 if(SNAKE_BUILD_TESTS)

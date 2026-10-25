@@ -7,6 +7,7 @@
 
 #include <QByteArray>
 #include <QColor>
+#include <QDir>
 #include <QFile>
 #include <QFont>
 #include <QFontDatabase>
@@ -14,8 +15,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QLocale>
+#include <QRawFont>
+#include <QSet>
 #include <QString>
 #include <QStringList>
+#include <QXmlStreamReader>
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -151,4 +157,80 @@ TEST_CASE("the medal colours are the tokens of the leaderboard tiles", "[theme]"
     CHECK(theme.medalGold().rgb() == QColor::fromRgb(tokens::MEDAL_GOLD).rgb());
     CHECK(theme.medalSilver().rgb() == QColor::fromRgb(tokens::MEDAL_SILVER).rgb());
     CHECK(theme.medalBronze().rgb() == QColor::fromRgb(tokens::MEDAL_BRONZE).rgb());
+}
+
+TEST_CASE("the font of the language comes first for the characters Japanese and Chinese share", "[theme][fonts]")
+{
+    const QStringList japanese = snake::ui::application_font(QLocale(QLocale::Japanese)).families();
+    CHECK(japanese.at(0) == QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size()));
+    CHECK(japanese.at(1) == "Noto Sans JP");
+    CHECK(japanese.at(2) == "Noto Sans SC");
+    const QStringList chinese = snake::ui::application_font(QLocale(QLocale::Chinese, QLocale::China)).families();
+    CHECK(chinese.at(1) == "Noto Sans SC");
+    CHECK(chinese.at(2) == "Noto Sans JP");
+    // Every other language gets the same fallbacks, and the monospace of the tokens last.
+    CHECK(snake::ui::application_font(QLocale(QLocale::French)).families().last() == "monospace");
+}
+
+namespace
+{
+
+/// The characters of every translation in the catalogue of `language`.
+QSet<char32_t> characters_of(const QString& language)
+{
+    QFile file(QDir(QStringLiteral(SNAKE_TRANSLATIONS_DIR)).filePath(QStringLiteral("snake_%1.ts").arg(language)));
+    REQUIRE(file.open(QIODevice::ReadOnly));
+    QXmlStreamReader xml(&file);
+    QSet<char32_t> found;
+    while (!xml.atEnd())
+    {
+        if (xml.readNext() == QXmlStreamReader::StartElement && xml.name() == u"translation")
+        {
+            for (const char32_t character : xml.readElementText().toStdU32String())
+            {
+                found.insert(character);
+            }
+        }
+    }
+    REQUIRE_FALSE(xml.hasError());
+    return found;
+}
+
+} // namespace
+
+TEST_CASE("the bundled fonts cover every character of every translation", "[theme][fonts]")
+{
+    REQUIRE(snake::ui::load_fonts());
+    // The fonts the game carries: the pixel font and the fallbacks. A character the system could supply does not count,
+    // because the game must look the same on every machine.
+    std::vector<QRawFont> fonts;
+    for (const QString& family : {QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size()),
+                                  QString("Noto Sans JP"), QString("Noto Sans SC"), QString("Noto Sans Hebrew")})
+    {
+        if (QFontDatabase::families().contains(family))
+        {
+            fonts.push_back(QRawFont::fromFont(QFont(family)));
+        }
+    }
+    REQUIRE(fonts.size() >= 3);
+
+    for (const QString& language : QStringList{"en", "zh_CN", "fr", "es", "de", "ja", "he", "yi"})
+    {
+        if (!QFile::exists(
+                QDir(QStringLiteral(SNAKE_TRANSLATIONS_DIR)).filePath(QStringLiteral("snake_%1.ts").arg(language))))
+        {
+            continue;
+        }
+        for (const char32_t character : characters_of(language))
+        {
+            if (QChar::isSpace(character) || character == U'\n')
+            {
+                continue;
+            }
+            INFO("language " << language.toStdString() << " character U+"
+                             << QString::number(character, 16).toStdString());
+            CHECK(std::ranges::any_of(fonts,
+                                      [character](const QRawFont& font) { return font.supportsCharacter(character); }));
+        }
+    }
 }

@@ -35,7 +35,9 @@ FocusScope {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 28
             offset: 5
-            pixelSize: 76
+            // The pixel font has Latin letters only; the name in another script is drawn in a font that is taller, so
+            // it is set smaller to stay above the preview.
+            pixelSize: /^[\u0000-\u024F]*$/.test(text) ? 76 : 54
             text: qsTr("Snake")
         }
 

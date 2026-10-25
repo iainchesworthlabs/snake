@@ -14,11 +14,15 @@ namespace snake::ui
 namespace
 {
 
-constexpr std::array<const char*, 4> FONT_FILES = {
+constexpr std::array<const char*, 8> FONT_FILES = {
     ":/snake/fonts/pixelify-sans-latin-400-normal.woff2",
     ":/snake/fonts/pixelify-sans-latin-500-normal.woff2",
     ":/snake/fonts/pixelify-sans-latin-600-normal.woff2",
     ":/snake/fonts/pixelify-sans-latin-700-normal.woff2",
+    ":/snake/fonts/noto-sans-jp-400.woff2",
+    ":/snake/fonts/noto-sans-jp-700.woff2",
+    ":/snake/fonts/noto-sans-sc-400.woff2",
+    ":/snake/fonts/noto-sans-sc-700.woff2",
 };
 
 QColor colour_of(std::uint32_t rgb)
@@ -38,11 +42,16 @@ bool load_fonts()
     return all_loaded;
 }
 
-QFont application_font()
+QFont application_font(const QLocale& locale)
 {
+    // Japanese and Chinese share Han characters that are drawn differently, so the language chooses which comes first.
+    const bool chinese = locale.language() == QLocale::Chinese;
+    const QString japanese = QStringLiteral("Noto Sans JP");
+    const QString simplified = QStringLiteral("Noto Sans SC");
     QFont font;
     font.setFamilies({QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size()),
-                      QStringLiteral("Courier New"), QStringLiteral("monospace")});
+                      chinese ? simplified : japanese, chinese ? japanese : simplified, QStringLiteral("Courier New"),
+                      QStringLiteral("monospace")});
     return font;
 }
 

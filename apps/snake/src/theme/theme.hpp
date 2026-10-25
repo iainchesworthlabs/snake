@@ -5,6 +5,7 @@
 
 #include <QColor>
 #include <QFont>
+#include <QLocale>
 #include <QObject>
 #include <QString>
 
@@ -15,8 +16,10 @@ namespace snake::ui
 /// after the GUI application exists and before the first window.
 bool load_fonts();
 
-/// The font the application uses for all text: the bundled family, then the fallbacks of the design tokens.
-QFont application_font();
+/// The font the application uses for all text: the bundled family, then the bundled fonts for the scripts it lacks,
+/// then the fallbacks of the design tokens. The Han characters of Japanese and Chinese are drawn differently, so the
+/// font of the language comes first.
+QFont application_font(const QLocale& locale = QLocale());
 
 /// The design tokens as QML sees them: `Theme.ink`, `Theme.fontFamily` and so on. The values are constants.
 class Theme : public QObject
