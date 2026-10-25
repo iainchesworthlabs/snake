@@ -19,7 +19,8 @@ Item {
 
     signal picked
 
-    height: 60
+    // The card is as tall as its words need: a language with long words sets the detail on two lines.
+    height: Math.max(60, words.height + 18)
     activeFocusOnTab: selectable
     Accessible.role: Accessible.Button
     Accessible.name: name + ". " + detail
@@ -57,19 +58,29 @@ Item {
         border.color: Theme.ink
 
         Column {
+            id: words
+
             anchors.left: parent.left
             anchors.leftMargin: 14
             anchors.verticalCenter: parent.verticalCenter
+            // Room for the tick on the other side.
+            width: parent.width - 14 - 44
             spacing: 2
 
             Text {
+                width: parent.width
                 color: Theme.ink
                 font.pixelSize: 20
                 font.weight: Font.Bold
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: 12
                 text: root.name
             }
 
             Text {
+                width: parent.width
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
                 color: Theme.ink
                 font.pixelSize: 14
                 font.weight: Font.Medium

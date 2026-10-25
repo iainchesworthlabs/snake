@@ -27,17 +27,6 @@ int main(int argc, char* argv[])
     QGuiApplication::setApplicationVersion(
         QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size()));
 
-    // A font that fails to load leaves the fallback families of the font in use, so the game still runs.
-    snake::ui::load_fonts();
-    QGuiApplication::setFont(snake::ui::application_font());
-
-    // The catalogues are compiled into the executable. A language without one shows the English source.
-    QTranslator translator;
-    if (translator.load(QLocale(), QStringLiteral("snake"), QStringLiteral("_"), QStringLiteral(":/i18n")))
-    {
-        QGuiApplication::installTranslator(&translator);
-    }
-
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Snake"));
     parser.addHelpOption();
@@ -50,7 +39,27 @@ int main(int argc, char* argv[])
         QStringLiteral("Keep the leaderboards and settings in <file> instead of the user's data folder."),
         QStringLiteral("file"));
     parser.addOption(save_file);
+    const QCommandLineOption language(QStringLiteral("language"),
+                                      QStringLiteral("Show the game in <language> (en, fr, es, de, ja, zh_CN, ...) "
+                                                     "instead of the language of the system."),
+                                      QStringLiteral("language"));
+    parser.addOption(language);
     parser.process(app);
+
+    // The language of the system, or the one asked for. It also sets how numbers are written.
+    const QLocale locale = parser.isSet(language) ? QLocale(parser.value(language)) : QLocale();
+    QLocale::setDefault(locale);
+
+    // A font that fails to load leaves the fallback families of the font in use, so the game still runs.
+    snake::ui::load_fonts();
+    QGuiApplication::setFont(snake::ui::application_font());
+
+    // The catalogues are compiled into the executable. A language without one shows the English source.
+    QTranslator translator;
+    if (translator.load(locale, QStringLiteral("snake"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+    {
+        QGuiApplication::installTranslator(&translator);
+    }
 
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
     format.setSamples(snake::MAIN_WINDOW.multisample_count);
