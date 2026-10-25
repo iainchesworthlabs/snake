@@ -6,6 +6,11 @@ libs/sim/             portable library (see below): board cells, directions, fix
   include/snake/sim/
   src/
   tests/
+libs/audio/           portable library: note table, synthesiser, sound effects and tunes as data; public headers,
+                      sources, tests
+  include/snake/audio/
+  src/
+  tests/
 libs/input/           portable library: tilt processor, sample sources, swipe recogniser, direction selector, key and
                       gamepad maps; public headers, sources, tests
   include/snake/input/
@@ -65,6 +70,15 @@ written by a newer program is reported as `NEWER_VERSION`, and the program then 
 with an older save. The recorded games are separate files in the replay format, because they are up to 64 KB each and
 change at other times. The platform service stores the bytes: it writes a new file next to the old one and renames it
 into place, so a crash or a flat battery leaves the old save whole.
+`libs/audio` is portable in the same way, and makes the sound of the game from numbers. `note_frequency_q8()` gives the
+frequency of a MIDI note, times 256, in whole-number arithmetic. `Synth` has four effect voices and up to three music
+channels, each a square (with a duty), triangle or noise oscillator on a 32-bit phase; an effect is a list of `Segment`s,
+each a slide from one note to another that fades out, and a tune is channels of `TuneNote`s that loop. `render()` writes
+16-bit mono samples, mixing the effects at half and the music at a quarter of their level, and giving the same samples
+whether it is called once or in pieces. Because it uses no floating point, a given sequence of calls gives the same
+samples on every platform, and golden hashes in the tests are the proof. It does not know how the samples reach a
+speaker: the platform asks for them when its audio output needs them. The tunes and effects are placeholders to be
+judged by ear.
 `libs/input` is portable in the same way, and may use floating point because none of it is part of the simulation. It
 turns what the player does into directions for the input buffer in `libs/sim`; reading the sensor, the touch screen
 and the keyboard stays with the platform, which hands the library plain numbers and its own key codes translated to the

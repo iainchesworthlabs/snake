@@ -23,6 +23,10 @@
     "libs/input": {
       "line": 98,
       "branch": 95
+    },
+    "libs/audio": {
+      "line": 98,
+      "branch": 95
     }
   }
 }
