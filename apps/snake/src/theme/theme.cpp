@@ -73,6 +73,13 @@ QColor Theme::accent() const
     return colour_of(tokens::ACCENT);
 }
 
+QColor Theme::overlay() const
+{
+    QColor colour = colour_of(tokens::INK);
+    colour.setAlphaF(tokens::OVERLAY_ALPHA);
+    return colour;
+}
+
 QString Theme::fontFamily() const
 {
     return QString::fromLatin1(tokens::FONT_FAMILY.data(), tokens::FONT_FAMILY.size());

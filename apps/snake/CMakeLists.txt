@@ -36,7 +36,11 @@ qt_add_qml_module(snake_app
         src/theme/theme.hpp
         src/theme/tokens.hpp
         src/viewmodel/game_view_model.cpp
-        src/viewmodel/game_view_model.hpp)
+        src/viewmodel/game_view_model.hpp
+        src/viewmodel/mode_list_model.cpp
+        src/viewmodel/mode_list_model.hpp
+        src/viewmodel/profile_view_model.cpp
+        src/viewmodel/profile_view_model.hpp)
 # qmltyperegistrar includes each header by its file name, so the directories of the QML types are on the path too.
 target_include_directories(snake_app PRIVATE src src/board src/theme src/viewmodel)
 snake_add_font_resources(snake_app)
@@ -48,7 +52,7 @@ qt_add_translations(snake_app
     LUPDATE_OPTIONS -locations none -no-obsolete)
 
 target_link_libraries(snake_app
-    PRIVATE snake::core snake::input snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
+    PRIVATE snake::core snake::input snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
 
 # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
 icl_relax_generated_warnings(snake_app)
@@ -69,6 +73,7 @@ else()
 endif()
 
 if(SNAKE_BUILD_TESTS)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Test)
     set(snake_ui_test_environment
         QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QSG_RENDER_LOOP=basic)
     if(ICL_SANITIZERS MATCHES "thread")

@@ -25,6 +25,9 @@ inline constexpr std::uint32_t MEDAL_GOLD = 0xFFC93C;
 inline constexpr std::uint32_t MEDAL_SILVER = 0xD7DCEB;
 inline constexpr std::uint32_t MEDAL_BRONZE = 0xF0A868;
 
+/// The pause dimming: INK at this opacity, as in the `overlay` token (rgba(43,29,82,0.8)).
+inline constexpr float OVERLAY_ALPHA = 0.8F;
+
 /// The font family of all text. Weights 400, 500, 600 and 700 are bundled.
 inline constexpr std::string_view FONT_FAMILY = "Pixelify Sans";
 
