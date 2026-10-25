@@ -70,7 +70,21 @@ foreach(qml_file IN LISTS SNAKE_QML_FILES)
     get_filename_component(qml_name "${qml_file}" NAME)
     set_source_files_properties("${qml_file}" PROPERTIES QT_RESOURCE_ALIAS "${qml_name}")
 endforeach()
+# miniaudio is a single-file C library from vcpkg. Its code is compiled once, here, with its own settings: the
+# project's strict warnings and coverage are for the project's code. The audio thread and the runtime loading of the
+# system's audio libraries need the thread library and, on Linux, libdl.
+find_package(Threads REQUIRED)
+find_path(SNAKE_MINIAUDIO_INCLUDE_DIR miniaudio.h REQUIRED)
+add_library(snake_miniaudio STATIC src/platform/miniaudio_impl.cpp)
+target_include_directories(snake_miniaudio SYSTEM PUBLIC "${SNAKE_MINIAUDIO_INCLUDE_DIR}")
+set_source_files_properties(src/platform/miniaudio_impl.cpp PROPERTIES COMPILE_DEFINITIONS MINIAUDIO_IMPLEMENTATION)
+target_link_libraries(snake_miniaudio PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
+add_library(snake::miniaudio ALIAS snake_miniaudio)
+
 set(SNAKE_UI_SOURCES
+    src/platform/audio_output.cpp
+    src/platform/audio_output.hpp
+    src/platform/sound_sink.hpp
     src/about/about_info.cpp
     src/about/about_info.hpp
     src/board/board_item.cpp
@@ -118,7 +132,7 @@ function(snake_add_ui_module target)
     snake_add_font_resources(${target})
     snake_add_about_resources(${target})
     target_link_libraries(${target}
-        PRIVATE snake::core snake::input snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
+        PRIVATE snake::audio snake::core snake::input snake::miniaudio snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
     # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.
     icl_relax_generated_warnings(${target})
 endfunction()

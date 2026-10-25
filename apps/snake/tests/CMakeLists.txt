@@ -96,3 +96,19 @@ target_link_libraries(snake_board_scene_tests
     PRIVATE snake::sim Qt6::Gui Catch2::Catch2WithMain icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_board_scene_tests)
 catch_discover_tests(snake_board_scene_tests PROPERTIES LABELS unit)
+
+# The audio output: the synthesiser behind its lock, and a device that plays nothing but is asked for samples like a
+# real one. It needs no Qt widgets or window, so it has its own program.
+add_executable(snake_audio_output_tests
+    test_audio_output.cpp
+    ../src/platform/audio_output.cpp
+    ../src/platform/audio_output.hpp
+    ../src/platform/sound_sink.hpp)
+set_target_properties(snake_audio_output_tests PROPERTIES AUTOMOC OFF)
+target_include_directories(snake_audio_output_tests PRIVATE ../src)
+target_link_libraries(snake_audio_output_tests
+    PRIVATE snake::audio snake::miniaudio Qt6::Core Catch2::Catch2WithMain icl::warnings icl::coverage)
+catch_discover_tests(snake_audio_output_tests
+    PROPERTIES
+        LABELS unit
+        TIMEOUT 60)
