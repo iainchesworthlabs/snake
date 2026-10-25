@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "platform/motion_preference.hpp"
+#include "snake/profile/settings.hpp"
 #include "snake/profile/unlocks.hpp"
 #include "snake/sim/mode.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -772,4 +774,181 @@ TEST_CASE("The leaderboard comes back from the save file with no line marked", "
     REQUIRE(board.rowCount() == 1);
     CHECK(line_value(board, 0, LeaderboardModel::NameRole) == "MAYA");
     CHECK_FALSE(line_value(board, 0, LeaderboardModel::LatestRole).toBool());
+}
+
+TEST_CASE("The settings start as a first run has them", "[profile][settings]")
+{
+    ProfileViewModel profile;
+    CHECK(profile.controls() == ProfileViewModel::Controls::Tilt);
+    CHECK_FALSE(profile.invertAxes());
+    CHECK(profile.sound());
+    CHECK(profile.music());
+    CHECK_FALSE(profile.reducedMotion());
+}
+
+TEST_CASE("A setting that changes says so once, and one that does not says nothing", "[profile][settings]")
+{
+    ProfileViewModel profile;
+    QSignalSpy changed(&profile, &ProfileViewModel::settingsChanged);
+
+    profile.setInvertAxes(true);
+    profile.setSound(false);
+    profile.setMusic(false);
+    profile.setReducedMotion(true);
+    profile.setControls(ProfileViewModel::Controls::Dpad);
+    CHECK(changed.count() == 5);
+    CHECK(profile.invertAxes());
+    CHECK_FALSE(profile.sound());
+    CHECK_FALSE(profile.music());
+    CHECK(profile.reducedMotion());
+    CHECK(profile.controls() == ProfileViewModel::Controls::Dpad);
+    CHECK(profile.data().settings.controls == snake::profile::ControlScheme::DPAD);
+
+    profile.setInvertAxes(true);
+    profile.setSound(false);
+    profile.setMusic(false);
+    profile.setReducedMotion(true);
+    profile.setControls(ProfileViewModel::Controls::Dpad);
+    CHECK(changed.count() == 5);
+}
+
+TEST_CASE("The settings come back from the save file", "[profile][settings]")
+{
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile;
+        profile.setSaveFile(path);
+        profile.setControls(ProfileViewModel::Controls::Swipe);
+        profile.setInvertAxes(true);
+        profile.setSound(false);
+        profile.setMusic(false);
+        profile.setReducedMotion(true);
+    }
+
+    ProfileViewModel again;
+    QSignalSpy changed(&again, &ProfileViewModel::settingsChanged);
+    again.setSaveFile(path);
+    CHECK(changed.count() == 1);
+    CHECK(again.controls() == ProfileViewModel::Controls::Swipe);
+    CHECK(again.invertAxes());
+    CHECK_FALSE(again.sound());
+    CHECK_FALSE(again.music());
+    CHECK(again.reducedMotion());
+}
+
+TEST_CASE("A first run starts with reduced motion when the system asks for it", "[profile][settings]")
+{
+    const auto now = [] { return std::int64_t{0}; };
+    const QTemporaryDir folder;
+
+    ProfileViewModel asks(now, [] { return true; });
+    asks.setSaveFile(folder.filePath("first.snk"));
+    CHECK(asks.reducedMotion());
+
+    ProfileViewModel does_not_ask(now, [] { return false; });
+    does_not_ask.setSaveFile(folder.filePath("second.snk"));
+    CHECK_FALSE(does_not_ask.reducedMotion());
+
+    // Without a file there is no first run to speak of.
+    ProfileViewModel in_memory(now, [] { return true; });
+    CHECK_FALSE(in_memory.reducedMotion());
+}
+
+TEST_CASE("A choice made on an earlier run is not overruled by the system", "[profile][settings]")
+{
+    const auto now = [] { return std::int64_t{0}; };
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile(now, [] { return true; });
+        profile.setSaveFile(path);
+        REQUIRE(profile.reducedMotion());
+        profile.setReducedMotion(false);
+    }
+    ProfileViewModel again(now, [] { return true; });
+    again.setSaveFile(path);
+    CHECK_FALSE(again.reducedMotion());
+}
+
+TEST_CASE("A damaged save file starts afresh with the system's motion preference", "[profile][settings]")
+{
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        QFile file(path);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+        file.write("damaged");
+    }
+    ProfileViewModel profile([] { return std::int64_t{0}; }, [] { return true; });
+    profile.setSaveFile(path);
+    CHECK(profile.reducedMotion());
+}
+
+TEST_CASE("Resetting a leaderboard empties it and leaves the other and the unlocks", "[profile][settings]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::CLASSIC, 2500);
+    save_as(profile, "MUM");
+    profile.record_game(Mode::EASY, 300);
+    save_as(profile, "LEO");
+    REQUIRE(profile.data().unlocks.has(snake::profile::Unlockable::PORTALS));
+
+    GameViewModel game(counting_seeds());
+    game.setMode(GameViewModel::Mode::Classic);
+    profile.setGame(&game);
+    REQUIRE(profile.best() == "002500");
+    QSignalSpy best(&profile, &ProfileViewModel::bestChanged);
+
+    profile.resetLeaderboard(GameViewModel::Mode::Classic);
+    CHECK(best.count() == 1);
+    CHECK(profile.data().leaderboards.of(Mode::CLASSIC).empty());
+    CHECK(profile.best() == "000000");
+    CHECK(profile.data().leaderboards.of(Mode::EASY).size() == 1);
+    CHECK(profile.data().unlocks.has(snake::profile::Unlockable::PORTALS));
+    // The names that were used are still the recent ones.
+    CHECK(profile.recentNames() == QStringList{"LEO", "MUM"});
+    // The board the screen shows follows, and nothing on it is marked as the latest.
+    profile.setBoardMode(GameViewModel::Mode::Classic);
+    CHECK(profile.leaderboard()->rowCount() == 0);
+}
+
+TEST_CASE("A reset is written to the save file", "[profile][settings]")
+{
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile;
+        profile.setSaveFile(path);
+        profile.record_game(Mode::EASY, 10);
+        save_as(profile, "A");
+        profile.resetLeaderboard(GameViewModel::Mode::Easy);
+    }
+    ProfileViewModel again;
+    again.setSaveFile(path);
+    CHECK(again.data().leaderboards.of(Mode::EASY).empty());
+}
+
+TEST_CASE("A reset takes back the place a waiting score was given", "[profile][settings]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::EASY, 10);
+    REQUIRE(profile.qualifies());
+    profile.resetLeaderboard(GameViewModel::Mode::Classic);
+    CHECK(profile.qualifies());
+    profile.resetLeaderboard(GameViewModel::Mode::Easy);
+    CHECK_FALSE(profile.qualifies());
+}
+
+TEST_CASE("Asking to recalibrate tilt tells whoever reads the tilt", "[profile][settings]")
+{
+    ProfileViewModel profile;
+    QSignalSpy asked(&profile, &ProfileViewModel::calibrationRequested);
+    profile.calibrateTilt();
+    CHECK(asked.count() == 1);
+}
+
+TEST_CASE("Without a GUI application the system asks for no reduced motion", "[profile][settings]")
+{
+    CHECK_FALSE(snake::ui::system_prefers_reduced_motion());
 }

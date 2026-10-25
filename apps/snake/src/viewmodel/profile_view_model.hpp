@@ -55,6 +55,15 @@ class ProfileViewModel : public QObject
     Q_PROPERTY(snake::ui::LeaderboardModel* leaderboard READ leaderboard CONSTANT FINAL)
     Q_PROPERTY(snake::ui::GameViewModel::Mode boardMode READ boardMode WRITE setBoardMode NOTIFY boardModeChanged FINAL)
 
+    /// How the player steers on a touch device. Keyboard and gamepad always work.
+    Q_PROPERTY(Controls controls READ controls WRITE setControls NOTIFY settingsChanged FINAL)
+    /// Tilt and the touch pad steer the other way round.
+    Q_PROPERTY(bool invertAxes READ invertAxes WRITE setInvertAxes NOTIFY settingsChanged FINAL)
+    Q_PROPERTY(bool sound READ sound WRITE setSound NOTIFY settingsChanged FINAL)
+    Q_PROPERTY(bool music READ music WRITE setMusic NOTIFY settingsChanged FINAL)
+    /// Turns off the motion that is not needed to play: shake, flashing and the bobbing of the food.
+    Q_PROPERTY(bool reducedMotion READ reducedMotion WRITE setReducedMotion NOTIFY settingsChanged FINAL)
+
     /// The last game made the top 10 of its mode and waits for a name.
     Q_PROPERTY(bool qualifies READ qualifies NOTIFY pendingChanged FINAL)
     /// The score that waits for a name, as six digits. Empty when none waits.
@@ -76,11 +85,25 @@ class ProfileViewModel : public QObject
 public:
     /// The time of the end of a game, in seconds since 1 January 1970 UTC.
     using Clock = std::function<std::int64_t()>;
+    /// Says whether the system asks for less motion.
+    using MotionPreference = std::function<bool()>;
+
+    /// How the player steers on a touch device. The values are those of profile::ControlScheme.
+    enum class Controls : std::uint8_t
+    {
+        Tilt,
+        Swipe,
+        Dpad,
+    };
+    Q_ENUM(Controls)
 
     /// The clock is the system's.
     explicit ProfileViewModel(QObject* parent = nullptr);
     /// Tests give the time.
     explicit ProfileViewModel(Clock clock, QObject* parent = nullptr);
+    /// Tests give the time and what the system asks for. On a first run, with a save file set, the reduced-motion
+    /// setting starts on when the system asks for less motion.
+    ProfileViewModel(Clock clock, MotionPreference motion_preference, QObject* parent = nullptr);
 
     [[nodiscard]] GameViewModel* game() const noexcept
     {
@@ -145,6 +168,34 @@ public:
     [[nodiscard]] QStringList recentNames() const;
     [[nodiscard]] QVariantList standing() const;
 
+    [[nodiscard]] Controls controls() const noexcept;
+    void setControls(Controls controls);
+    [[nodiscard]] bool invertAxes() const noexcept
+    {
+        return m_Data.settings.invert_axes;
+    }
+    void setInvertAxes(bool invert);
+    [[nodiscard]] bool sound() const noexcept
+    {
+        return m_Data.settings.sound;
+    }
+    void setSound(bool on);
+    [[nodiscard]] bool music() const noexcept
+    {
+        return m_Data.settings.music;
+    }
+    void setMusic(bool on);
+    [[nodiscard]] bool reducedMotion() const noexcept
+    {
+        return m_Data.settings.reduced_motion;
+    }
+    void setReducedMotion(bool reduced);
+
+    /// Empties the leaderboard of `mode`. The modes it opened stay open.
+    Q_INVOKABLE void resetLeaderboard(snake::ui::GameViewModel::Mode mode);
+    /// The player asked for the device's position to become the neutral one. The tilt source answers the signal.
+    Q_INVOKABLE void calibrateTilt();
+
     /// Adds the letter or the space in `character` to the end of the name. Anything else, and a letter that does not
     /// fit, is ignored.
     Q_INVOKABLE void typeCharacter(const QString& character);
@@ -171,6 +222,10 @@ signals:
     void gameChanged();
     void bestChanged();
     void saveFileChanged();
+    /// Any of the settings changed, or they were loaded.
+    void settingsChanged();
+    /// The player asked to recalibrate tilt.
+    void calibrationRequested();
     void boardModeChanged();
     /// A score began to wait for a name, or stopped.
     void pendingChanged();
@@ -194,10 +249,14 @@ private:
     /// The best score of `mode`: the leaderboard's, or the waiting score when that is higher.
     [[nodiscard]] std::uint32_t best_of(sim::Mode mode) const noexcept;
     void write();
+    /// Changes the settings through `change`, then writes them and tells QML when something is different.
+    template <typename Change>
+    void change_settings(Change change);
     void set_pending(const std::optional<Pending>& pending);
 
     GameViewModel* m_Game = nullptr;
     Clock m_Clock;
+    MotionPreference m_MotionPreference;
     profile::SaveData m_Data;
     ModeListModel m_Modes;
     LeaderboardModel m_Board;

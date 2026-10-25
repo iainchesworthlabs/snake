@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "platform/motion_preference.hpp"
 #include "snake/sim/mode.hpp"
 #include "theme/tokens.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -847,4 +848,10 @@ TEST_CASE("Play on the leaderboard after saving starts the next game", "[screens
     CHECK(app.game().state() == State::Running);
     CHECK_FALSE(app.shows("leaderboardScreen"));
     CHECK_FALSE(app.shows("nameEntryScreen"));
+}
+
+TEST_CASE("The motion preference is read from the GUI application", "[screens][settings]")
+{
+    // The off-screen platform has no accessibility settings, so it asks for nothing.
+    CHECK_FALSE(snake::ui::system_prefers_reduced_motion());
 }

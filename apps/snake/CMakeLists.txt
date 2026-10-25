@@ -43,6 +43,8 @@ set(SNAKE_UI_SOURCES
     src/board/board_scene.hpp
     src/input/qt_keys.cpp
     src/input/qt_keys.hpp
+    src/platform/motion_preference.cpp
+    src/platform/motion_preference.hpp
     src/platform/save_file.cpp
     src/platform/save_file.hpp
     src/theme/theme.cpp
