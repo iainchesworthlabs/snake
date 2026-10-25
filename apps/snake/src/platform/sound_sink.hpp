@@ -25,4 +25,9 @@ public:
     virtual void stop_music() = 0;
 };
 
+/// The sink the game plays its sounds on: the one the program set, or none, in which case the game is silent. Set it
+/// before the user interface is created and clear it after. It is not thread safe.
+[[nodiscard]] SoundSink* default_sound_sink() noexcept;
+void set_default_sound_sink(SoundSink* sink) noexcept;
+
 } // namespace snake::ui

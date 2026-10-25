@@ -50,6 +50,12 @@ Window {
         }
     }
 
+    // What is heard: the effects of the game, the buttons, and the music of the title and the game.
+    SoundDirector {
+        game: gameModel
+        profile: profileModel
+    }
+
     ProfileViewModel {
         id: profileModel
 

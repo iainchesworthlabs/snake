@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "platform/motion_preference.hpp"
+#include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
+#include "snake/audio/tunes.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
@@ -28,6 +30,7 @@
 #include <Qt>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 using snake::sim::Mode;
 using snake::ui::GameViewModel;
@@ -1165,4 +1168,89 @@ TEST_CASE("The notice text scrolls with the arrow keys and the page keys and sto
     app.press(Qt::Key_Escape);
     app.click("licenceButton");
     CHECK(position() == 0.0);
+}
+
+namespace
+{
+
+/// Writes down what the program plays, and is the program's sink for as long as it lives.
+class ListeningSink final : public snake::ui::SoundSink
+{
+public:
+    ListeningSink()
+    {
+        snake::ui::set_default_sound_sink(this);
+    }
+    ~ListeningSink() override
+    {
+        snake::ui::set_default_sound_sink(nullptr);
+    }
+    ListeningSink(const ListeningSink&) = delete;
+    ListeningSink& operator=(const ListeningSink&) = delete;
+
+    void play(snake::audio::Effect effect) override
+    {
+        effects.push_back(effect);
+    }
+    void play_music(snake::audio::Tune tune) override
+    {
+        tunes.push_back(tune);
+    }
+    void stop_music() override
+    {
+        ++stops;
+    }
+
+    std::vector<snake::audio::Effect> effects;
+    std::vector<snake::audio::Tune> tunes;
+    int stops = 0;
+};
+
+} // namespace
+
+TEST_CASE("The screens are heard: the title tune, a button, a game and its tune", "[screens][sound]")
+{
+    using snake::audio::Effect;
+    using snake::audio::Tune;
+    ListeningSink sink;
+    App app;
+    // The title has its tune as soon as the program is up.
+    REQUIRE_FALSE(sink.tunes.empty());
+    CHECK(sink.tunes.back() == Tune::TITLE);
+    CHECK(sink.effects.empty());
+
+    // A button, by touch and by key.
+    app.click("leaderboardButton");
+    REQUIRE(sink.effects.size() == 1);
+    CHECK(sink.effects.back() == Effect::SELECT);
+    app.press(Qt::Key_Escape);
+    app.click("playButton");
+    // The press of Play, then the jingle of the game and its tune.
+    REQUIRE(sink.effects.size() >= 3);
+    CHECK(sink.effects[sink.effects.size() - 2] == Effect::SELECT);
+    CHECK(sink.effects.back() == Effect::START);
+    CHECK(sink.tunes.back() == Tune::GAME);
+
+    // Pausing is silent.
+    const int stops = sink.stops;
+    app.game().pause();
+    CHECK(sink.stops == stops + 1);
+}
+
+TEST_CASE("A switch is heard, and a screen with the sound off is not", "[screens][sound]")
+{
+    using snake::audio::Effect;
+    ListeningSink sink;
+    App app;
+    app.click("settingsButton");
+    sink.effects.clear();
+    app.click("soundToggle");
+    // The press is heard by the director before the setting changes, so this one sounds.
+    CHECK(sink.effects == std::vector<Effect>{Effect::SELECT});
+    CHECK_FALSE(app.profile().sound());
+    sink.effects.clear();
+    app.click("soundToggle");
+    // Now the sound is off while the switch is pressed, so the press that turns it on is silent.
+    CHECK(sink.effects.empty());
+    CHECK(app.profile().sound());
 }

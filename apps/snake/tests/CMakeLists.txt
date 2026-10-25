@@ -16,12 +16,15 @@ add_executable(snake_viewmodel_tests
     test_profile_view_model.cpp
     test_qt_keys.cpp
     test_save_file.cpp
+    test_sound_director.cpp
     ../src/input/qt_keys.cpp
     ../src/input/qt_keys.hpp
     ../src/platform/motion_preference.cpp
     ../src/platform/motion_preference.hpp
     ../src/platform/save_file.cpp
     ../src/platform/save_file.hpp
+    ../src/platform/sound_sink.cpp
+    ../src/platform/sound_sink.hpp
     ../src/platform/touch_screen.cpp
     ../src/platform/touch_screen.hpp
     ../src/viewmodel/game_view_model.cpp
@@ -31,11 +34,15 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/mode_list_model.cpp
     ../src/viewmodel/mode_list_model.hpp
     ../src/viewmodel/profile_view_model.cpp
-    ../src/viewmodel/profile_view_model.hpp)
+    ../src/viewmodel/profile_view_model.hpp
+    ../src/viewmodel/sound_director.cpp
+    ../src/viewmodel/sound_director.hpp
+    ../src/viewmodel/ui_events.cpp
+    ../src/viewmodel/ui_events.hpp)
 set_target_properties(snake_viewmodel_tests PROPERTIES AUTOMOC ON)
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
 target_link_libraries(snake_viewmodel_tests
-    PRIVATE snake::input snake::profile snake::sim Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)
+    PRIVATE snake::audio snake::input snake::profile snake::sim Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_viewmodel_tests)
 catch_discover_tests(snake_viewmodel_tests
     PROPERTIES
