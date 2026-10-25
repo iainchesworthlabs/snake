@@ -8,6 +8,8 @@ Window {
     required property int windowHeight
     // Where the profile is kept. Empty keeps it in memory only, as the tests do.
     property string saveFile
+    // True on a device with a touch screen.
+    property bool touchDevice
 
     width: windowWidth
     height: windowHeight
@@ -15,7 +17,7 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
-    // The screen shown over the title or the game over screen: "", "nameEntry" or "leaderboard". A game that starts
+    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard" or "settings". A game that starts
     // clears it.
     property string overlay
 
@@ -71,6 +73,7 @@ Window {
             profileModel.boardMode = gameModel.mode;
             root.overlay = "leaderboard";
         }
+        onSettingsRequested: root.overlay = "settings"
     }
 
     GameScreen {
@@ -88,6 +91,8 @@ Window {
         visible: gameModel.state === GameViewModel.State.Paused
         focus: visible
         game: gameModel
+        profile: profileModel
+        touchDevice: root.touchDevice
     }
 
     GameOverScreen {
@@ -107,6 +112,16 @@ Window {
         focus: visible
         profile: profileModel
         onSaved: root.overlay = "leaderboard"
+    }
+
+    SettingsScreen {
+        objectName: "settingsScreen"
+        anchors.fill: parent
+        visible: root.overlay === "settings"
+        focus: visible
+        profile: profileModel
+        touchDevice: root.touchDevice
+        onClosed: root.overlay = ""
     }
 
     LeaderboardScreen {

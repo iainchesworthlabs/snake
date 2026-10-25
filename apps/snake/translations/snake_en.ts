@@ -147,8 +147,95 @@
         <translation>Restart</translation>
     </message>
     <message>
+        <source>Controls</source>
+        <translation>Controls</translation>
+    </message>
+    <message>
+        <source>Tilt</source>
+        <translation>Tilt</translation>
+    </message>
+    <message>
+        <source>Swipe</source>
+        <translation>Swipe</translation>
+    </message>
+    <message>
+        <source>D-pad</source>
+        <translation>D-pad</translation>
+    </message>
+    <message>
+        <source>Recalibrate tilt</source>
+        <translation>Recalibrate tilt</translation>
+    </message>
+    <message>
+        <source>Hold it how you like to play, then tap.</source>
+        <translation>Hold it how you like to play, then tap.</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Sound</translation>
+    </message>
+    <message>
+        <source>Music</source>
+        <translation>Music</translation>
+    </message>
+    <message>
         <source>Quit to menu</source>
         <translation>Quit to menu</translation>
+    </message>
+</context>
+<context>
+    <name>SettingsScreen</name>
+    <message>
+        <source>Easy</source>
+        <translation>Easy</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>Classic</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Settings</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Sound</translation>
+    </message>
+    <message>
+        <source>Music</source>
+        <translation>Music</translation>
+    </message>
+    <message>
+        <source>Reduced motion</source>
+        <translation>Reduced motion</translation>
+    </message>
+    <message>
+        <source>Invert axes</source>
+        <translation>Invert axes</translation>
+    </message>
+    <message>
+        <source>Reset a leaderboard</source>
+        <translation>Reset a leaderboard</translation>
+    </message>
+    <message>
+        <source>Reset the %1 leaderboard?</source>
+        <translation>Reset the %1 leaderboard?</translation>
+    </message>
+    <message>
+        <source>Every score on it will be deleted. This cannot be undone.</source>
+        <translation>Every score on it will be deleted. This cannot be undone.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Reset</translation>
+    </message>
+    <message>
+        <source>Keep my scores</source>
+        <translation>Keep my scores</translation>
     </message>
 </context>
 <context>
@@ -168,6 +255,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>Leaderboard</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Settings</translation>
     </message>
 </context>
 <context>

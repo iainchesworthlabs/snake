@@ -147,8 +147,95 @@
         <translation>重新开始</translation>
     </message>
     <message>
+        <source>Controls</source>
+        <translation>操控方式</translation>
+    </message>
+    <message>
+        <source>Tilt</source>
+        <translation>倾斜</translation>
+    </message>
+    <message>
+        <source>Swipe</source>
+        <translation>滑动</translation>
+    </message>
+    <message>
+        <source>D-pad</source>
+        <translation>方向键</translation>
+    </message>
+    <message>
+        <source>Recalibrate tilt</source>
+        <translation>重新校准倾斜</translation>
+    </message>
+    <message>
+        <source>Hold it how you like to play, then tap.</source>
+        <translation>按你喜欢的姿势拿好，然后点一下。</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>音效</translation>
+    </message>
+    <message>
+        <source>Music</source>
+        <translation>音乐</translation>
+    </message>
+    <message>
         <source>Quit to menu</source>
         <translation>返回菜单</translation>
+    </message>
+</context>
+<context>
+    <name>SettingsScreen</name>
+    <message>
+        <source>Easy</source>
+        <translation>简单</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>经典</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>音效</translation>
+    </message>
+    <message>
+        <source>Music</source>
+        <translation>音乐</translation>
+    </message>
+    <message>
+        <source>Reduced motion</source>
+        <translation>减少动态效果</translation>
+    </message>
+    <message>
+        <source>Invert axes</source>
+        <translation>反转方向</translation>
+    </message>
+    <message>
+        <source>Reset a leaderboard</source>
+        <translation>重置排行榜</translation>
+    </message>
+    <message>
+        <source>Reset the %1 leaderboard?</source>
+        <translation>要重置“%1”排行榜吗？</translation>
+    </message>
+    <message>
+        <source>Every score on it will be deleted. This cannot be undone.</source>
+        <translation>榜上的所有得分都会被删除，此操作无法撤销。</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
+    <message>
+        <source>Keep my scores</source>
+        <translation>保留我的得分</translation>
     </message>
 </context>
 <context>
@@ -168,6 +255,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>排行榜</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>设置</translation>
     </message>
 </context>
 <context>

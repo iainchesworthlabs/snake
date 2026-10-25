@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "platform/touch_screen.hpp"
 #include "snake/version.hpp"
 #include "snake/window_settings.hpp"
 #include "theme/theme.hpp"
@@ -63,7 +64,8 @@ int main(int argc, char* argv[])
             : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QStringLiteral("/save.snk");
     engine.setInitialProperties({{QStringLiteral("windowWidth"), snake::MAIN_WINDOW.width},
                                  {QStringLiteral("windowHeight"), snake::MAIN_WINDOW.height},
-                                 {QStringLiteral("saveFile"), save_path}});
+                                 {QStringLiteral("saveFile"), save_path},
+                                 {QStringLiteral("touchDevice"), snake::ui::has_touch_screen()}});
     engine.loadFromModule("SnakeApp", "Main");
 
     if (parser.isSet(smoke_test))

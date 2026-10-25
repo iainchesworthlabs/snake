@@ -17,15 +17,26 @@ FocusScope {
     }
 
     BoardItem {
+        id: board
+
+        objectName: "board"
         anchors.fill: parent
         anchors.margins: 16
         anchors.topMargin: 64
         game: root.game
 
+        // With reduced motion the food stays where it is.
+        Binding {
+            target: board
+            property: "foodLift"
+            value: 0
+            when: root.profile.reducedMotion
+        }
+
         // The food bobs up and down. Each half is an ease-in-out, as in the design.
         SequentialAnimation on foodLift {
             loops: Animation.Infinite
-            running: root.game.state !== GameViewModel.State.Paused
+            running: root.game.state !== GameViewModel.State.Paused && !root.profile.reducedMotion
 
             NumberAnimation {
                 to: 1
