@@ -141,6 +141,17 @@ accessibility hints); a choice made later is kept. `resetLeaderboard(mode)` empt
 the mobile steps answers it. The settings that steer (`controls`, `invertAxes`) and the sound ones are stored and shown
 before anything reads them; the input and audio steps come later.
 
+`AudioOutput` (`src/platform/`) takes the samples of `libs/audio` to the speakers through miniaudio, a single-file C
+library from vcpkg that opens the default device of each system (WASAPI, Core Audio, PulseAudio, ALSA and, on the
+phones, AAudio and the iOS audio session) by loading the system's libraries at run time. Its code is compiled once in
+the `snake_miniaudio` library, without the project's warnings and coverage; the project's own wrapper has them. The
+device asks for samples from a thread of its own, so `AudioOutput` keeps the synthesiser behind a lock that `play()`,
+`render()` and the status calls take, and never holds it while the device is started or stopped (stopping waits for
+the audio thread, which takes the lock to render). `Device::NONE` opens miniaudio's null device, which plays nothing but
+asks at the speed of a real one: the tests use it to drive the callback path under the sanitizers. A machine that has
+no audio device leaves `start()` returning false and the game silent. `SoundSink` is the small interface the game talks
+to, so the game does not depend on the platform and tests can record what it plays.
+
 `SaveFile` (`src/platform/`) is the platform service that keeps `SaveData` in one file. The profile library turns the
 data into bytes; `SaveFile` reads them, and writes them through `QSaveFile`, so a crash leaves the old file or the new
 one and never half of either. `ProfileViewModel::saveFile` names the file (`save.snk` in the user's data folder; the
