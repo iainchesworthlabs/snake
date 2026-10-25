@@ -40,6 +40,23 @@ What this suggests, to be checked against a person:
 - **Easy ends at 120 ms**, 8 cells a second, after 30 foods. For a young child that may already be too fast at the start
   (180 ms is 5.5 cells a second). The walls wrap in Easy, so nothing ends a game but the snake meeting itself.
 
+## The packaging dry run
+
+`gh workflow run release.yml --ref feature/release-candidate` (run 40240804304, 26 October 2026) built and packaged the
+program on all three systems and started the installed program on each (`snake 0.2.0`), without publishing anything:
+
+| Package | Size |
+|---|---|
+| Linux x86-64 (`.tar.gz`) | 32 MB |
+| macOS arm64 (`.tar.gz`, with `snake.app`) | 32 MB |
+| Windows x86-64 (`.zip`) | 49 MB |
+
+On Linux the installed tree was also moved to another folder, given the off-screen platform plugin and run with each of
+the eight languages (`snake --smoke-test --language <code>`): every one started, showed a frame and exited with no
+message. What a dry run cannot check, and the release candidate still needs, is an install on a clean machine of each
+system, the Windows signing (`SIGN_WINDOWS` is `false`, so the binaries are unsigned), and the macOS notarisation, which
+the project has not set up.
+
 ## The playtest of Easy with a six-year-old
 
 Before: a build of the release candidate on the device the child will use (a phone or tablet for tilt, or the desktop
