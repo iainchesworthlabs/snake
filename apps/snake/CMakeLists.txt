@@ -208,6 +208,20 @@ if(SNAKE_BUILD_TESTS)
         TIMEOUT 60
         ENVIRONMENT "${snake_ui_test_environment}")
 
+    # The version and the help are answered without a window system: the platform plugin is one that does not exist.
+    add_test(NAME app.version COMMAND snake_app --version)
+    set_tests_properties(app.version PROPERTIES
+        LABELS ui
+        TIMEOUT 30
+        ENVIRONMENT "QT_QPA_PLATFORM=there-is-no-such-plugin"
+        PASS_REGULAR_EXPRESSION "^snake [0-9]+\\.[0-9]+\\.[0-9]+")
+    add_test(NAME app.help COMMAND snake_app --help)
+    set_tests_properties(app.help PROPERTIES
+        LABELS ui
+        TIMEOUT 30
+        ENVIRONMENT "QT_QPA_PLATFORM=there-is-no-such-plugin"
+        PASS_REGULAR_EXPRESSION "--language")
+
     # qmllint over the QML files; any warning fails (see qml/.qmllint.ini).
     add_test(NAME app.qmllint
         COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target snake_app_qmllint)

@@ -15,6 +15,7 @@ nav:
   - Testing: testing.md
   - Continuous integration: ci.md
   - Releasing: releasing.md
+  - Playtest and tuning: playtest.md
   - Translations: i18n.md
   - Product requirements: prd.md
   - Roadmap: roadmap.md
