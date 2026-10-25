@@ -15,6 +15,14 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
+    // The screen shown over the title or the game over screen: "", "nameEntry" or "leaderboard". A game that starts
+    // clears it.
+    property string overlay
+
+    function showLeaderboard() {
+        overlay = "leaderboard";
+    }
+
     // The title starts on Easy, as the design does. The mode played last will come back with the settings.
     Component.onCompleted: gameModel.mode = GameViewModel.Mode.Easy
 
@@ -28,6 +36,11 @@ Window {
         id: gameModel
 
         objectName: "game"
+
+        onStateChanged: {
+            if (state === GameViewModel.State.Running)
+                root.overlay = "";
+        }
     }
 
     ProfileViewModel {
@@ -50,10 +63,14 @@ Window {
     TitleScreen {
         objectName: "titleScreen"
         anchors.fill: parent
-        visible: gameModel.state === GameViewModel.State.NotStarted
+        visible: gameModel.state === GameViewModel.State.NotStarted && root.overlay === ""
         focus: visible
         game: gameModel
         profile: profileModel
+        onLeaderboardRequested: {
+            profileModel.boardMode = gameModel.mode;
+            root.overlay = "leaderboard";
+        }
     }
 
     GameScreen {
@@ -76,9 +93,34 @@ Window {
     GameOverScreen {
         objectName: "gameOverScreen"
         anchors.fill: parent
-        visible: gameModel.state === GameViewModel.State.GameOver
+        visible: gameModel.state === GameViewModel.State.GameOver && root.overlay === ""
         focus: visible
         game: gameModel
         profile: profileModel
+        onNameRequested: root.overlay = "nameEntry"
+    }
+
+    NameEntryScreen {
+        objectName: "nameEntryScreen"
+        anchors.fill: parent
+        visible: gameModel.state === GameViewModel.State.GameOver && root.overlay === "nameEntry"
+        focus: visible
+        profile: profileModel
+        onSaved: root.overlay = "leaderboard"
+    }
+
+    LeaderboardScreen {
+        objectName: "leaderboardScreen"
+        anchors.fill: parent
+        visible: root.overlay === "leaderboard"
+        focus: visible
+        game: gameModel
+        profile: profileModel
+        onClosed: {
+            root.overlay = "";
+            // Leaving after a game goes to the title, not back to the end screen of a score that is saved.
+            if (gameModel.state === GameViewModel.State.GameOver)
+                gameModel.newGame();
+        }
     }
 }

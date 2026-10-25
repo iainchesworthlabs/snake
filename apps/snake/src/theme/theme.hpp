@@ -30,6 +30,9 @@ class Theme : public QObject
     Q_PROPERTY(QColor surface READ surface CONSTANT FINAL)
     Q_PROPERTY(QColor accent READ accent CONSTANT FINAL)
     Q_PROPERTY(QColor overlay READ overlay CONSTANT FINAL)
+    Q_PROPERTY(QColor medalGold READ medalGold CONSTANT FINAL)
+    Q_PROPERTY(QColor medalSilver READ medalSilver CONSTANT FINAL)
+    Q_PROPERTY(QColor medalBronze READ medalBronze CONSTANT FINAL)
     Q_PROPERTY(QString fontFamily READ fontFamily CONSTANT FINAL)
 
 public:
@@ -42,6 +45,10 @@ public:
     [[nodiscard]] QColor accent() const;
     /// The dimming drawn over the game while it is paused.
     [[nodiscard]] QColor overlay() const;
+    /// The tiles of the first three places on the leaderboard.
+    [[nodiscard]] QColor medalGold() const;
+    [[nodiscard]] QColor medalSilver() const;
+    [[nodiscard]] QColor medalBronze() const;
     [[nodiscard]] QString fontFamily() const;
 };
 

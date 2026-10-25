@@ -6,6 +6,7 @@
 #include "snake/profile/save_data.hpp"
 #include "snake/sim/mode.hpp"
 #include "viewmodel/game_view_model.hpp"
+#include "viewmodel/leaderboard_model.hpp"
 #include "viewmodel/mode_list_model.hpp"
 
 #include <QtQml/qqmlregistration.h>
@@ -50,6 +51,10 @@ class ProfileViewModel : public QObject
     /// come from a newer program, which this one must not overwrite.
     Q_PROPERTY(bool persistent READ persistent NOTIFY saveFileChanged FINAL)
 
+    /// The leaderboard the screen shows: its lines, and the mode they are of.
+    Q_PROPERTY(snake::ui::LeaderboardModel* leaderboard READ leaderboard CONSTANT FINAL)
+    Q_PROPERTY(snake::ui::GameViewModel::Mode boardMode READ boardMode WRITE setBoardMode NOTIFY boardModeChanged FINAL)
+
     /// The last game made the top 10 of its mode and waits for a name.
     Q_PROPERTY(bool qualifies READ qualifies NOTIFY pendingChanged FINAL)
     /// The score that waits for a name, as six digits. Empty when none waits.
@@ -87,6 +92,16 @@ public:
     {
         return &m_Modes;
     }
+
+    [[nodiscard]] LeaderboardModel* leaderboard() noexcept
+    {
+        return &m_Board;
+    }
+    [[nodiscard]] GameViewModel::Mode boardMode() const noexcept
+    {
+        return m_BoardMode;
+    }
+    void setBoardMode(GameViewModel::Mode mode);
 
     [[nodiscard]] QString best() const;
     [[nodiscard]] bool newBest() const noexcept
@@ -156,6 +171,7 @@ signals:
     void gameChanged();
     void bestChanged();
     void saveFileChanged();
+    void boardModeChanged();
     /// A score began to wait for a name, or stopped.
     void pendingChanged();
     void entryChanged();
@@ -184,6 +200,8 @@ private:
     Clock m_Clock;
     profile::SaveData m_Data;
     ModeListModel m_Modes;
+    LeaderboardModel m_Board;
+    GameViewModel::Mode m_BoardMode = GameViewModel::Mode::Easy;
     std::unique_ptr<SaveFile> m_File;
     bool m_Writing = false;
     std::optional<Pending> m_Pending;

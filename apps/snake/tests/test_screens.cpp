@@ -21,6 +21,7 @@
 #include <QString>
 #include <QVariantMap>
 #include <Qt>
+#include <cstdint>
 #include <memory>
 
 using snake::sim::Mode;
@@ -122,6 +123,15 @@ public:
     void press(Qt::Key key)
     {
         QTest::keyClick(m_Window, key);
+    }
+
+    /// Types `text` on the keyboard.
+    void type(const char* text)
+    {
+        for (const char* c = text; *c != '\0'; ++c)
+        {
+            QTest::keyClick(m_Window, *c);
+        }
     }
 
     /// Chooses Classic and starts the game.
@@ -572,4 +582,269 @@ TEST_CASE("The game over screen draws the board as it was left", "[screens][game
     // The panel is cream with an ink outline; the board above it has the dark frame.
     CHECK(image.pixel(app.face_of("playAgainButton")) == rgb_of(tokens::INK));
     CHECK(image.pixel(4, 4) == rgb_of(tokens::BACKGROUND));
+}
+
+TEST_CASE("The title screen has a Leaderboard button that opens the leaderboard and Back closes it",
+          "[screens][leaderboard]")
+{
+    App app;
+    CHECK(app.text_of("leaderboardButton") == "Leaderboard");
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+
+    app.click("leaderboardButton");
+    CHECK(app.shows("leaderboardScreen"));
+    CHECK_FALSE(app.shows("titleScreen"));
+    CHECK(app.focus_name() == "leaderboardPlayButton");
+    // Nothing has been scored.
+    CHECK(app.shows("emptyBoard"));
+    CHECK(app.profile().boardMode() == GameViewModel::Mode::Easy);
+
+    app.click("backButton");
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+    CHECK(app.focus_name() == "playButton");
+}
+
+TEST_CASE("Escape closes the leaderboard", "[screens][leaderboard]")
+{
+    App app;
+    app.click("leaderboardButton");
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+}
+
+TEST_CASE("The leaderboard opens on the mode chosen on the title and has a tab for each mode", "[screens][leaderboard]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 1480);
+    app.save_score_as("MUM");
+    app.profile().record_game(Mode::EASY, 300);
+    app.save_score_as("LEO");
+
+    app.click("modeCard1");
+    app.click("leaderboardButton");
+    CHECK(app.profile().boardMode() == GameViewModel::Mode::Classic);
+    CHECK_FALSE(app.shows("emptyBoard"));
+    CHECK(app.text_of("emptyBoard") == "No scores yet.");
+    CHECK(app.item("line1")->property("name").toString() == "MUM");
+    CHECK(app.item("line1")->property("score").toString() == "001480");
+    CHECK_FALSE(app.item("line1")->property("latest").toBool());
+
+    app.click("easyTab");
+    CHECK(app.profile().boardMode() == GameViewModel::Mode::Easy);
+    CHECK(app.item("line1")->property("name").toString() == "LEO");
+    app.click("classicTab");
+    CHECK(app.item("line1")->property("name").toString() == "MUM");
+}
+
+TEST_CASE("The first three places have the medal colours", "[screens][leaderboard]")
+{
+    App app;
+    for (const std::uint32_t score : {500u, 400u, 300u, 200u, 100u})
+    {
+        app.profile().record_game(Mode::EASY, score);
+        app.save_score_as("AAA");
+    }
+    app.click("leaderboardButton");
+    const QImage image = app.render();
+    // A point in the tile of each place, clear of its outline and of the number.
+    const auto tile = [&](const char* line)
+    {
+        QQuickItem* row = app.item(line);
+        return image.pixel(row->mapToScene(QPointF(14, 14)).toPoint());
+    };
+    CHECK(tile("line1") == rgb_of(tokens::MEDAL_GOLD));
+    CHECK(tile("line2") == rgb_of(tokens::MEDAL_SILVER));
+    CHECK(tile("line3") == rgb_of(tokens::MEDAL_BRONZE));
+    // The fourth has no tile: the panel shows through. (The line saved last is the fifth.)
+    CHECK(tile("line4") == rgb_of(tokens::SURFACE));
+}
+
+TEST_CASE("Play on the leaderboard starts a game and the leaderboard goes", "[screens][leaderboard]")
+{
+    App app;
+    app.click("leaderboardButton");
+    app.click("leaderboardPlayButton");
+    CHECK(app.game().state() == State::Running);
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+    CHECK(app.shows("gameScreen"));
+}
+
+TEST_CASE("A game over that does not make the top 10 offers Play again", "[screens][nameentry]")
+{
+    App app;
+    app.start_classic();
+    app.crash();
+    REQUIRE(app.game().points() == 0);
+    CHECK(app.shows("playAgainButton"));
+    CHECK_FALSE(app.shows("saveScoreButton"));
+    CHECK(app.focus_name() == "playAgainButton");
+}
+
+TEST_CASE("A game over that makes the top 10 offers Save score in place of Play again", "[screens][nameentry]")
+{
+    App app;
+    app.start_classic();
+    app.crash();
+    app.profile().record_game(Mode::CLASSIC, 1280);
+    CHECK(app.shows("saveScoreButton"));
+    CHECK_FALSE(app.shows("playAgainButton"));
+    // The keyboard moved to the button that is there now.
+    CHECK(app.focus_name() == "saveScoreButton");
+    app.press(Qt::Key_Return);
+    CHECK(app.shows("nameEntryScreen"));
+    CHECK_FALSE(app.shows("gameOverScreen"));
+}
+
+TEST_CASE("Menu on a game over with a score to save lets the score go", "[screens][nameentry]")
+{
+    App app;
+    app.start_classic();
+    app.crash();
+    app.profile().record_game(Mode::CLASSIC, 1280);
+    app.click("menuButton");
+    CHECK(app.game().state() == State::NotStarted);
+    CHECK_FALSE(app.profile().qualifies());
+    CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).empty());
+}
+
+namespace
+{
+
+/// Plays to a game over with a score of 1,280 in Classic that waits for a name, and opens the name entry screen.
+void open_name_entry(App& app)
+{
+    app.start_classic();
+    app.crash();
+    app.profile().record_game(Mode::CLASSIC, 1280);
+    app.click("saveScoreButton");
+    REQUIRE(app.shows("nameEntryScreen"));
+}
+
+} // namespace
+
+TEST_CASE("Name entry shows the score, the place and twelve empty slots", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+    CHECK(app.text_of("pendingScore") == "001280");
+    CHECK(app.text_of("nameCount") == "0 of 12");
+    // The only line is the score itself, in first place.
+    CHECK(app.item("standing1")->isVisible());
+
+    const QImage image = app.render();
+    // The next slot to fill is coral; the others are cream.
+    CHECK(image.pixel(app.face_of("slot0")) == rgb_of(tokens::ACCENT));
+    CHECK(image.pixel(app.face_of("slot1")) == rgb_of(tokens::SURFACE));
+    CHECK(image.pixel(app.face_of("slot11")) == rgb_of(tokens::SURFACE));
+    // Save score cannot be pressed until the name has a letter.
+    CHECK_FALSE(app.item("saveNameButton")->isEnabled());
+}
+
+TEST_CASE("The keyboard types the name and Backspace takes a letter off", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+    app.type("maya");
+    CHECK(app.profile().entryName() == "MAYA");
+    CHECK(app.text_of("nameCount") == "4 of 12");
+    CHECK(app.item("slot0")->property("letter").toString() == "M");
+    CHECK(app.item("slot3")->property("letter").toString() == "A");
+    CHECK(app.item("saveNameButton")->isEnabled());
+
+    app.press(Qt::Key_Backspace);
+    CHECK(app.profile().entryName() == "MAY");
+    // A space is a character of the name, and a digit is not.
+    app.press(Qt::Key_Space);
+    app.type("7");
+    CHECK(app.profile().entryName() == "MAY ");
+    // The standing shows the name as typed.
+    CHECK(app.item("standing1")->isVisible());
+}
+
+TEST_CASE("The letter grid types by touch", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+    app.click("keyL");
+    app.click("keyE");
+    app.click("keyO");
+    CHECK(app.profile().entryName() == "LEO");
+    app.click("keyDelete");
+    CHECK(app.profile().entryName() == "LE");
+    app.click("keySpace");
+    CHECK(app.profile().entryName() == "LE ");
+    // The grid does not take the keyboard: Space still types.
+    app.press(Qt::Key_Space);
+    CHECK(app.profile().entryName() == "LE  ");
+}
+
+TEST_CASE("A recent name is one tap", "[screens][nameentry]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 100);
+    app.save_score_as("MUM");
+    app.profile().record_game(Mode::CLASSIC, 200);
+    app.save_score_as("DAD");
+    open_name_entry(app);
+
+    CHECK(app.text_of("recentName0") == "DAD");
+    CHECK(app.text_of("recentName1") == "MUM");
+    app.click("recentName1");
+    CHECK(app.profile().entryName() == "MUM");
+    app.click("recentName0");
+    CHECK(app.profile().entryName() == "DAD");
+}
+
+TEST_CASE("Save score puts the score on the leaderboard with its line marked", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+
+    // With no letter the button does nothing, by touch or by key.
+    app.click("saveNameButton");
+    app.press(Qt::Key_Return);
+    CHECK(app.shows("nameEntryScreen"));
+
+    app.type("maya");
+    app.click("saveNameButton");
+    CHECK_FALSE(app.shows("nameEntryScreen"));
+    REQUIRE(app.shows("leaderboardScreen"));
+    CHECK(app.profile().boardMode() == GameViewModel::Mode::Classic);
+    CHECK(app.item("line1")->property("name").toString() == "MAYA");
+    CHECK(app.item("line1")->property("score").toString() == "001280");
+    CHECK(app.item("line1")->property("latest").toBool());
+
+    // The latest line is coral.
+    const QImage image = app.render();
+    const QPoint edge = app.item("line1")->mapToScene(QPointF(3, 24)).toPoint();
+    CHECK(image.pixel(edge) == rgb_of(tokens::ACCENT));
+
+    // Back goes to the title, not to the end screen of the game that is saved.
+    app.click("backButton");
+    CHECK(app.game().state() == State::NotStarted);
+    CHECK(app.shows("titleScreen"));
+}
+
+TEST_CASE("Enter saves the name", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+    app.type("leo");
+    app.press(Qt::Key_Return);
+    CHECK(app.shows("leaderboardScreen"));
+    CHECK(app.profile().data().leaderboards.of(Mode::CLASSIC).at(0).name.view() == "LEO");
+}
+
+TEST_CASE("Play on the leaderboard after saving starts the next game", "[screens][nameentry]")
+{
+    App app;
+    open_name_entry(app);
+    app.type("leo");
+    app.press(Qt::Key_Return);
+    app.click("leaderboardPlayButton");
+    CHECK(app.game().state() == State::Running);
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+    CHECK_FALSE(app.shows("nameEntryScreen"));
 }

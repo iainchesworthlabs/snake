@@ -128,7 +128,16 @@ profile starts afresh. A file from a newer version, or one that cannot be read, 
 writing, so an older program never destroys what a newer one saved. The profile is written after each game that ends
 (the unlocks may have changed) and after each score is saved; a write that fails is logged and tried again next time.
 
-The screens follow the state of the game, so there is no navigation to keep in step with it. `Main.qml` shows the title
+The leaderboard is a `LeaderboardModel` (place, name, score as six digits, and whether the line is the one saved last) of
+the mode in `boardMode`; saving a score sets the mode and marks its line, and loading a save file clears the mark.
+
+The screens follow the state of the game, so there is almost no navigation to keep in step with it. The two screens
+that are not states of the game, name entry and the leaderboard, are an `overlay` property of `Main.qml` (`""`,
+`"nameEntry"` or `"leaderboard"`) shown over the title or the game over screen; a game that starts clears it. The game
+over screen offers Save score in place of Play again while a score waits for a name, and Menu lets that score go. The
+leaderboard's Back goes to the title (through `newGame()` when it was reached from the end of a game). `NameEntryScreen`
+keeps the keyboard on the screen itself, so letters and Space type into the name and the buttons on it answer touch only;
+steering the letter grid with tilt or a gamepad comes with the settings and the tilt work. `Main.qml` shows the title
 screen while the game has not started, the game screen (the score, the best score and the board) while it runs or is
 paused, the pause dialog over the game while it is paused, and the game over screen after it. Each screen takes the
 keyboard when it shows and puts it on its main button. The three screens are drawn on the 390 by 844 page of the design
