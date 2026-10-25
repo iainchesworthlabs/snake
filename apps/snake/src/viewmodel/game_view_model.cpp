@@ -78,6 +78,12 @@ GameViewModel::Mode GameViewModel::mode() const
     return from_sim(m_Session.mode());
 }
 
+double GameViewModel::tickProgress() const
+{
+    const double interval_us = static_cast<double>(m_Session.tick_interval_ms()) * 1000.0;
+    return std::clamp(static_cast<double>(m_Pacer.pending_us()) / interval_us, 0.0, 1.0);
+}
+
 void GameViewModel::setMode(Mode mode)
 {
     if (mode == this->mode())
@@ -125,8 +131,8 @@ void GameViewModel::resume()
     const sim::GameState state_before = m_Session.state();
     if (m_Session.resume())
     {
-        // The time of the pause is not the game's.
-        m_Pacer.reset();
+        // The time of the pause is not the game's: the pacer collects none while the game is paused, and what it held
+        // when the game stopped is kept, so that the snake carries on from where the picture showed it.
         publish(state_before, m_Session.simulation().score(), false);
     }
 }
@@ -152,6 +158,7 @@ void GameViewModel::advance(double seconds)
     {
         publish(state_before, score_before, true);
     }
+    emit progressChanged();
 }
 
 bool GameViewModel::handleKey(int qtKey, bool autoRepeat)

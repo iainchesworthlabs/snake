@@ -65,6 +65,10 @@ public:
         return m_Session;
     }
 
+    /// How far the game is from the last tick to the next, from 0 to 1. The board uses it to draw the snake between
+    /// cells.
+    [[nodiscard]] double tickProgress() const;
+
     /// A new game in the current mode, waiting to start.
     Q_INVOKABLE void newGame();
     /// NOT_STARTED to running.
@@ -87,6 +91,8 @@ signals:
     void modeChanged();
     /// The board is different: a tick ran or a new game began.
     void boardChanged();
+    /// Time has passed within a tick, so the snake is further on between its cells.
+    void progressChanged();
 
 private:
     void perform(input::Action action);

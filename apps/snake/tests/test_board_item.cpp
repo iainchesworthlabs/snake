@@ -163,9 +163,9 @@ TEST_CASE("The board follows the game", "[board]")
     const QImage image = scene.render();
     REQUIRE(model.session().simulation().head() == Cell{11, 10});
     CHECK(colour_of(image, Cell{11, 10}) == opaque(tokens::ACCENT));
-    // Each cell of the body keeps its colour as the snake moves along it.
-    CHECK(colour_of(image, Cell{10, 10}) == opaque(tokens::ACCENT));
-    CHECK(colour_of(image, Cell{9, 10}) == opaque(tokens::SURFACE));
+    // The stripes keep their places in the snake as it moves.
+    CHECK(colour_of(image, Cell{10, 10}) == opaque(tokens::SURFACE));
+    CHECK(colour_of(image, Cell{9, 10}) == opaque(tokens::ACCENT));
     // The tail has moved on, so its cell is empty again (unless the food is there).
     if (model.session().simulation().food() != Cell{8, 10})
     {
@@ -266,4 +266,24 @@ TEST_CASE("Raising the food redraws it higher, and the lift is held between 0 an
     scene.board().setFoodLift(-2.0);
     CHECK(scene.board().foodLift() == 0.0);
     CHECK(scene.render() == resting);
+}
+
+TEST_CASE("The snake moves between the cells while time passes within a tick", "[board]")
+{
+    GameViewModel model(counting_seeds());
+    Scene scene;
+    scene.board().setGame(&model);
+    model.start();
+    const QImage at_rest = scene.render();
+
+    // Half of the first interval: no tick has run, and the head has moved half a cell on.
+    model.advance(0.075);
+    REQUIRE(model.session().simulation().ticks() == 0);
+    const QImage between = scene.render();
+    CHECK(between != at_rest);
+    const board_scene::Layout layout = board_scene::layout_for(between.size());
+    const int middle_y = layout.origin.y() + (10 * layout.cell) + (layout.cell / 2);
+    const int next_cell_start = layout.origin.x() + (11 * layout.cell);
+    CHECK(at_rest.pixel(next_cell_start + 1, middle_y) != opaque(tokens::ACCENT));
+    CHECK(between.pixel(next_cell_start + 1, middle_y) == opaque(tokens::ACCENT));
 }
