@@ -8,6 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <QChar>
+#include <QSignalSpy>
 #include <QString>
 #include <Qt>
 #include <cmath>
@@ -490,4 +491,61 @@ TEST_CASE("The points are the score as a number", "[viewmodel]")
     }
     REQUIRE(model.points() > 0);
     CHECK(model.score().toInt() == model.points());
+}
+
+TEST_CASE("The demo game plays itself, takes seeds of its own and never ends", "[viewmodel][demo]")
+{
+    std::uint64_t calls = 0;
+    GameViewModel model([&calls]() mutable { return ++calls; });
+    const std::uint64_t before = calls;
+    QSignalSpy autoplay(&model, &GameViewModel::autoplayChanged);
+    CHECK_FALSE(model.autoplay());
+
+    model.setAutoplay(true);
+    CHECK(model.autoplay());
+    CHECK(autoplay.count() == 1);
+    // The demo is under way at once, and no seed of a real game was used for it.
+    CHECK(model.state() == State::Running);
+    CHECK(calls == before);
+    model.setAutoplay(true);
+    CHECK(autoplay.count() == 1);
+
+    // Five minutes of play: the snake eats, and when a game ends the next begins at once.
+    bool ate = false;
+    for (int step = 0; step < 6000; ++step)
+    {
+        model.advance(0.05);
+        ate = ate || model.points() > 0;
+        REQUIRE(model.state() == State::Running);
+    }
+    CHECK(ate);
+    CHECK(calls == before);
+
+    // Switched off, the games take the seeds of the real thing again.
+    model.setAutoplay(false);
+    model.newGame();
+    CHECK(calls == before + 1);
+}
+
+TEST_CASE("The demo is the same every time", "[viewmodel][demo]")
+{
+    GameViewModel first(counting_seeds(1));
+    GameViewModel second(counting_seeds(99));
+    for (GameViewModel* model : {&first, &second})
+    {
+        model->setAutoplay(true);
+        for (int step = 0; step < 400; ++step)
+        {
+            model->advance(0.05);
+        }
+    }
+    CHECK(snake::sim::state_hash(first.session().simulation()) ==
+          snake::sim::state_hash(second.session().simulation()));
+}
+
+TEST_CASE("The row of the head is told, for the preview to follow", "[viewmodel][demo]")
+{
+    GameViewModel model(counting_seeds(1));
+    CHECK(model.headRow() == model.session().simulation().head().y);
+    CHECK(model.headRow() == 10);
 }

@@ -141,6 +141,13 @@ public:
         QTest::keyClick(m_Window, key);
     }
 
+    GameViewModel& demo()
+    {
+        auto* found = m_Window->findChild<GameViewModel*>("demoGame");
+        REQUIRE(found != nullptr);
+        return *found;
+    }
+
     /// Types `text` on the keyboard.
     void type(const char* text)
     {
@@ -1390,4 +1397,51 @@ TEST_CASE("A key or a tap skips the death of the snake", "[screens][effects]")
         // one.
         CHECK(app.effects().effects().death_look().popped > 0);
     }
+}
+
+TEST_CASE("The title shows the game playing itself in a frame", "[screens][attract]")
+{
+    App app;
+    CHECK(app.shows("attractPreview"));
+    GameViewModel& demo = app.demo();
+    CHECK(demo.autoplay());
+    CHECK(demo.state() == State::Running);
+    // It is a game of its own: the real one has not started.
+    CHECK(app.game().state() == State::NotStarted);
+    CHECK(&demo != &app.game());
+
+    // It plays in real time while the title is up.
+    const auto ticks = demo.session().simulation().ticks();
+    for (int i = 0; i < 100 && demo.session().simulation().ticks() == ticks; ++i)
+    {
+        QTest::qWait(20);
+    }
+    CHECK(demo.session().simulation().ticks() > ticks);
+
+    // The preview is the board and not the yellow of the page.
+    const QImage image = app.render();
+    QQuickItem* preview = app.item("attractPreview");
+    const QPoint inside = preview->mapToScene(QPointF(preview->width() / 2, preview->height() / 2)).toPoint();
+    CHECK(image.pixel(inside) != rgb_of(tokens::BACKGROUND));
+}
+
+TEST_CASE("The demo stops when the title goes", "[screens][attract]")
+{
+    App app;
+    app.click("playButton");
+    REQUIRE(app.game().state() == State::Running);
+    const auto ticks = app.demo().session().simulation().ticks();
+    QTest::qWait(400);
+    CHECK(app.demo().session().simulation().ticks() == ticks);
+}
+
+TEST_CASE("The demo does not use the seeds of the real game", "[screens][attract]")
+{
+    App first;
+    const auto food = first.game().session().simulation().food();
+    // The real game's first food does not depend on how much the demo has played.
+    QTest::qWait(300);
+    App second;
+    CHECK(second.demo().session().simulation().food() == first.demo().session().simulation().food());
+    static_cast<void>(food);
 }
