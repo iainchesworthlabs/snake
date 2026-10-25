@@ -20,31 +20,63 @@
 #include <QTranslator>
 #include <QVariantMap>
 
-int main(int argc, char* argv[])
+namespace
 {
-    QGuiApplication app(argc, argv);
-    QGuiApplication::setApplicationName(QStringLiteral("snake"));
-    QGuiApplication::setApplicationVersion(
-        QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size()));
 
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Snake"));
-    parser.addHelpOption();
-    parser.addVersionOption();
-    const QCommandLineOption smoke_test(QStringLiteral("smoke-test"),
-                                        QStringLiteral("Exit after the first frame has been shown."));
-    parser.addOption(smoke_test);
-    const QCommandLineOption save_file(
+/// The options of the program. Each one is added to the parser that is given.
+struct Options
+{
+    explicit Options(QCommandLineParser& parser)
+    {
+        parser.setApplicationDescription(QStringLiteral("Snake"));
+        parser.addHelpOption();
+        parser.addVersionOption();
+        parser.addOption(smoke_test);
+        parser.addOption(save_file);
+        parser.addOption(language);
+    }
+
+    QCommandLineOption smoke_test{QStringLiteral("smoke-test"),
+                                  QStringLiteral("Exit after the first frame has been shown.")};
+    QCommandLineOption save_file{
         QStringLiteral("save-file"),
         QStringLiteral("Keep the leaderboards and settings in <file> instead of the user's data folder."),
-        QStringLiteral("file"));
-    parser.addOption(save_file);
-    const QCommandLineOption language(QStringLiteral("language"),
-                                      QStringLiteral("Show the game in <language> (en, fr, es, de, ja, zh_CN, ...) "
-                                                     "instead of the language of the system."),
-                                      QStringLiteral("language"));
-    parser.addOption(language);
+        QStringLiteral("file")};
+    QCommandLineOption language{QStringLiteral("language"),
+                                QStringLiteral("Show the game in <language> (en, fr, es, de, ja, zh_CN, he, yi) "
+                                               "instead of the language of the system."),
+                                QStringLiteral("language")};
+};
+
+void name_the_program()
+{
+    QCoreApplication::setApplicationName(QStringLiteral("snake"));
+    QCoreApplication::setApplicationVersion(
+        QString::fromUtf8(snake::VERSION_STRING.data(), snake::VERSION_STRING.size()));
+}
+
+} // namespace
+
+int main(int argc, char* argv[])
+{
+    // --help, --version and a mistake in the options need no window system, so they are dealt with first by an
+    // application that has none: a machine without a display, or a check of an installed package, can ask the version.
+    {
+        const QCoreApplication core(argc, argv);
+        name_the_program();
+        QCommandLineParser parser;
+        const Options options(parser);
+        parser.process(core);
+    }
+
+    QGuiApplication app(argc, argv);
+    name_the_program();
+    QCommandLineParser parser;
+    const Options options(parser);
     parser.process(app);
+    const QCommandLineOption& smoke_test = options.smoke_test;
+    const QCommandLineOption& save_file = options.save_file;
+    const QCommandLineOption& language = options.language;
 
     // The language of the system, or the one asked for. It also sets how numbers are written.
     const QLocale locale = parser.isSet(language) ? QLocale(parser.value(language)) : QLocale();

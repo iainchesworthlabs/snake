@@ -18,6 +18,9 @@
    built from), which `icl_install_qt_app` in `apps/snake/CMakeLists.txt` installs. The notices are generated
    from the licence file of each runtime dependency, so adding a dependency to `vcpkg.json` without a licence
    file in its port stops the configure step. Test-only packages are listed in `NOTICE_EXCLUDE`.
+   The package job starts the installed program (`snake --version`), which needs no display, so a package that lacks a
+   library fails before anything is published. To try the packaging without a tag, run the workflow on a branch:
+   `gh workflow run release.yml --ref <branch>`. It builds and uploads the three packages and publishes nothing.
 5. The publish job waits for approval in the `release` environment, then writes `SHA512SUMS`,
    detached GPG signatures, an SPDX SBOM and build provenance, creates the GitHub Release, and for a
    final release fast-forwards `main` to the tag.

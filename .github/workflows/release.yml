@@ -98,6 +98,20 @@ jobs:
             cmake --build --preset "$PRESET"
             cmake --install "build/$PRESET" --prefix stage
           fi
+      - name: Run the installed program
+        shell: bash
+        run: |
+          # The version needs no window system, so this runs on a runner without a display. It fails when the package
+          # lacks a library the program is linked to, or the program does not start.
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            exe="$(find stage -name snake.exe | head -n 1)"
+          else
+            exe="$(find stage -type f -name snake -perm -u+x | head -n 1)"
+          fi
+          test -n "$exe"
+          "$exe" --version | tee version.txt
+          grep -q '^snake [0-9]' version.txt
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'
