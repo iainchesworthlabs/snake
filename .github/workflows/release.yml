@@ -247,8 +247,10 @@ jobs:
           project="$(find build/ios-release -maxdepth 1 -name '*.xcodeproj' | head -n 1)"
           [ -n "$project" ] || { echo "::error::CMake made no .xcodeproj under build/ios-release"; exit 1; }
           echo "project=$project" >> "$GITHUB_OUTPUT"
-          echo "ipa=dist-ios/snake-$label-ios-adhoc.ipa" >> "$GITHUB_OUTPUT"
-          echo "url=https://github.com/$REPOSITORY/releases/download/$label/snake-$label-ios-adhoc.ipa" >> "$GITHUB_OUTPUT"
+          kind=adhoc
+          if [ "$METHOD" = app-store ]; then kind=appstore; fi
+          echo "ipa=dist-ios/snake-$label-ios-$kind.ipa" >> "$GITHUB_OUTPUT"
+          echo "url=https://github.com/$REPOSITORY/releases/download/$label/snake-$label-ios-$kind.ipa" >> "$GITHUB_OUTPUT"
           echo "version=${label#v}" >> "$GITHUB_OUTPUT"
 
       - name: Archive and export the IPA
