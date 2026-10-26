@@ -415,7 +415,7 @@ TEST_CASE("Changing the game or the profile is heard once and the old one is let
     rig.input.steer(Heading::Up);
 }
 
-TEST_CASE("The joystick turns the snake once the knob is far enough out, and not before",
+TEST_CASE("The joystick turns the snake once the knob is a third of the way out, and not before",
           "[input-controller][joystick]")
 {
     Rig rig;
@@ -423,7 +423,7 @@ TEST_CASE("The joystick turns the snake once the knob is far enough out, and not
     CHECK(rig.input.controls() == Scheme::Joystick);
     rig.start_level();
 
-    rig.input.joystickMoved(0.0, 0.3);
+    rig.input.joystickMoved(0.0, 0.2);
     CHECK_FALSE(rig.pending());
     rig.input.joystickMoved(0.0, 0.5);
     REQUIRE(rig.pending());
@@ -431,20 +431,64 @@ TEST_CASE("The joystick turns the snake once the knob is far enough out, and not
     rig.input.joystickReleased();
 }
 
-TEST_CASE("The joystick follows the larger axis, so a thumb round the rim does not flicker",
+TEST_CASE("A diagonal is a turn across the snake's line", "[input-controller][joystick]")
+{
+    // The snake starts heading right: north-east is up, south-east is down.
+    for (const auto& [up, expected] : {std::pair{0.6, Direction::UP}, std::pair{-0.6, Direction::DOWN}})
+    {
+        Rig rig;
+        rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+        rig.start_level();
+        rig.input.joystickMoved(0.6, up);
+        REQUIRE(rig.pending());
+        CHECK(*rig.pending() == expected);
+    }
+}
+
+TEST_CASE("A thumb held on a diagonal steers a staircase, one turn each tick", "[input-controller][joystick]")
+{
+    Rig rig;
+    rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+    rig.start_level();
+    rig.input.joystickMoved(0.6, 0.6);
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::UP);
+    // Held while the turn waits for its tick: nothing more is queued, however many frames go by.
+    rig.input.update();
+    rig.input.update();
+    CHECK(rig.game.session().simulation().pending_turns().size() == 1);
+
+    // The tick takes the turn: the snake heads up, so north-east now asks for east.
+    rig.game.advance(0.2);
+    REQUIRE(rig.game.session().simulation().heading() == Direction::UP);
+    rig.input.update();
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::RIGHT);
+    rig.game.advance(0.2);
+    REQUIRE(rig.game.session().simulation().heading() == Direction::RIGHT);
+    rig.input.update();
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::UP);
+}
+
+TEST_CASE("A flick to the diagonal and back inside one tick moves the snake one row aside",
           "[input-controller][joystick]")
 {
     Rig rig;
     rig.profile.setControls(ProfileViewModel::Controls::Joystick);
     rig.start_level();
-    // Down, then lets go, then a push to the left after the snake has turned.
-    rig.input.joystickMoved(0.1, -0.6);
-    REQUIRE(rig.pending());
-    CHECK(*rig.pending() == Direction::DOWN);
+    rig.input.joystickMoved(0.8, 0.0);
+    CHECK_FALSE(rig.pending());
+    rig.input.joystickMoved(0.6, 0.6);
+    rig.input.joystickMoved(0.8, 0.0);
+    const auto& turns = rig.game.session().simulation().pending_turns();
+    REQUIRE(turns.size() == 2);
+    CHECK(turns.at(0) == Direction::UP);
+    CHECK(turns.at(1) == Direction::RIGHT);
     rig.game.advance(0.2);
-    rig.input.joystickMoved(-0.7, -0.2);
-    REQUIRE(rig.pending());
-    CHECK(*rig.pending() == Direction::LEFT);
+    rig.game.advance(0.2);
+    CHECK(rig.game.session().simulation().heading() == Direction::RIGHT);
+    CHECK(rig.game.session().simulation().head().y == 9);
 }
 
 TEST_CASE("The joystick does nothing when it is not the way, or the game is not running",
@@ -462,7 +506,7 @@ TEST_CASE("The joystick does nothing when it is not the way, or the game is not 
     CHECK_FALSE(rig.pending());
 }
 
-TEST_CASE("Letting go of the joystick forgets the direction, so the same push turns again",
+TEST_CASE("Letting go of the joystick stops steering, and a paused knob steers nothing when the game resumes",
           "[input-controller][joystick]")
 {
     Rig rig;
@@ -472,8 +516,9 @@ TEST_CASE("Letting go of the joystick forgets the direction, so the same push tu
     REQUIRE(rig.pending());
     rig.game.advance(0.2);
     rig.input.joystickReleased();
-    rig.input.joystickMoved(0.0, 0.8);
-    // A second up while already heading up is dropped by the game, not by the stick: the stick offers it.
-    rig.input.joystickMoved(-0.9, 0.0);
-    CHECK(rig.pending());
+    // Nothing is held: another frame turns nothing, and the knob in the middle is nothing.
+    rig.input.update();
+    CHECK_FALSE(rig.pending());
+    rig.input.joystickMoved(0.0, 0.0);
+    CHECK_FALSE(rig.pending());
 }

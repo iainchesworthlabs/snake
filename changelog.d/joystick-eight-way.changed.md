@@ -1,0 +1,1 @@
+**The joystick reads eight ways and answers sooner.** The knob now steers once it is a third of the way out, and a diagonal turns the snake: pushed north-east while heading east it goes up, and held there it climbs a staircase. A quick flick to the diagonal and back moves the snake one row aside.

@@ -241,9 +241,12 @@ is comfortable and that is neutral, and again when the pause dialog's Recalibrat
 swipe goes through `SwipeRecogniser` from a `MultiPointTouchArea` over the game screen (only while swiping is chosen and a
 game runs; the first finger down is followed and the rest are ignored), and the d-pad's four buttons call `steer()`.
 The on-screen joystick (`JoystickPad`) is a plate with a knob that follows a thumb, clamped to its travel, and calls
-`joystickMoved(right, up)` with the knob's place as a fraction of that travel (`joystickReleased()` when the thumb lifts); a
-`DirectionSelector` with `TOUCH_STICK_SELECTOR` (engage 0.45, release 0.25) turns it into a turn, as the gamepad stick does
-with its own numbers. The four choices (tilt, swipe, d-pad, joystick) are in the pause dialog; `ControlScheme::JOYSTICK` is 3
+`joystickMoved(right, up)` with the knob's place as a fraction of that travel (`joystickReleased()` when the thumb lifts). An
+`EightWaySelector` (`TOUCH_JOYSTICK`: engage 0.30, release 0.20) reads it in eight ways: straight is that way, and a diagonal
+(25 degrees or more off an axis, 40 degrees wide) is a turn across the snake's own line, so north-east is up while the snake
+heads east and east while it heads north. The controller reads the knob when it moves and every frame, against the heading the
+snake will have after the turns that are waiting: a thumb held on a diagonal queues one turn per tick, a staircase, and a
+flick to the diagonal and back within a tick queues two, which is one row aside. The four choices (tilt, swipe, d-pad, joystick) are in the pause dialog; `ControlScheme::JOYSTICK` is 3
 in the save file, so a file with it is refused by a build from before it. On a phone the game screen keeps the score, the
 best and the controls inside `SafeArea.margins` (the status bar, the camera cut-out, the home indicator), and the pause
 button, which is also the way to leave a game (Pause has Quit to menu), is at the bottom on the leading side, clear of a score
