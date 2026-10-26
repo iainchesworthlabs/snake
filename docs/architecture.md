@@ -229,6 +229,22 @@ normal one, granted at install and never asked of the person, and the only permi
 `UIImpactFeedbackGenerator` (`device.mm`, Objective-C++ with automatic reference counting). Anywhere else it does nothing.
 `HapticsDirector` listens to `GameViewModel::tickEvent`: a tap for eating, a thud for a crash. Neither has run on a device.
 
+**Steering by touch.** `InputController` (`viewmodel/`) is the one place where a phone's input becomes a turn. It reads three
+things: the profile's choice (`controls`: tilt, swipe or d-pad, and `invertAxes`), whether the device has a touch screen
+(`touchDevice`) and `device::accelerometer()`. `controls` is the choice made good: no touch screen is the keyboard, and
+tilt on a device with no accelerometer is swiping. `update()` is called once a frame from the timer in `Main.qml`, before
+the game advances: it takes in the accelerometer's readings through libs/input's `TiltProcessor` (which filters them, takes
+the neutral from the calibration and applies a dead zone and hysteresis), and while a game runs with tilt chosen it offers
+the direction in force to `GameViewModel::turn()` every frame, which the input buffer de-duplicates. The tilt is
+calibrated at `GameViewModel::gameStarted` (a new game or a restart, not a resume), so the player holds the device however
+is comfortable and that is neutral, and again when the pause dialog's Recalibrate tilt asks (`calibrationRequested`). A
+swipe goes through `SwipeRecogniser` from a `MultiPointTouchArea` over the game screen (only while swiping is chosen and a
+game runs; the first finger down is followed and the rest are ignored), and the d-pad's four buttons call `steer()`.
+`TiltIndicator` draws the tilt read as a dot on a plate with the dead zone and the turning angle marked, so a player sees
+why the snake does or does not turn; `DPad` is four `ArrowButton`s in a cross. Where there is a touch screen the game
+screen also has a pause button, since there is no Escape. The accelerometer comes from `device::accelerometer()`, which
+is the device's own unless a test has set a factory (`set_accelerometer_factory`): the tests give it a recording.
+
 **Leaving and coming back.** A window that is not the active one pauses the game (`Main.qml`), which covers the home button,
 a call and another program on a phone, and the music of a game follows it. `SoundDirector::active` is true while the program
 is active or inactive (a call, the notification shade) and false when it is put away (suspended or hidden): then the music

@@ -4,6 +4,7 @@
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
 #include "snake/audio/tunes.hpp"
+#include "snake/input/sample_source.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
@@ -38,6 +39,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 using snake::sim::Mode;
@@ -52,6 +54,16 @@ namespace
 constexpr int PAGE_WIDTH = 390;
 constexpr int PAGE_HEIGHT = 844;
 
+/// An accelerometer that feels nothing, so that a device in a test can be steered by tilt.
+class SilentAccelerometer final : public snake::input::SampleSource
+{
+public:
+    std::optional<snake::input::AccelSample> next() noexcept override
+    {
+        return std::nullopt;
+    }
+};
+
 // The window is the size of the design's page, so a screen is drawn at the scale of the design and its measures can be
 // read off the pixels.
 class App
@@ -62,8 +74,11 @@ public:
         QQmlComponent component(&m_Engine, "SnakeApp", "Main");
         INFO(component.errorString().toStdString());
         REQUIRE(component.isReady());
+        // The computer these run on has no accelerometer; a phone does.
+        snake::ui::device::set_accelerometer_factory([] { return std::make_unique<SilentAccelerometer>(); });
         m_Root.reset(component.createWithInitialProperties(
             {{"windowWidth", PAGE_WIDTH}, {"windowHeight", PAGE_HEIGHT}, {"touchDevice", touch_device}}));
+        snake::ui::device::set_accelerometer_factory({});
         m_Window = qobject_cast<QQuickWindow*>(m_Root.get());
         REQUIRE(m_Window != nullptr);
         m_Window->show();
@@ -400,6 +415,68 @@ TEST_CASE("The keys steer the game once it runs", "[screens]")
     CHECK(app.game().state() == State::Running);
     // The head is a cell above the row it started in.
     CHECK(app.game().session().simulation().head().y == 9);
+}
+
+TEST_CASE("A computer shows no touch controls on the game screen", "[screens][touch]")
+{
+    App app;
+    app.start_classic();
+    CHECK_FALSE(app.shows("dpad"));
+    CHECK_FALSE(app.shows("tiltIndicator"));
+    CHECK_FALSE(app.shows("pauseButton"));
+    CHECK_FALSE(app.item("swipeArea")->isEnabled());
+}
+
+TEST_CASE("Tilt shows the indicator and a pause button, and swiping a swipe area", "[screens][touch]")
+{
+    App app(true);
+    app.start_classic();
+    // Tilt is the first choice of the profile.
+    CHECK(app.shows("tiltIndicator"));
+    CHECK(app.shows("pauseButton"));
+    CHECK_FALSE(app.shows("dpad"));
+    CHECK_FALSE(app.item("swipeArea")->isEnabled());
+    // The dot sits in the middle of the plate while nothing is felt.
+    const QQuickItem* plate = app.item("tiltIndicator");
+    const QQuickItem* dot = app.item("tiltDot");
+    CHECK(dot->x() + dot->width() / 2 == Catch::Approx(plate->width() / 2).margin(1.0));
+    CHECK(dot->y() + dot->height() / 2 == Catch::Approx(plate->height() / 2).margin(1.0));
+    // The dead zone is inside the angle that turns.
+    CHECK(app.item("tiltDeadZone")->width() < app.item("tiltThreshold")->width());
+
+    app.game().pause();
+    app.profile().setControls(ProfileViewModel::Controls::Swipe);
+    app.game().resume();
+    CHECK_FALSE(app.shows("tiltIndicator"));
+    CHECK(app.item("swipeArea")->isEnabled());
+}
+
+TEST_CASE("The d-pad makes room under the board and its arrows turn the snake", "[screens][touch]")
+{
+    App app(true);
+    app.profile().setControls(ProfileViewModel::Controls::Dpad);
+    app.start_classic();
+    REQUIRE(app.shows("dpad"));
+    CHECK_FALSE(app.shows("tiltIndicator"));
+    const QQuickItem* board = app.item("board");
+    const QQuickItem* dpad = app.item("dpad");
+    CHECK(board->y() + board->height() <= dpad->y());
+
+    app.click("dpadUp");
+    app.game().advance(0.18);
+    CHECK(app.game().session().simulation().head().y == 9);
+    app.click("dpadLeft");
+    app.click("dpadDown");
+    app.click("dpadRight");
+}
+
+TEST_CASE("The pause button of a phone pauses the game", "[screens][touch]")
+{
+    App app(true);
+    app.start_classic();
+    app.click("pauseButton");
+    CHECK(app.game().state() == State::Paused);
+    CHECK(app.shows("pauseScreen"));
 }
 
 TEST_CASE("Escape pauses and shows the pause dialog over the dimmed game", "[screens][pause]")

@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>DPad</name>
+    <message>
+        <source>Up</source>
+        <translation>אַרויף</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>לינקס</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>רעכטס</translation>
+    </message>
+    <message>
+        <source>Down</source>
+        <translation>אַראָפּ</translation>
+    </message>
+</context>
+<context>
     <name>GameOverScreen</name>
     <message>
         <source>New best!</source>
@@ -96,6 +115,10 @@
     <message>
         <source>Game</source>
         <translation>שפּיל</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>אָפּשטעלן</translation>
     </message>
     <message>
         <source>Score</source>
@@ -306,6 +329,13 @@
     <message>
         <source>Keep my scores</source>
         <translation>היט אָפּ מײַנע פּונקטן</translation>
+    </message>
+</context>
+<context>
+    <name>TiltIndicator</name>
+    <message>
+        <source>Tilt</source>
+        <translation>נייגן</translation>
     </message>
 </context>
 <context>

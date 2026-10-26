@@ -120,11 +120,17 @@ public:
     /// accept the event. A held key's repeats are used up without effect.
     Q_INVOKABLE bool handleKey(int qtKey, bool autoRepeat);
 
+    /// Steers the snake, as an arrow key does: tilt, a swipe and the d-pad come here. Returns false when the input is
+    /// dropped (the game is not running, or the turn is a reversal or a repeat).
+    bool turn(sim::Direction direction);
+
 signals:
     /// A tick ate, crashed or won. It is sent as the tick happens, before the state changes.
     void tickEvent(snake::ui::GameViewModel::Event event);
     /// The state changed.
     void stateChanged();
+    /// A new game began running, from the title or by restarting: not a resume from a pause.
+    void gameStarted();
     void autoplayChanged();
     void scoreChanged();
     void modeChanged();
