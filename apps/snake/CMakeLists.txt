@@ -43,6 +43,10 @@ if(NOT SNAKE_SOURCE_REVISION)
 endif()
 configure_file(src/about/source_info.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/generated/snake/source_info.hpp" @ONLY)
 
+if(ANDROID OR IOS)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/packaging/mobile.cmake")
+endif()
+
 # The licence texts the About screen shows are compiled into the executable: the licence of the program, the notices
 # that icl_install_qt_app() generates when CMake configures (one entry per runtime dependency, with its licence text),
 # and the licence of the bundled font.
@@ -93,6 +97,15 @@ add_library(snake_miniaudio STATIC src/platform/miniaudio_impl.cpp)
 target_include_directories(snake_miniaudio SYSTEM PUBLIC "${SNAKE_MINIAUDIO_INCLUDE_DIR}")
 set_source_files_properties(src/platform/miniaudio_impl.cpp PROPERTIES COMPILE_DEFINITIONS MINIAUDIO_IMPLEMENTATION)
 target_link_libraries(snake_miniaudio PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
+if(IOS)
+    # On iOS miniaudio's code is Objective-C++ (it uses AVAudioSession), and the system's audio frameworks are linked in
+    # rather than opened at run time.
+    set_source_files_properties(src/platform/miniaudio_impl.cpp PROPERTIES
+        LANGUAGE OBJCXX COMPILE_DEFINITIONS "MINIAUDIO_IMPLEMENTATION;MA_NO_RUNTIME_LINKING")
+    target_link_libraries(snake_miniaudio PUBLIC
+        "$<LINK_LIBRARY:FRAMEWORK,CoreFoundation>" "$<LINK_LIBRARY:FRAMEWORK,CoreAudio>"
+        "$<LINK_LIBRARY:FRAMEWORK,AudioToolbox>" "$<LINK_LIBRARY:FRAMEWORK,AVFoundation>")
+endif()
 add_library(snake::miniaudio ALIAS snake_miniaudio)
 
 set(SNAKE_UI_SOURCES
@@ -161,8 +174,11 @@ function(snake_add_ui_module target)
 endfunction()
 
 qt_add_executable(snake_app src/main.cpp)
-# The executable is named snake while the target is snake_app, so the QML module and the target stay distinct.
-set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
+# The executable is named snake while the target is snake_app, so the QML module and the target stay distinct. (Not on
+# Android, where the name of the library is the target's: androiddeployqt and the manifest go by it.)
+if(NOT ANDROID)
+    set_target_properties(snake_app PROPERTIES OUTPUT_NAME snake)
+endif()
 snake_add_ui_module(snake_app)
 
 # Translations: the source language and the others of docs/i18n.md. `cmake --build <dir> --target
@@ -175,21 +191,33 @@ qt_add_translations(snake_app
 
 target_link_libraries(snake_app PRIVATE snake::core)
 
-# Installs the program, copies the Qt libraries, plugins and QML modules next to it so the installed tree runs on a
-# machine without Qt, and adds the licence, notices and source information. The macOS bundle identifier follows the
-# reverse-domain form of the project's GitHub address; change it here if the project later gets its own domain, because
-# macOS keys saved settings and permissions by it. catch2 is used by the tests only and is not shipped.
-icl_install_qt_app(snake_app
-    BUNDLE_IDENTIFIER io.github.iainchesworthlabs.snake
-    DISPLAY_NAME Snake
-    NOTICE_EXCLUDE catch2)
-# The font's licence asks for its copyright notice and text to travel with the font.
-if(APPLE)
-    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
-        DESTINATION "snake.app/Contents/Resources/doc")
+if(ANDROID OR IOS)
+    # A phone or a tablet: no installer. The package is androiddeployqt's or Xcode's, from the target's properties
+    # (packaging/mobile.cmake). The notices that the About screen shows are still generated, from the manifest.
+    include(IclNotices)
+    icl_generate_notices(
+        OUTPUT "${SNAKE_NOTICES_FILE}"
+        NAME "${SNAKE_DISPLAY_NAME}"
+        QT_VERSION "${Qt6_VERSION}"
+        EXCLUDE catch2)
+    snake_configure_mobile_app(snake_app)
 else()
-    install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
-        DESTINATION "share/doc/snake")
+    # Installs the program, copies the Qt libraries, plugins and QML modules next to it so the installed tree runs on a
+    # machine without Qt, and adds the licence, notices and source information. The macOS bundle identifier follows the
+    # reverse-domain form of the project's GitHub address; change it here if the project later gets its own domain, because
+    # macOS keys saved settings and permissions by it. catch2 is used by the tests only and is not shipped.
+    icl_install_qt_app(snake_app
+        BUNDLE_IDENTIFIER io.github.iainchesworthlabs.snake
+        DISPLAY_NAME Snake
+        NOTICE_EXCLUDE catch2)
+    # The font's licence asks for its copyright notice and text to travel with the font.
+    if(APPLE)
+        install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
+            DESTINATION "snake.app/Contents/Resources/doc")
+    else()
+        install(FILES "${SNAKE_FONT_DIR}/LICENSE-pixelify-sans.txt" "${SNAKE_NOTO_DIR}/LICENSE-noto-sans.txt"
+            DESTINATION "share/doc/snake")
+    endif()
 endif()
 
 if(SNAKE_BUILD_TESTS)

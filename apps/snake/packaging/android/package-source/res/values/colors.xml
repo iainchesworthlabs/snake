@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The yellow of the page (docs/design/tokens.json, "background"): the colour behind the first frame and behind the
+     icon's mark. -->
+<resources>
+    <color name="snake_launch_background">#FFC93C</color>
+    <color name="snake_icon_background">#FFC93C</color>
+</resources>

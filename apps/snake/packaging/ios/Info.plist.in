@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The iOS application's Info.plist. CMake fills the MACOSX_BUNDLE_ names in from the target's properties
+     (snake_configure_mobile_app in apps/snake/packaging/mobile.cmake). CMake substitutes inside comments too, so no
+     comment here may write a dollar sign and a brace. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
+    <key>CFBundleIdentifier</key>
+    <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
+    <key>CFBundleDisplayName</key>
+    <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
+    <key>CFBundleVersion</key>
+    <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
+    <!-- The eight languages of the game (apps/snake/translations). -->
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>fr</string>
+        <string>es</string>
+        <string>de</string>
+        <string>ja</string>
+        <string>zh-Hans</string>
+        <string>he</string>
+        <string>yi</string>
+    </array>
+    <!-- The icon: the AppIcon set in Assets.xcassets, compiled by Xcode (the target's
+         ASSETCATALOG_COMPILER_APPICON_NAME names the same set). -->
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.arcade-games</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+
+    <!-- No usage text for any permission: the game asks for none (no camera, no microphone, no location, no photos).
+         The accelerometer, which tilt reads, needs no permission on iOS. -->
+
+    <!-- A launch screen in the property list: without one iOS runs the program in a legacy 320 x 480 window and scales
+         it up. The colour is the yellow of the page (Assets.xcassets, LaunchBackground). -->
+    <key>UILaunchScreen</key>
+    <dict>
+        <key>UIColorName</key>
+        <string>LaunchBackground</string>
+    </dict>
+
+    <!-- Portrait: the design is a portrait page, and the screen does not turn while the game is played. On an iPad the
+         page is centred, as on a desktop window. -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+
+    <key>UIStatusBarHidden</key>
+    <false/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleDarkContent</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+</dict>
+</plist>

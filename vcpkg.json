@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "builtin-baseline": "9eec002df1cd109f8f104cd966a763daf9751489",
   "dependencies": [
-    "catch2",
+    { "name": "catch2", "platform": "!(android | ios)" },
     "miniaudio"
   ],
   "features": {
