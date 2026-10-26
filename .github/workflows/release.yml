@@ -150,8 +150,9 @@ jobs:
   #
   # Opt in with the repository variable SIGN_IOS_ADHOC=true. With it unset the release is made without an IPA, as before.
   # The IPA carries its profile, which lists the UDIDs of the devices, so it goes to the release only when the repository
-  # variable IOS_IPA_ON_RELEASE is true; otherwise it stays a workflow artifact (`ios-adhoc`), which only people with access
-  # to the repository can download. This repository is public.
+  # variable IOS_IPA_ON_RELEASE is true; otherwise it stays a workflow artifact (`ios-adhoc`). That is NOT private: in a public
+  # repository any signed-in GitHub account can download an artifact. It is only out of sight and short-lived (retention-days
+  # below). Real access control needs a host with a login in front of it (docs/ios-install.md).
   ios:
     name: Package (iOS, ad-hoc)
     needs: version
@@ -276,6 +277,7 @@ jobs:
         with:
           # Only an artifact named release-* goes to the release (the publish job's pattern).
           name: ${{ vars.IOS_IPA_ON_RELEASE == 'true' && 'release-ios-adhoc' || 'ios-adhoc' }}
+          retention-days: 7
           path: dist-ios/*
           if-no-files-found: error
 
@@ -290,7 +292,7 @@ jobs:
             if [ "$ON_RELEASE" = true ]; then
               echo "It goes to the release with the other files. On the device, in Safari, open the install page (docs/ios-install.md)."
             else
-              echo "Kept as the workflow artifact \`ios-adhoc\` (IOS_IPA_ON_RELEASE is not true, because an ad-hoc IPA lists device UDIDs and this repository is public)."
+              echo "Kept as the workflow artifact \`ios-adhoc\` for 7 days (IOS_IPA_ON_RELEASE is not true). It lists device UDIDs, and in a public repository any signed-in GitHub account can download an artifact."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
