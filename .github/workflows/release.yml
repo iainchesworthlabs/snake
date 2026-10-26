@@ -10,6 +10,13 @@ on:
   # Builds and uploads the packages from a branch without publishing, to try the packaging
   # (`gh workflow run release.yml --ref <branch>`). The version check and the publish job run for tags only.
   workflow_dispatch:
+    inputs:
+      upload_testflight:
+        description: >-
+          Upload the iOS build to TestFlight (a tag always does). Without it a run on a branch only has Apple validate the build.
+          Needs SIGN_IOS_UPLOAD=true.
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -143,26 +150,31 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  # The iPhone and iPad application as an ad-hoc IPA: archived and exported by Xcode with the Apple Distribution certificate
-  # (organisation secrets) and this repository's own ad-hoc provisioning profile, through the shared signing actions
-  # (docs/ios-signing.md in icl-common-infra). It installs only on the devices the profile lists, so a new device needs a new
-  # profile and a new build (docs/ios-install.md).
+  # The iPhone and iPad application, signed with the Apple Distribution certificate (organisation secrets) and this
+  # repository's own provisioning profile, through the shared signing actions (docs/ios-signing.md in icl-common-infra).
+  # Two ways to use it, by repository variable:
   #
-  # Opt in with the repository variable SIGN_IOS_ADHOC=true. With it unset the release is made without an IPA, as before.
-  # The IPA carries its profile, which lists the UDIDs of the devices, so it goes to the release only when the repository
-  # variable IOS_IPA_ON_RELEASE is true; otherwise it stays a workflow artifact (`ios-adhoc`). That is NOT private: in a public
-  # repository any signed-in GitHub account can download an artifact. It is only out of sight and short-lived (retention-days
-  # below). Real access control needs a host with a login in front of it (docs/ios-install.md).
+  #   SIGN_IOS_UPLOAD=true  TestFlight. The profile is an App Store one (no devices), the build number is the number of this
+  #                         run, and Apple validates the build; a tag, or a manual run with `upload_testflight`, uploads it.
+  #                         Testers install it from the TestFlight app (docs/ios-install.md). Nothing identifies a device.
+  #   SIGN_IOS_ADHOC=true   Ad hoc. The profile is an ad-hoc one: the IPA installs only on the devices it lists, and it
+  #                         carries the UDIDs of those devices. It is a workflow artifact, or goes to the release if
+  #                         IOS_IPA_ON_RELEASE is true. Neither is private in a public repository: any signed-in GitHub
+  #                         account can download an artifact.
+  #
+  # With both unset the release is made without iOS, as before. SIGN_IOS_UPLOAD wins when both are set.
   ios:
-    name: Package (iOS, ad-hoc)
+    name: Package (iOS)
     needs: version
-    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') && vars.SIGN_IOS_ADHOC == 'true' }}
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') && (vars.SIGN_IOS_UPLOAD == 'true' || vars.SIGN_IOS_ADHOC == 'true') }}
     runs-on: macos-26
     timeout-minutes: 120
     permissions:
       contents: read
     env:
       BUNDLE_ID: com.iainchesworthlabs.snake
+      # app-store for TestFlight, ad-hoc otherwise.
+      METHOD: ${{ vars.SIGN_IOS_UPLOAD == 'true' && 'app-store' || 'ad-hoc' }}
       VCPKG_DISABLE_METRICS: "1"
     steps:
       - name: Check out
@@ -173,12 +185,13 @@ jobs:
       # The shared action names the secret that is missing, before a Qt download of several gigabytes.
       - name: Import the certificate and the provisioning profile
         id: signing
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@494f40c3f0565866317e3b0e98878ebbfc68b295 # v0.1.16 plus #31 and #33
         with:
           certificate-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
           certificate-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
           profile-base64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
           bundle-id: ${{ env.BUNDLE_ID }}
+          method: ${{ env.METHOD }}
 
       - name: Set up vcpkg
         uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
@@ -212,9 +225,11 @@ jobs:
         env:
           TEAM_ID: ${{ steps.signing.outputs.team-id }}
           PROFILE_NAME: ${{ steps.signing.outputs.profile-name }}
+          BUILD_NUMBER: ${{ github.run_number }}
         run: >
           cmake --preset ios-release
           -DCMAKE_XCODE_GENERATE_SCHEME=ON
+          -DSNAKE_IOS_BUILD_NUMBER="$BUILD_NUMBER"
           -DSNAKE_IOS_SIGNING_TEAM="$TEAM_ID"
           -DSNAKE_IOS_SIGNING_PROFILE="$PROFILE_NAME"
 
@@ -236,17 +251,18 @@ jobs:
           echo "url=https://github.com/$REPOSITORY/releases/download/$label/snake-$label-ios-adhoc.ipa" >> "$GITHUB_OUTPUT"
           echo "version=${label#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Archive and export the ad-hoc IPA
+      - name: Archive and export the IPA
         id: export
-        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@494f40c3f0565866317e3b0e98878ebbfc68b295 # v0.1.16 plus #31 and #33
         with:
           project: ${{ steps.name.outputs.project }}
           scheme: snake_app
           bundle-id: ${{ env.BUNDLE_ID }}
           team-id: ${{ steps.signing.outputs.team-id }}
           profile-name: ${{ steps.signing.outputs.profile-name }}
+          method: ${{ env.METHOD }}
           output: ${{ steps.name.outputs.ipa }}
-          manifest-ipa-url: ${{ steps.name.outputs.url }}
+          manifest-ipa-url: ${{ env.METHOD == 'ad-hoc' && steps.name.outputs.url || '' }}
           manifest-title: Snake
           manifest-version: ${{ steps.name.outputs.version }}
 
@@ -260,15 +276,26 @@ jobs:
           REF_TYPE: ${{ github.ref_type }}
         run: |
           set -euo pipefail
-          if [ "$REF_TYPE" = tag ]; then
-            apps/snake/packaging/ios/verify_app.sh "$IPA" --version "${VERSION%%-*}" --signed
-          else
-            apps/snake/packaging/ios/verify_app.sh "$IPA" --signed
-          fi
+          args=(--signed)
+          if [ "$METHOD" = app-store ]; then args+=(--store); fi
+          if [ "$REF_TYPE" = tag ]; then args+=(--version "${VERSION%%-*}"); fi
+          apps/snake/packaging/ios/verify_app.sh "$IPA" "${args[@]}"
+
+      # Apple's own check of the icon, the property list, the signature and the privacy declarations; and, for a tag or a
+      # manual run that asks, the upload to TestFlight.
+      - name: Validate with Apple, and upload to TestFlight
+        if: env.METHOD == 'app-store'
+        uses: iainchesworthlabs/icl-common-infra/actions/upload-testflight@494f40c3f0565866317e3b0e98878ebbfc68b295 # v0.1.16 plus #31 and #33
+        with:
+          ipa: ${{ steps.export.outputs.ipa }}
+          key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          issuer-id: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          validate-only: ${{ github.ref_type != 'tag' && inputs.upload_testflight != true }}
 
       - name: Remove the signing keychain and profile
         if: always()
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@494f40c3f0565866317e3b0e98878ebbfc68b295 # v0.1.16 plus #31 and #33
         with:
           remove: "true"
 
@@ -276,7 +303,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           # Only an artifact named release-* goes to the release (the publish job's pattern).
-          name: ${{ vars.IOS_IPA_ON_RELEASE == 'true' && 'release-ios-adhoc' || 'ios-adhoc' }}
+          name: ${{ env.METHOD == 'app-store' && 'ios-appstore' || (vars.IOS_IPA_ON_RELEASE == 'true' && 'release-ios-adhoc' || 'ios-adhoc') }}
           retention-days: 7
           path: dist-ios/*
           if-no-files-found: error
@@ -284,15 +311,25 @@ jobs:
       - name: Say how to install it
         shell: bash
         env:
-          MANIFEST_URL: ${{ steps.name.outputs.url }}
           ON_RELEASE: ${{ vars.IOS_IPA_ON_RELEASE }}
+          UPLOADED: ${{ github.ref_type == 'tag' || inputs.upload_testflight == true }}
+          BUILD_NUMBER: ${{ github.run_number }}
         run: |
           {
-            echo "### iOS ad-hoc IPA"
-            if [ "$ON_RELEASE" = true ]; then
-              echo "It goes to the release with the other files. On the device, in Safari, open the install page (docs/ios-install.md)."
+            if [ "$METHOD" = app-store ]; then
+              echo "### iOS build for TestFlight"
+              if [ "$UPLOADED" = true ]; then
+                echo "Uploaded as build $BUILD_NUMBER. Apple processes it for a few minutes; then it is in the TestFlight app for the internal testers."
+              else
+                echo "Validated by Apple, not uploaded. Run the workflow with \`upload_testflight\` (or push a tag) to upload build $BUILD_NUMBER."
+              fi
             else
-              echo "Kept as the workflow artifact \`ios-adhoc\` for 7 days (IOS_IPA_ON_RELEASE is not true). It lists device UDIDs, and in a public repository any signed-in GitHub account can download an artifact."
+              echo "### iOS ad-hoc IPA"
+              if [ "$ON_RELEASE" = true ]; then
+                echo "It goes to the release with the other files (docs/ios-install.md)."
+              else
+                echo "Kept as the workflow artifact \`ios-adhoc\` for 7 days (IOS_IPA_ON_RELEASE is not true). It lists device UDIDs, and in a public repository any signed-in GitHub account can download an artifact."
+              fi
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

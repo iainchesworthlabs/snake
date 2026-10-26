@@ -16,6 +16,9 @@
 # Captured here: inside a function CMAKE_CURRENT_LIST_DIR is the caller's.
 set(SNAKE_PACKAGING_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
+# The build number (CFBundleVersion) of the iOS application. TestFlight refuses a build whose number is not higher than every
+# earlier one for the same version, so the release workflow gives the number of its run. Empty: the project version.
+set(SNAKE_IOS_BUILD_NUMBER "" CACHE STRING "Build number of the iOS application (empty: the project version)")
 set(SNAKE_IOS_SIGNING_TEAM "" CACHE STRING "Apple team ID the iOS application is signed for (empty: an unsigned build)")
 set(SNAKE_IOS_SIGNING_PROFILE "" CACHE STRING "Name of the ad-hoc provisioning profile the iOS application is signed with (empty: an unsigned build)")
 
@@ -93,13 +96,18 @@ function(snake_configure_mobile_app target)
             QT_ANDROID_TARGET_SDK_VERSION "${SNAKE_ANDROID_TARGET_SDK}"
             QT_ANDROID_COMPILE_SDK_VERSION "${SNAKE_ANDROID_TARGET_SDK}")
     elseif(IOS)
+        if(SNAKE_IOS_BUILD_NUMBER)
+            set(SNAKE_IOS_BUILD_NUMBER_OR_VERSION "${SNAKE_IOS_BUILD_NUMBER}")
+        else()
+            set(SNAKE_IOS_BUILD_NUMBER_OR_VERSION "${PROJECT_VERSION}")
+        endif()
         set(assets "${SNAKE_PACKAGING_DIR}/ios/Assets.xcassets")
         set_target_properties(${target} PROPERTIES
             MACOSX_BUNDLE ON
             MACOSX_BUNDLE_INFO_PLIST "${SNAKE_PACKAGING_DIR}/ios/Info.plist.in"
             MACOSX_BUNDLE_BUNDLE_NAME "${SNAKE_DISPLAY_NAME}"
             MACOSX_BUNDLE_GUI_IDENTIFIER "${SNAKE_APPLICATION_ID}"
-            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+            MACOSX_BUNDLE_BUNDLE_VERSION "${SNAKE_IOS_BUILD_NUMBER_OR_VERSION}"
             MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
             MACOSX_BUNDLE_COPYRIGHT "Copyright (C) Iain Chesworth Labs contributors"
             # iPhone and iPad.
