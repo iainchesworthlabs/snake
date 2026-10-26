@@ -4,16 +4,17 @@
      androiddeployqt fills in the values marked INSERT from the target's properties and copies this file over Qt's
      template. The application id is not written here: Gradle takes it from the target's QT_ANDROID_PACKAGE_NAME.
 
-     PERMISSIONS: none. The game keeps one small file in its own private folder, plays sound, and needs no network, no
-     storage and no camera. The permissions placeholder of Qt's template is deliberately NOT here: Qt's core module would
+     PERMISSIONS: one, to vibrate. VIBRATE is a normal permission: Android grants it at install and never asks the person.
+     The game keeps one small file in its own private folder, plays sound, and needs no network, no storage and no camera. The permissions placeholder of Qt's template is deliberately NOT here: Qt's core module would
      put its network and storage permissions at it, whatever the program uses, and without the placeholder
      androiddeployqt inserts none. apps/snake/packaging/android/verify_apk.sh reads the manifest inside the finished
-     package and fails on any permission. Vibration for the haptics (step 18 of the roadmap) will be the first one, and
-     is added here with the code that needs it. -->
+     package and fails on any permission but the one below. A permission added here is added with the code that needs it. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
     android:versionCode="-- %%INSERT_VERSION_CODE%% --"
     android:versionName="-- %%INSERT_VERSION_NAME%% --">
+
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- A touch screen is required: the game is played by touch or tilt. The accelerometer, which tilt uses, is not
          required, so a device without one still installs the game and plays it by swipe or d-pad. -->

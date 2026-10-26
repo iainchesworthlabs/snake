@@ -218,6 +218,27 @@ when a game ends, and taking its seeds from a sequence of its own (`DEMO_SEED`),
 and the demo is the same every time. A frame animation runs it only while the title shows. The preview is the board in a
 frame, clipped to a window about ten rows high that scrolls to keep the head's row (`headRow`) in view.
 
+**What a phone has.** `src/device/` is what a phone has and a computer mostly does not, declared once in `device.hpp` and
+defined once for each operating system (`src/device/<os>/`, picked by `icl_platform_sources()`, so no `#if` is in the
+code). `make_accelerometer()` gives a `SampleSource` for the tilt processor, or nothing: Android and iOS use Qt Sensors'
+accelerometer (`qt_accelerometer.cpp`, built only for them, with the `Sensors` module), which collects the readings on the
+main thread and hands them out oldest first; `accel_sample_from()` turns Qt's metres per second squared into g and its
+timestamp into the 32 bits `AccelSample` uses. A computer returns nothing. `make_haptics()` gives a `Haptics` (a light `tap()`
+and a harder `thud()`): on Android a one-shot `VibrationEffect` through JNI, which needs the `VIBRATE` permission (a
+normal one, granted at install and never asked of the person, and the only permission the package has), and on iOS a
+`UIImpactFeedbackGenerator` (`device.mm`, Objective-C++ with automatic reference counting). Anywhere else it does nothing.
+`HapticsDirector` listens to `GameViewModel::tickEvent`: a tap for eating, a thud for a crash. Neither has run on a device.
+
+**Leaving and coming back.** A window that is not the active one pauses the game (`Main.qml`), which covers the home button,
+a call and another program on a phone, and the music of a game follows it. `SoundDirector::active` is true while the program
+is active or inactive (a call, the notification shade) and false when it is put away (suspended or hidden): then the music
+stops and no effect sounds, and the tune for the moment comes back with the program.
+
+**Orientation and storage.** The screen is fixed to portrait in the Android manifest and the iOS property list, so it does
+not turn during play. The save file is `save.snk` in `QStandardPaths::AppDataLocation`, which Qt makes the program's own
+private folder on Android and `Library/Application Support` in the bundle's container on iOS: no storage permission, and
+Android's backup is off, so the scores stay on the device.
+
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
 that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
 `"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game

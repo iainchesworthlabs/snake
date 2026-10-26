@@ -83,7 +83,7 @@ QML modules and the manifest in `apps/snake/packaging/android/package-source` in
 Android's debug key. It needs, besides the desktop kit above:
 
 - Qt's Android kit and a desktop Qt of the same version for its host tools: `aqt install-qt linux android 6.12.0
-  android_arm64_v8a -O ~/Qt --autodesktop` (use `all_os` as the host name from Qt 6.7 on, in CI's form below);
+  android_arm64_v8a -m qtsensors -O ~/Qt --autodesktop`, with the `qtsensors` module (the accelerometer);
 - the Android SDK with the NDK the kit was built with (r27c, `27.2.12479018`), platform `android-36` and build tools
   `36.0.0` (`sdkmanager "ndk;27.2.12479018" "platforms;android-36" "build-tools;36.0.0"`), and a JDK 17 or later;
 - a vcpkg checkout at the baseline of `vcpkg.json`, as `VCPKG_ROOT`.
@@ -105,7 +105,7 @@ variables, which are the owner's.
 ## iOS
 
 On a Mac with Xcode, with Qt's iOS kit and a macOS kit of the same version for the host tools
-(`aqt install-qt mac ios 6.12.0 ios -O ~/Qt --autodesktop`) and a vcpkg checkout as `VCPKG_ROOT`:
+(`aqt install-qt mac ios 6.12.0 ios -m qtsensors -O ~/Qt --autodesktop`) and a vcpkg checkout as `VCPKG_ROOT`:
 
 ```bash
 export QT_ROOT_DIR=~/Qt/6.12.0/ios QT_HOST_PATH=~/Qt/6.12.0/macos VCPKG_ROOT=~/vcpkg

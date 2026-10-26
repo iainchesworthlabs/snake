@@ -24,6 +24,9 @@ class SoundDirector : public QObject
     QML_ELEMENT
     Q_PROPERTY(snake::ui::GameViewModel* game READ game WRITE setGame NOTIFY gameChanged FINAL)
     Q_PROPERTY(snake::ui::ProfileViewModel* profile READ profile WRITE setProfile NOTIFY profileChanged FINAL)
+    /// The program is the one the person is using. When it is put away (the phone's home button, a call, another
+    /// program in front) the music stops and no effect sounds; when it comes back the music for the moment returns.
+    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged FINAL)
 
 public:
     /// Plays on the program's default sink (see default_sound_sink()).
@@ -43,9 +46,16 @@ public:
     }
     void setProfile(ProfileViewModel* profile);
 
+    [[nodiscard]] bool active() const noexcept
+    {
+        return m_Active;
+    }
+    void setActive(bool active);
+
 signals:
     void gameChanged();
     void profileChanged();
+    void activeChanged();
 
 private:
     void on_tick_event(GameViewModel::Event event);
@@ -65,6 +75,7 @@ private:
     SoundSink* m_Sink = nullptr;
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
+    bool m_Active = true;
     GameViewModel::State m_State = GameViewModel::State::NotStarted;
     /// The tune the sink was last told to play, so that a state signal that changes nothing does not restart it.
     std::optional<audio::Tune> m_Tune;

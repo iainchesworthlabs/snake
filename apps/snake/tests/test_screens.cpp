@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "device/device.hpp"
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
@@ -1841,4 +1842,14 @@ TEST_CASE("The licence text reads from the left in a language read from the righ
     QQuickItem* body = app.item("noticeBody");
     // Left-aligned text: its box starts at the left of the panel.
     CHECK(body->mapToScene(QPointF(0, 0)).x() < 60);
+}
+
+TEST_CASE("A computer has no accelerometer and a motor that does nothing", "[screens][device]")
+{
+    // The tests run on a computer, whatever it is: the operating system's own device file is the one that is built.
+    CHECK(snake::ui::device::make_accelerometer() == nullptr);
+    const auto haptics = snake::ui::device::make_haptics();
+    REQUIRE(haptics != nullptr);
+    haptics->tap();
+    haptics->thud();
 }

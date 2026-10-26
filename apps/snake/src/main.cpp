@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "device/device.hpp"
+#include "device/haptics.hpp"
 #include "platform/audio_output.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
@@ -111,6 +113,10 @@ int main(int argc, char* argv[])
         qWarning() << "No audio output could be opened. The game is silent.";
     }
 
+    // The motor of a phone. A computer has none, and nothing buzzes.
+    const auto haptics = snake::ui::device::make_haptics();
+    snake::ui::device::set_default_haptics(haptics.get());
+
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); },
@@ -140,5 +146,6 @@ int main(int argc, char* argv[])
     const int status = QGuiApplication::exec();
     // The user interface is gone: nothing may play on the sink, which goes with this function.
     snake::ui::set_default_sound_sink(nullptr);
+    snake::ui::device::set_default_haptics(nullptr);
     return status;
 }
