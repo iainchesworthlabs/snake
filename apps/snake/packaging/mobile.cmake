@@ -16,6 +16,9 @@
 # Captured here: inside a function CMAKE_CURRENT_LIST_DIR is the caller's.
 set(SNAKE_PACKAGING_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
+set(SNAKE_IOS_SIGNING_TEAM "" CACHE STRING "Apple team ID the iOS application is signed for (empty: an unsigned build)")
+set(SNAKE_IOS_SIGNING_PROFILE "" CACHE STRING "Name of the ad-hoc provisioning profile the iOS application is signed with (empty: an unsigned build)")
+
 # The application id on Android and the bundle identifier on iOS: the reverse of the repository's address, as the macOS
 # bundle has it.
 set(SNAKE_APPLICATION_ID "io.github.iainchesworthlabs.snake")
@@ -107,5 +110,21 @@ function(snake_configure_mobile_app target)
         target_sources(${target} PRIVATE "${assets}")
         set_source_files_properties("${assets}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         snake_ios_default_plugins()
+        # Signing, for the ad-hoc build only. Both are empty for the unsigned build (the presets turn signing off for every
+        # target), and the release workflow gives both from the provisioning profile it checked. They sign the application
+        # target alone: signing every Xcode target forces Xcode to sign static libraries and Qt's resource bundles, which
+        # have no bundle identifier and were never meant to be signed.
+        if(SNAKE_IOS_SIGNING_TEAM AND SNAKE_IOS_SIGNING_PROFILE)
+            set_target_properties(${target} PROPERTIES
+                XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "YES"
+                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "YES"
+                XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Manual"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Apple Distribution"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${SNAKE_IOS_SIGNING_TEAM}"
+                XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${SNAKE_IOS_SIGNING_PROFILE}")
+        elseif(SNAKE_IOS_SIGNING_TEAM OR SNAKE_IOS_SIGNING_PROFILE)
+            message(FATAL_ERROR "SNAKE_IOS_SIGNING_TEAM and SNAKE_IOS_SIGNING_PROFILE go together: one of them is set and the "
+                "other is empty. Give both for a signed build, or neither for an unsigned one (docs/building.md, iOS).")
+        endif()
     endif()
 endfunction()

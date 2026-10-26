@@ -165,6 +165,10 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     needs the owner's accounts and secrets (D8, D16). Builds and simulator tests do not. (L)
 18. Platform services: sensors, orientation lock, lifecycle auto-pause, haptics, storage location. (M)
 19. Tilt on device with the on-screen indicator, swipe and d-pad. Tuning on real hardware. (M)
+19a. Signed iOS build for the owner's devices: shared `import-ios-signing` and `export-ios-ipa` actions in
+    icl-common-infra, an ad-hoc IPA from the release workflow, and an install on an iPhone and then an iPad. Needs the
+    owner's Apple certificate, profile and registered devices. Done before the ESP32 phase so that step 19's tuning can
+    start. (M)
 
 **Phase 5: ESP32-P4** (release 0.4.0)
 
