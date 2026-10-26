@@ -1,0 +1,1 @@
+**The phone versions are called `com.iainchesworthlabs.snake`.** That is the Android application id and the iOS bundle identifier, chosen to match the other apps and the App ID registered with Apple. Nothing had been released for a phone yet.

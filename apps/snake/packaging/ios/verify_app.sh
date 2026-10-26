@@ -36,7 +36,7 @@ done
 [ -e "$target" ] || { echo "usage: verify_app.sh <app|ipa> [--version v] [--signed]" >&2; exit 2; }
 fail() { echo "FAILED: $*" >&2; exit 1; }
 
-bundle_id="io.github.iainchesworthlabs.snake"
+bundle_id="com.iainchesworthlabs.snake"
 
 work=""
 cleanup() { if [ -n "$work" ]; then rm -rf "$work"; fi; }

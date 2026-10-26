@@ -161,7 +161,7 @@ jobs:
     permissions:
       contents: read
     env:
-      BUNDLE_ID: io.github.iainchesworthlabs.snake
+      BUNDLE_ID: com.iainchesworthlabs.snake
       VCPKG_DISABLE_METRICS: "1"
     steps:
       - name: Check out
@@ -240,7 +240,7 @@ jobs:
         uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
         with:
           project: ${{ steps.name.outputs.project }}
-          scheme: snake
+          scheme: snake_app
           bundle-id: ${{ env.BUNDLE_ID }}
           team-id: ${{ steps.signing.outputs.team-id }}
           profile-name: ${{ steps.signing.outputs.profile-name }}

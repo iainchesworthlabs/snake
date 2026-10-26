@@ -34,7 +34,7 @@ done
 [ -n "$apk" ] || { echo "usage: verify_apk.sh <package.apk> [--version x.y.z] [--release] [--signed]" >&2; exit 2; }
 [ -f "$apk" ] || { echo "verify_apk.sh: $apk is not a file" >&2; exit 2; }
 
-application_id="io.github.iainchesworthlabs.snake"
+application_id="com.iainchesworthlabs.snake"
 library="lib/arm64-v8a/libsnake_app_arm64-v8a.so"
 
 # aapt2 and apksigner: on PATH, or the newest build-tools of the SDK.
