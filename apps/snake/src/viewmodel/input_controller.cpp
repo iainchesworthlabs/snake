@@ -125,6 +125,8 @@ InputController::Scheme InputController::controls() const
         return Scheme::Dpad;
     case ProfileViewModel::Controls::Swipe:
         return Scheme::Swipe;
+    case ProfileViewModel::Controls::Joystick:
+        return Scheme::Joystick;
     case ProfileViewModel::Controls::Tilt:
         break;
     }
@@ -142,6 +144,7 @@ void InputController::on_settings_changed()
     m_Tilt.set_invert_axes(m_Profile != nullptr && m_Profile->invertAxes());
     // The choice of the profile may have changed what steers.
     m_Swipe.cancel();
+    m_Stick.reset();
     emit controlsChanged();
 }
 
@@ -150,6 +153,7 @@ void InputController::on_game_started()
     // A game begins with the device held as the player likes: that is neutral. A resume from a pause keeps it, unless
     // the pause dialog's Recalibrate tilt asked.
     m_Tilt.calibrate();
+    m_Stick.reset();
 }
 
 void InputController::update()
@@ -211,6 +215,25 @@ void InputController::touchReleased(int pointer)
 void InputController::touchCancelled()
 {
     m_Swipe.cancel();
+}
+
+void InputController::joystickMoved(double right, double up)
+{
+    if (m_Game == nullptr || controls() != Scheme::Joystick)
+    {
+        return;
+    }
+    const auto direction = m_Stick.update(static_cast<float>(right), static_cast<float>(up));
+    if (direction && m_Game->state() == GameViewModel::State::Running)
+    {
+        // Offered on every move: the input buffer drops a repeat of the direction already in force.
+        static_cast<void>(m_Game->turn(*direction));
+    }
+}
+
+void InputController::joystickReleased()
+{
+    m_Stick.reset();
 }
 
 } // namespace snake::ui

@@ -240,7 +240,14 @@ calibrated at `GameViewModel::gameStarted` (a new game or a restart, not a resum
 is comfortable and that is neutral, and again when the pause dialog's Recalibrate tilt asks (`calibrationRequested`). A
 swipe goes through `SwipeRecogniser` from a `MultiPointTouchArea` over the game screen (only while swiping is chosen and a
 game runs; the first finger down is followed and the rest are ignored), and the d-pad's four buttons call `steer()`.
-`TiltIndicator` draws the tilt read as a dot on a plate with the dead zone and the turning angle marked, so a player sees
+The on-screen joystick (`JoystickPad`) is a plate with a knob that follows a thumb, clamped to its travel, and calls
+`joystickMoved(right, up)` with the knob's place as a fraction of that travel (`joystickReleased()` when the thumb lifts); a
+`DirectionSelector` with `TOUCH_STICK_SELECTOR` (engage 0.45, release 0.25) turns it into a turn, as the gamepad stick does
+with its own numbers. The four choices (tilt, swipe, d-pad, joystick) are in the pause dialog; `ControlScheme::JOYSTICK` is 3
+in the save file, so a file with it is refused by a build from before it. On a phone the game screen keeps the score, the
+best and the controls inside `SafeArea.margins` (the status bar, the camera cut-out, the home indicator), and the pause
+button, which is also the way to leave a game (Pause has Quit to menu), is at the bottom on the leading side, clear of a score
+that can be six digits wide. `TiltIndicator` draws the tilt read as a dot on a plate with the dead zone and the turning angle marked, so a player sees
 why the snake does or does not turn; `DPad` is four `ArrowButton`s in a cross. Where there is a touch screen the game
 screen also has a pause button, since there is no Escape. The accelerometer comes from `device::accelerometer()`, which
 is the device's own unless a test has set a factory (`set_accelerometer_factory`): the tests give it a recording.

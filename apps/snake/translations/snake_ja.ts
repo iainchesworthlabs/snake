@@ -130,6 +130,13 @@
     </message>
 </context>
 <context>
+    <name>JoystickPad</name>
+    <message>
+        <source>Joystick</source>
+        <translation>ジョイスティック</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>
@@ -250,6 +257,10 @@
     <message>
         <source>D-pad</source>
         <translation>十字キー</translation>
+    </message>
+    <message>
+        <source>Joystick</source>
+        <translation>ジョイスティック</translation>
     </message>
     <message>
         <source>Recalibrate tilt</source>

@@ -122,6 +122,16 @@ FocusScope {
                         font.weight: Font.Medium
                         text: qsTr("Revision: %1").arg(AboutInfo.sourceRevision)
                     }
+
+                    // Not translated: for a bug report about the language.
+                    Text {
+                        objectName: "aboutLanguage"
+                        width: parent.width
+                        wrapMode: Text.WrapAnywhere
+                        color: Theme.ink
+                        font.pixelSize: 12
+                        text: "Language: " + AboutInfo.languageDetail
+                    }
                 }
             }
         }

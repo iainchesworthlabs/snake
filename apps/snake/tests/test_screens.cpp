@@ -470,6 +470,71 @@ TEST_CASE("The d-pad makes room under the board and its arrows turn the snake", 
     app.click("dpadRight");
 }
 
+TEST_CASE("The joystick makes room under the board, and the knob follows a thumb and comes back", "[screens][touch]")
+{
+    App app(true);
+    app.profile().setControls(ProfileViewModel::Controls::Joystick);
+    app.start_classic();
+    REQUIRE(app.shows("joystick"));
+    CHECK_FALSE(app.shows("dpad"));
+    CHECK_FALSE(app.shows("tiltIndicator"));
+    const QQuickItem* board = app.item("board");
+    const QQuickItem* joystick = app.item("joystick");
+    CHECK(board->y() + board->height() <= joystick->y());
+
+    QQuickItem* area = app.item("joystickArea");
+    const QPoint middle = app.centre_of(area);
+    const QQuickItem* knob = app.item("joystickKnob");
+    const QPointF rest = knob->position();
+    QTest::mousePress(&app.window(), Qt::LeftButton, Qt::NoModifier, middle + QPoint(0, -60));
+    CHECK(knob->y() < rest.y());
+    app.game().advance(0.18);
+    CHECK(app.game().session().simulation().head().y == 9);
+    QTest::mouseRelease(&app.window(), Qt::LeftButton, Qt::NoModifier, middle + QPoint(0, -60));
+    CHECK(knob->position() == rest);
+}
+
+TEST_CASE("The knob stops at the edge of its travel however far the thumb goes", "[screens][touch]")
+{
+    App app(true);
+    app.profile().setControls(ProfileViewModel::Controls::Joystick);
+    app.start_classic();
+    QQuickItem* area = app.item("joystickArea");
+    const QPoint middle = app.centre_of(area);
+    const QQuickItem* knob = app.item("joystickKnob");
+    const QPointF rest = knob->position();
+    QTest::mousePress(&app.window(), Qt::LeftButton, Qt::NoModifier, middle);
+    QTest::mouseMove(&app.window(), middle + QPoint(80, 0));
+    CHECK(knob->x() - rest.x() == Catch::Approx(52.0).margin(1.0));
+    QTest::mouseRelease(&app.window(), Qt::LeftButton, Qt::NoModifier, middle + QPoint(80, 0));
+}
+
+TEST_CASE("The pause button is clear of the score, even a long one, on a phone", "[screens][touch]")
+{
+    for (const auto controls : {ProfileViewModel::Controls::Tilt, ProfileViewModel::Controls::Swipe,
+                                ProfileViewModel::Controls::Dpad, ProfileViewModel::Controls::Joystick})
+    {
+        App app(true);
+        app.profile().setControls(controls);
+        app.start_classic();
+        const QQuickItem* pause = app.item("pauseButton");
+        const QQuickItem* score = app.item("score");
+        const QQuickItem* best = app.item("bestScore");
+        const QRectF pause_box(pause->mapToScene(QPointF(0, 0)), QSizeF(pause->width(), pause->height()));
+        const QRectF score_box(score->mapToScene(QPointF(0, 0)), QSizeF(score->width(), score->height()));
+        const QRectF best_box(best->mapToScene(QPointF(0, 0)), QSizeF(best->width(), best->height()));
+        CHECK_FALSE(pause_box.intersects(score_box));
+        CHECK_FALSE(pause_box.intersects(best_box));
+        // Inside the window, with room for a thumb to reach and the home indicator to be.
+        CHECK(pause_box.left() >= 0.0);
+        CHECK(pause_box.bottom() <= app.window().height());
+        // And clear of the board and of the other controls.
+        const QQuickItem* board = app.item("board");
+        const QRectF board_box(board->mapToScene(QPointF(0, 0)), QSizeF(board->width(), board->height()));
+        CHECK_FALSE(pause_box.intersects(board_box));
+    }
+}
+
 TEST_CASE("The pause button of a phone pauses the game", "[screens][touch]")
 {
     App app(true);
@@ -1169,6 +1234,9 @@ TEST_CASE("On a touch device the pause dialog has the controls and recalibrates 
     CHECK_FALSE(app.shows("recalibrateButton"));
     app.click("controlsDpad");
     CHECK(app.profile().controls() == ProfileViewModel::Controls::Dpad);
+    app.click("controlsJoystick");
+    CHECK(app.profile().controls() == ProfileViewModel::Controls::Joystick);
+    CHECK_FALSE(app.shows("recalibrateButton"));
     app.click("controlsTilt");
     CHECK(app.profile().controls() == ProfileViewModel::Controls::Tilt);
     CHECK(app.shows("recalibrateButton"));

@@ -69,6 +69,7 @@ set(SNAKE_QML_FILES
     qml/ConfirmDialog.qml
     qml/DashedFrame.qml
     qml/DPad.qml
+    qml/JoystickPad.qml
     qml/GameOverScreen.qml
     qml/GameScreen.qml
     qml/LeaderboardScreen.qml

@@ -94,6 +94,7 @@ public:
         Tilt,
         Swipe,
         Dpad,
+        Joystick,
     };
     Q_ENUM(Controls)
 

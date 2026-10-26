@@ -13,10 +13,11 @@ enum class ControlScheme : std::uint8_t
     TILT = 0,
     SWIPE = 1,
     DPAD = 2,
+    JOYSTICK = 3,
 };
 
 /// The number of control schemes, for checking a stored value.
-inline constexpr std::uint8_t CONTROL_SCHEME_COUNT = 3;
+inline constexpr std::uint8_t CONTROL_SCHEME_COUNT = 4;
 
 /// What the player can change in Pause and Settings. The defaults are the values of a first run. A platform that
 /// has no tilt sensor picks the first scheme it supports instead of ControlScheme::TILT, and one whose system asks
