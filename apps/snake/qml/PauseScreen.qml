@@ -116,7 +116,8 @@ FocusScope {
                         text: qsTr("Controls")
                     }
 
-                    Row {
+                    Grid {
+                        columns: 2
                         spacing: 8
 
                         Repeater {
@@ -138,6 +139,12 @@ FocusScope {
                                     label: qsTr("D-pad"),
                                     value: ProfileViewModel.Controls.Dpad,
                                     scheme: InputController.Scheme.Dpad
+                                },
+                                {
+                                    name: "Joystick",
+                                    label: qsTr("Joystick"),
+                                    value: ProfileViewModel.Controls.Joystick,
+                                    scheme: InputController.Scheme.Joystick
                                 }
                             ]
 
@@ -149,7 +156,7 @@ FocusScope {
                                 objectName: "controls" + choice.modelData.name
                                 // A device that cannot feel its tilt is not offered it.
                                 visible: choice.modelData.scheme !== InputController.Scheme.Tilt || root.input.tiltAvailable
-                                width: 88
+                                width: 139
                                 height: 42
                                 kind: root.input.controls === choice.modelData.scheme ? "chosen" : "secondary"
                                 activeFocusOnTab: false
@@ -207,9 +214,9 @@ FocusScope {
                 ToyButton {
                     objectName: "quitButton"
                     width: parent.width
-                    height: 44
-                    kind: "link"
-                    fontSize: 17
+                    height: 48
+                    kind: "secondary"
+                    fontSize: 18
                     text: qsTr("Quit to menu")
                     onClicked: root.game.newGame()
                 }

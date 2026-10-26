@@ -20,7 +20,8 @@ TEST_CASE("The control schemes are numbered as they are saved", "[settings][form
     CHECK(static_cast<int>(ControlScheme::TILT) == 0);
     CHECK(static_cast<int>(ControlScheme::SWIPE) == 1);
     CHECK(static_cast<int>(ControlScheme::DPAD) == 2);
-    CHECK(CONTROL_SCHEME_COUNT == 3);
+    CHECK(static_cast<int>(ControlScheme::JOYSTICK) == 3);
+    CHECK(CONTROL_SCHEME_COUNT == 4);
 }
 
 TEST_CASE("Settings are equal when every setting is", "[settings]")

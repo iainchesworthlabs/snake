@@ -6,6 +6,7 @@
 
 #include <QFile>
 #include <QIODevice>
+#include <QLocale>
 #include <QString>
 
 namespace snake::ui
@@ -46,6 +47,12 @@ QString AboutInfo::repositoryUrl()
 QString AboutInfo::sourceRevision()
 {
     return QString::fromUtf8(SOURCE_REVISION.data(), static_cast<qsizetype>(SOURCE_REVISION.size()));
+}
+
+QString AboutInfo::languageDetail()
+{
+    return QStringLiteral("%1 (the system offers %2; its locale is %3)")
+        .arg(QLocale().name(), QLocale::system().uiLanguages().join(QStringLiteral(", ")), QLocale::system().name());
 }
 
 QString AboutInfo::licenceText()

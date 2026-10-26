@@ -414,3 +414,66 @@ TEST_CASE("Changing the game or the profile is heard once and the old one is let
     rig.input.update();
     rig.input.steer(Heading::Up);
 }
+
+TEST_CASE("The joystick turns the snake once the knob is far enough out, and not before",
+          "[input-controller][joystick]")
+{
+    Rig rig;
+    rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+    CHECK(rig.input.controls() == Scheme::Joystick);
+    rig.start_level();
+
+    rig.input.joystickMoved(0.0, 0.3);
+    CHECK_FALSE(rig.pending());
+    rig.input.joystickMoved(0.0, 0.5);
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::UP);
+    rig.input.joystickReleased();
+}
+
+TEST_CASE("The joystick follows the larger axis, so a thumb round the rim does not flicker",
+          "[input-controller][joystick]")
+{
+    Rig rig;
+    rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+    rig.start_level();
+    // Down, then lets go, then a push to the left after the snake has turned.
+    rig.input.joystickMoved(0.1, -0.6);
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::DOWN);
+    rig.game.advance(0.2);
+    rig.input.joystickMoved(-0.7, -0.2);
+    REQUIRE(rig.pending());
+    CHECK(*rig.pending() == Direction::LEFT);
+}
+
+TEST_CASE("The joystick does nothing when it is not the way, or the game is not running",
+          "[input-controller][joystick]")
+{
+    Rig rig;
+    rig.profile.setControls(ProfileViewModel::Controls::Dpad);
+    rig.start_level();
+    rig.input.joystickMoved(0.0, 0.9);
+    CHECK_FALSE(rig.pending());
+
+    rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+    rig.game.pause();
+    rig.input.joystickMoved(0.0, 0.9);
+    CHECK_FALSE(rig.pending());
+}
+
+TEST_CASE("Letting go of the joystick forgets the direction, so the same push turns again",
+          "[input-controller][joystick]")
+{
+    Rig rig;
+    rig.profile.setControls(ProfileViewModel::Controls::Joystick);
+    rig.start_level();
+    rig.input.joystickMoved(0.0, 0.8);
+    REQUIRE(rig.pending());
+    rig.game.advance(0.2);
+    rig.input.joystickReleased();
+    rig.input.joystickMoved(0.0, 0.8);
+    // A second up while already heading up is dropped by the game, not by the stick: the stick offers it.
+    rig.input.joystickMoved(-0.9, 0.0);
+    CHECK(rig.pending());
+}

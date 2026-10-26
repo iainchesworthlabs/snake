@@ -55,3 +55,16 @@ TEST_CASE("The left stick follows the larger axis and holds it against a small w
     CHECK(stick.update(-0.7F, 0.8F) == Direction::LEFT);
     CHECK(stick.update(-0.7F, 0.85F) == Direction::UP);
 }
+
+TEST_CASE("The on-screen joystick steers once the knob is 45 percent of the way and lets go under 25", "[stick]")
+{
+    DirectionSelector stick(TOUCH_STICK_SELECTOR);
+    CHECK_FALSE(stick.update(0.0F, 0.4F));
+    CHECK(stick.update(0.0F, 0.45F) == Direction::UP);
+    CHECK(stick.update(0.0F, 0.3F) == Direction::UP);
+    CHECK_FALSE(stick.update(0.0F, 0.2F));
+    // A thumb that drifts round the rim goes from one direction to the next without a diagonal flicker.
+    CHECK(stick.update(0.5F, 0.0F) == Direction::RIGHT);
+    CHECK(stick.update(0.55F, 0.6F) == Direction::RIGHT);
+    CHECK(stick.update(0.4F, 0.7F) == Direction::UP);
+}

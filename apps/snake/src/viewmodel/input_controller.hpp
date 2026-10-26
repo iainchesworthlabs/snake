@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "snake/input/direction_selector.hpp"
+#include "snake/input/gamepad_map.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
@@ -54,6 +56,7 @@ public:
         Tilt,
         Swipe,
         Dpad,
+        Joystick,
     };
     Q_ENUM(Scheme)
 
@@ -128,6 +131,13 @@ public:
     /// The system took the touches away.
     Q_INVOKABLE void touchCancelled();
 
+    /// The knob of the on-screen joystick, as a fraction of the way it can travel: -1 to 1, right and up positive. A
+    /// direction is set once the knob is far enough out (TOUCH_STICK_SELECTOR) and stays while it is not near the
+    /// middle.
+    Q_INVOKABLE void joystickMoved(double right, double up);
+    /// The thumb came off the joystick.
+    Q_INVOKABLE void joystickReleased();
+
 signals:
     void gameChanged();
     void profileChanged();
@@ -142,6 +152,7 @@ private:
     input::TiltProcessor m_Tilt;
     input::TiltReading m_Reading;
     input::SwipeRecogniser m_Swipe;
+    input::DirectionSelector m_Stick{input::TOUCH_STICK_SELECTOR};
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
     bool m_TouchDevice = false;

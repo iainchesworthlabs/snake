@@ -206,7 +206,8 @@ TEST_CASE("The bytes of a save read back as the save", "[save][format]")
 
 TEST_CASE("Every combination of settings survives a round trip", "[save][roundtrip]")
 {
-    for (const ControlScheme controls : {ControlScheme::TILT, ControlScheme::SWIPE, ControlScheme::DPAD})
+    for (const ControlScheme controls :
+         {ControlScheme::TILT, ControlScheme::SWIPE, ControlScheme::DPAD, ControlScheme::JOYSTICK})
     {
         for (unsigned flags = 0; flags < 16; ++flags)
         {
@@ -347,7 +348,7 @@ TEST_CASE("Changing any byte after the version is caught by the checksum or the 
 TEST_CASE("A control scheme that does not exist is refused", "[save][decode][invalid]")
 {
     Bytes bytes = to_bytes(SAMPLE_BYTES);
-    bytes[8] = 3;
+    bytes[8] = 4; // 0 to 3 are the schemes (the joystick is 3)
     check_invalid(with_new_checksum(bytes));
 }
 

@@ -36,4 +36,9 @@ enum class GamepadButton : std::uint8_t
 /// flips the vertical axis if its stick reports down as positive. Use it with a DirectionSelector.
 inline constexpr SelectorConfig STICK_SELECTOR = {.release = 0.4F, .engage = 0.6F, .switch_margin = 0.15F};
 
+/// How a thumb on an on-screen joystick becomes a direction. The axes are the position of the knob as a fraction of the
+/// distance it can travel (-1 to 1, right and up positive). A thumb is less precise than a stick that springs back, and
+/// the knob only moves as far as the thumb does, so the thresholds are lower than the gamepad stick's.
+inline constexpr SelectorConfig TOUCH_STICK_SELECTOR = {.release = 0.25F, .engage = 0.45F, .switch_margin = 0.15F};
+
 } // namespace snake::input

@@ -130,6 +130,13 @@
     </message>
 </context>
 <context>
+    <name>JoystickPad</name>
+    <message>
+        <source>Joystick</source>
+        <translation>ג'ויסטיק</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>
@@ -250,6 +257,10 @@
     <message>
         <source>D-pad</source>
         <translation>חיצים</translation>
+    </message>
+    <message>
+        <source>Joystick</source>
+        <translation>ג'ויסטיק</translation>
     </message>
     <message>
         <source>Recalibrate tilt</source>

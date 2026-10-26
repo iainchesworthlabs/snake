@@ -22,6 +22,7 @@ class AboutInfo : public QObject
     Q_PROPERTY(QString licence READ licence CONSTANT FINAL)
     Q_PROPERTY(QString repositoryUrl READ repositoryUrl CONSTANT FINAL)
     Q_PROPERTY(QString sourceRevision READ sourceRevision CONSTANT FINAL)
+    Q_PROPERTY(QString languageDetail READ languageDetail CONSTANT FINAL)
     Q_PROPERTY(QString licenceText READ licenceText CONSTANT FINAL)
     Q_PROPERTY(QString noticesText READ noticesText CONSTANT FINAL)
     Q_PROPERTY(QString fontLicenceText READ fontLicenceText CONSTANT FINAL)
@@ -34,6 +35,9 @@ public:
     [[nodiscard]] static QString licence();
     [[nodiscard]] static QString repositoryUrl();
     [[nodiscard]] static QString sourceRevision();
+    /// Which language the game chose, and the languages the system offered, in its order. For finding out why a device
+    /// got a language it should not have. Not translated: it is for the person who reports it.
+    [[nodiscard]] static QString languageDetail();
     [[nodiscard]] static QString licenceText();
     [[nodiscard]] static QString noticesText();
     [[nodiscard]] static QString fontLicenceText();

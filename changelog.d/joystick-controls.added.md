@@ -1,0 +1,1 @@
+**A fourth way to steer on a phone: an on-screen joystick.** Choose Joystick in the pause dialog, next to Tilt, Swipe and D-pad: a knob under the board follows your thumb and springs back when you let go, and the snake turns the way it is pushed. Translated into the seven languages (machine translations, not read by a speaker).
