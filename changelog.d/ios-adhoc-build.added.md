@@ -1,0 +1,1 @@
+**The release workflow can build a signed iPhone and iPad version for the author's own devices.** It is an ad-hoc IPA, which installs only on the devices registered with Apple, and it is off until the owner turns it on. See "Installing on an iPhone or iPad" in the documentation. Not yet tried on a device.

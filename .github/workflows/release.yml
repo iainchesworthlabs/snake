@@ -143,10 +143,161 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  # The iPhone and iPad application as an ad-hoc IPA: archived and exported by Xcode with the Apple Distribution certificate
+  # (organisation secrets) and this repository's own ad-hoc provisioning profile, through the shared signing actions
+  # (docs/ios-signing.md in icl-common-infra). It installs only on the devices the profile lists, so a new device needs a new
+  # profile and a new build (docs/ios-install.md).
+  #
+  # Opt in with the repository variable SIGN_IOS_ADHOC=true. With it unset the release is made without an IPA, as before.
+  # The IPA carries its profile, which lists the UDIDs of the devices, so it goes to the release only when the repository
+  # variable IOS_IPA_ON_RELEASE is true; otherwise it stays a workflow artifact (`ios-adhoc`), which only people with access
+  # to the repository can download. This repository is public.
+  ios:
+    name: Package (iOS, ad-hoc)
+    needs: version
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') && vars.SIGN_IOS_ADHOC == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      BUNDLE_ID: io.github.iainchesworthlabs.snake
+      VCPKG_DISABLE_METRICS: "1"
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The shared action names the secret that is missing, before a Qt download of several gigabytes.
+      - name: Import the certificate and the provisioning profile
+        id: signing
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        with:
+          certificate-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          certificate-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          profile-base64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          bundle-id: ${{ env.BUNDLE_ID }}
+
+      - name: Set up vcpkg
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      - name: Set up CMake
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      # Qt's iOS kit, and the macOS kit that aqtinstall's --autodesktop installs beside it for the host tools (as ios-build.yml).
+      - name: Install Qt (iOS kit and macOS host kit)
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: "6.12.0"
+          host: mac
+          target: ios
+          arch: ios
+          dir: ${{ runner.temp }}
+          aqtsource: "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
+          modules: "qtsensors"
+          cache: false
+
+      - name: Name the Qt kits
+        shell: bash
+        run: |
+          echo "QT_ROOT_DIR=$RUNNER_TEMP/Qt/6.12.0/ios" >> "$GITHUB_ENV"
+          echo "QT_HOST_PATH=$RUNNER_TEMP/Qt/6.12.0/macos" >> "$GITHUB_ENV"
+
+      # Signed for the application alone (apps/snake/packaging/mobile.cmake says why). CMake makes no Xcode scheme unless
+      # asked, and `xcodebuild archive` takes only a scheme.
+      - name: Configure (signed)
+        shell: bash
+        env:
+          TEAM_ID: ${{ steps.signing.outputs.team-id }}
+          PROFILE_NAME: ${{ steps.signing.outputs.profile-name }}
+        run: >
+          cmake --preset ios-release
+          -DCMAKE_XCODE_GENERATE_SCHEME=ON
+          -DSNAKE_IOS_SIGNING_TEAM="$TEAM_ID"
+          -DSNAKE_IOS_SIGNING_PROFILE="$PROFILE_NAME"
+
+      - name: Name the package
+        id: name
+        shell: bash
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          label=dry-run
+          if [ "$REF_TYPE" = tag ]; then label="$REF_NAME"; fi
+          project="$(find build/ios-release -maxdepth 1 -name '*.xcodeproj' | head -n 1)"
+          [ -n "$project" ] || { echo "::error::CMake made no .xcodeproj under build/ios-release"; exit 1; }
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+          echo "ipa=dist-ios/snake-$label-ios-adhoc.ipa" >> "$GITHUB_OUTPUT"
+          echo "url=https://github.com/$REPOSITORY/releases/download/$label/snake-$label-ios-adhoc.ipa" >> "$GITHUB_OUTPUT"
+          echo "version=${label#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Archive and export the ad-hoc IPA
+        id: export
+        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        with:
+          project: ${{ steps.name.outputs.project }}
+          scheme: snake
+          bundle-id: ${{ env.BUNDLE_ID }}
+          team-id: ${{ steps.signing.outputs.team-id }}
+          profile-name: ${{ steps.signing.outputs.profile-name }}
+          output: ${{ steps.name.outputs.ipa }}
+          manifest-ipa-url: ${{ steps.name.outputs.url }}
+          manifest-title: Snake
+          manifest-version: ${{ steps.name.outputs.version }}
+
+      # The signed IPA, opened as a device would: identifier, version, the icon, no permission text, arm64, a valid signature,
+      # and an ad-hoc profile for this identifier.
+      - name: Check the IPA
+        shell: bash
+        env:
+          IPA: ${{ steps.export.outputs.ipa }}
+          VERSION: ${{ steps.name.outputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          set -euo pipefail
+          if [ "$REF_TYPE" = tag ]; then
+            apps/snake/packaging/ios/verify_app.sh "$IPA" --version "${VERSION%%-*}" --signed
+          else
+            apps/snake/packaging/ios/verify_app.sh "$IPA" --signed
+          fi
+
+      - name: Remove the signing keychain and profile
+        if: always()
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@d36b9f958304e3164df35e8fa188450799ec5863 # v0.1.16 plus #31
+        with:
+          remove: "true"
+
+      - name: Upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          # Only an artifact named release-* goes to the release (the publish job's pattern).
+          name: ${{ vars.IOS_IPA_ON_RELEASE == 'true' && 'release-ios-adhoc' || 'ios-adhoc' }}
+          path: dist-ios/*
+          if-no-files-found: error
+
+      - name: Say how to install it
+        shell: bash
+        env:
+          MANIFEST_URL: ${{ steps.name.outputs.url }}
+          ON_RELEASE: ${{ vars.IOS_IPA_ON_RELEASE }}
+        run: |
+          {
+            echo "### iOS ad-hoc IPA"
+            if [ "$ON_RELEASE" = true ]; then
+              echo "It goes to the release with the other files. On the device, in Safari, open the install page (docs/ios-install.md)."
+            else
+              echo "Kept as the workflow artifact \`ios-adhoc\` (IOS_IPA_ON_RELEASE is not true, because an ad-hoc IPA lists device UDIDs and this repository is public)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   publish:
     name: Publish
-    needs: package
-    if: github.ref_type == 'tag'
+    needs: [package, ios]
+    if: ${{ !cancelled() && github.ref_type == 'tag' && needs.package.result == 'success' && (needs.ios.result == 'success' || needs.ios.result == 'skipped') }}
     permissions:
       contents: write
       id-token: write
