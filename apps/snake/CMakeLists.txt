@@ -226,11 +226,11 @@ if(ANDROID OR IOS)
     snake_configure_mobile_app(snake_app)
 else()
     # Installs the program, copies the Qt libraries, plugins and QML modules next to it so the installed tree runs on a
-    # machine without Qt, and adds the licence, notices and source information. The macOS bundle identifier follows the
-    # reverse-domain form of the project's GitHub address; change it here if the project later gets its own domain, because
-    # macOS keys saved settings and permissions by it. catch2 is used by the tests only and is not shipped.
+    # machine without Qt, and adds the licence, notices and source information. The bundle identifier is
+    # com.iainchesworthlabs.snake on every system (the App ID registered with Apple, the Android application id, and here);
+    # change it everywhere together, because macOS keys saved settings and permissions by it. catch2 is used by the tests only and is not shipped.
     icl_install_qt_app(snake_app
-        BUNDLE_IDENTIFIER io.github.iainchesworthlabs.snake
+        BUNDLE_IDENTIFIER com.iainchesworthlabs.snake
         DISPLAY_NAME Snake
         NOTICE_EXCLUDE catch2)
     # The font's licence asks for its copyright notice and text to travel with the font.

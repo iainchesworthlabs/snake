@@ -49,8 +49,9 @@ target alone is signed), archives and exports with `export-ios-ipa`, and checks 
 actions are in `icl-common-infra` (`docs/ios-signing.md` there says where each secret comes from). The secrets are
 `IOS_DIST_CERT_P12_BASE64` and `IOS_DIST_CERT_PASSWORD` (organisation) and `IOS_PROVISIONING_PROFILE_BASE64` (this
 repository). A run on a branch (`gh workflow run release.yml --ref <branch>`) does everything but publish. The IPA is kept as
-the workflow artifact `ios-adhoc`; it goes to the release only if `IOS_IPA_ON_RELEASE` is `true`, because the IPA carries its
-profile and the profile lists the UDIDs of the devices, and this repository is public. How to install it is in
+the workflow artifact `ios-adhoc` for 7 days; it goes to the release only if `IOS_IPA_ON_RELEASE` is `true`. The IPA carries
+its profile and the profile lists the UDIDs of the devices. Neither place is private in a public repository: any signed-in
+GitHub account can download an artifact, and a release asset is open to everyone. How to install it is in
 [Installing on an iPhone or iPad](ios-install.md). The Android upload key is a later step.
 
 ## Required checks
