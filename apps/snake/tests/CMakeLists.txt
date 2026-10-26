@@ -17,6 +17,7 @@ add_executable(snake_viewmodel_tests
     test_qt_keys.cpp
     test_effects_model.cpp
     test_haptics.cpp
+    test_language_choice.cpp
     test_input_controller.cpp
     test_save_file.cpp
     test_sound_director.cpp
@@ -33,6 +34,8 @@ add_executable(snake_viewmodel_tests
     ../src/board/effects.cpp
     ../src/board/effects.hpp
     ../src/device/accelerometer.cpp
+    ../src/language/language_choice.cpp
+    ../src/language/language_choice.hpp
     ../src/device/haptics.cpp
     ../src/device/haptics.hpp
     ../src/viewmodel/effects_model.cpp

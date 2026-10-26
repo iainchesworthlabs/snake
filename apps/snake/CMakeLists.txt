@@ -123,6 +123,8 @@ set(SNAKE_UI_SOURCES
     src/platform/sound_sink.cpp
     src/platform/sound_sink.hpp
     src/about/about_info.cpp
+    src/language/language_choice.cpp
+    src/language/language_choice.hpp
     src/about/about_info.hpp
     src/board/board_item.cpp
     src/board/board_item.hpp

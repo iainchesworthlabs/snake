@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/device.hpp"
 #include "device/haptics.hpp"
+#include "language/language_choice.hpp"
 #include "platform/audio_output.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
@@ -80,8 +81,23 @@ int main(int argc, char* argv[])
     const QCommandLineOption& save_file = options.save_file;
     const QCommandLineOption& language = options.language;
 
-    // The language of the system, or the one asked for. It also sets how numbers are written.
-    const QLocale locale = parser.isSet(language) ? QLocale(parser.value(language)) : QLocale();
+    // The language: the one asked for, or the first of the system's preferred languages that the game has a catalogue
+    // for. It is chosen here, by the language alone (any English is English), and not left to the translator's search
+    // of the system's list, which differs from one system to the next. It also sets how numbers are written.
+    QStringList preferred =
+        parser.isSet(language) ? QStringList{parser.value(language)} : QLocale::system().uiLanguages();
+    if (preferred.isEmpty())
+    {
+        preferred = QStringList{QLocale::system().name()};
+    }
+    const snake::ui::LanguageChoice choice = snake::ui::choose_language(preferred, snake::ui::available_languages());
+    snake::ui::record_language_choice(choice, preferred);
+    // The system's own locale where it is in the chosen language (its region keeps its way of writing numbers), else
+    // the chosen language's.
+    const QLocale system_locale = QLocale::system();
+    const QLocale locale = parser.isSet(language) || QLocale(choice.code).language() != system_locale.language()
+                               ? QLocale(choice.code)
+                               : system_locale;
     QLocale::setDefault(locale);
 
     // A font that fails to load leaves the fallback families of the font in use, so the game still runs.
@@ -90,7 +106,7 @@ int main(int argc, char* argv[])
 
     // The catalogues are compiled into the executable. A language without one shows the English source.
     QTranslator translator;
-    if (translator.load(locale, QStringLiteral("snake"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+    if (translator.load(QStringLiteral(":/i18n/snake_%1.qm").arg(choice.code)))
     {
         QGuiApplication::installTranslator(&translator);
     }

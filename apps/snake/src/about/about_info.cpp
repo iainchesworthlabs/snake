@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "about/about_info.hpp"
 
+#include "language/language_choice.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
 
@@ -51,8 +52,8 @@ QString AboutInfo::sourceRevision()
 
 QString AboutInfo::languageDetail()
 {
-    return QStringLiteral("%1 (the system offers %2; its locale is %3)")
-        .arg(QLocale().name(), QLocale::system().uiLanguages().join(QStringLiteral(", ")), QLocale::system().name());
+    return QStringLiteral("%1; locale %2, system locale %3")
+        .arg(language_choice_description(), QLocale().name(), QLocale::system().name());
 }
 
 QString AboutInfo::licenceText()
