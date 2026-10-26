@@ -109,6 +109,10 @@ endif()
 add_library(snake::miniaudio ALIAS snake_miniaudio)
 
 set(SNAKE_UI_SOURCES
+    src/device/accelerometer.hpp
+    src/device/device.hpp
+    src/device/haptics.cpp
+    src/device/haptics.hpp
     src/platform/audio_output.cpp
     src/platform/audio_output.hpp
     src/platform/sound_sink.cpp
@@ -136,6 +140,8 @@ set(SNAKE_UI_SOURCES
     src/viewmodel/effects_model.hpp
     src/viewmodel/game_view_model.cpp
     src/viewmodel/game_view_model.hpp
+    src/viewmodel/haptics_director.cpp
+    src/viewmodel/haptics_director.hpp
     src/viewmodel/leaderboard_model.cpp
     src/viewmodel/leaderboard_model.hpp
     src/viewmodel/mode_list_model.cpp
@@ -167,6 +173,17 @@ function(snake_add_ui_module target)
         "${CMAKE_CURRENT_BINARY_DIR}/generated")
     snake_add_font_resources(${target})
     snake_add_about_resources(${target})
+    # What a phone has and a computer does not: the accelerometer and the motor, one directory for each operating system.
+    icl_platform_sources(${target} DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/device")
+    if(ANDROID OR IOS)
+        find_package(Qt6 6.8 REQUIRED COMPONENTS Sensors)
+        target_sources(${target} PRIVATE src/device/qt_accelerometer.cpp src/device/qt_accelerometer.hpp)
+        target_link_libraries(${target} PRIVATE Qt6::Sensors)
+    endif()
+    if(IOS)
+        # The haptics are Objective-C++, with automatic reference counting.
+        set_source_files_properties(src/device/ios/device.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+    endif()
     target_link_libraries(${target}
         PRIVATE snake::audio snake::core snake::input snake::miniaudio snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)
     # qmlcachegen, rcc and moc write C++ files that the strict warning set rejects with some compilers.

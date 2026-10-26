@@ -16,6 +16,7 @@ add_executable(snake_viewmodel_tests
     test_profile_view_model.cpp
     test_qt_keys.cpp
     test_effects_model.cpp
+    test_haptics.cpp
     test_save_file.cpp
     test_sound_director.cpp
     ../src/input/qt_keys.cpp
@@ -30,10 +31,14 @@ add_executable(snake_viewmodel_tests
     ../src/platform/touch_screen.hpp
     ../src/board/effects.cpp
     ../src/board/effects.hpp
+    ../src/device/haptics.cpp
+    ../src/device/haptics.hpp
     ../src/viewmodel/effects_model.cpp
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
+    ../src/viewmodel/haptics_director.cpp
+    ../src/viewmodel/haptics_director.hpp
     ../src/viewmodel/leaderboard_model.cpp
     ../src/viewmodel/leaderboard_model.hpp
     ../src/viewmodel/mode_list_model.cpp

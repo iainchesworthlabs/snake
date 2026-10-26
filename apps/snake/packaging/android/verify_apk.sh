@@ -84,21 +84,22 @@ target_sdk="$(printf '%s\n' "$badging" | sed -n "s/^targetSdkVersion:'\([0-9]*\)
 if [ "${min_sdk:-0}" -ge 28 ]; then ok "minSdkVersion is $min_sdk"; else bad "minSdkVersion is '${min_sdk:-}', Qt 6.12 needs 28 or later"; fi
 if [ "${target_sdk:-0}" -ge 35 ]; then ok "targetSdkVersion is $target_sdk"; else bad "targetSdkVersion is '${target_sdk:-}', Google Play wants 35 or later"; fi
 
-# Permissions: none. The one line AndroidX adds is the application's own signature-level permission for dynamic
+# Permissions: the vibrator (a normal permission, granted at install, never asked of the person) and nothing else. The
+# one other line AndroidX adds is the application's own signature-level permission for dynamic
 # receivers, in the application's own name: it asks nothing of the person.
 asked="$(printf '%s\n' "$permissions" | sed -n "s/^uses-permission: name='\(.*\)'.*/\1/p" | sort -u)"
 unexpected=""
 while IFS= read -r name; do
   [ -n "$name" ] || continue
   case "$name" in
-    "$application_id.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION") ;;
+    android.permission.VIBRATE|"$application_id.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION") ;;
     *) unexpected="$unexpected $name" ;;
   esac
 done <<<"$asked"
 if [ -n "$unexpected" ]; then
   bad "the package asks for permissions:$unexpected (the manifest is apps/snake/packaging/android/package-source/AndroidManifest.xml; Qt's core module adds INTERNET and storage permissions wherever its placeholder is)"
 else
-  ok "the package asks the person for no permission"
+  ok "the only permission is the vibrator, which Android grants at install"
 fi
 
 # The accelerometer is optional: a device without one still installs the game, and plays it by swipe or d-pad.

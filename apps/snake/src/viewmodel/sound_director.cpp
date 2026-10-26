@@ -60,14 +60,25 @@ void SoundDirector::setProfile(ProfileViewModel* profile)
     emit profileChanged();
 }
 
+void SoundDirector::setActive(bool active)
+{
+    if (active == m_Active)
+    {
+        return;
+    }
+    m_Active = active;
+    update_music();
+    emit activeChanged();
+}
+
 bool SoundDirector::sound_on() const
 {
-    return m_Profile == nullptr || m_Profile->sound();
+    return m_Active && (m_Profile == nullptr || m_Profile->sound());
 }
 
 bool SoundDirector::music_on() const
 {
-    return m_Profile == nullptr || m_Profile->music();
+    return m_Active && (m_Profile == nullptr || m_Profile->music());
 }
 
 void SoundDirector::play(audio::Effect effect)

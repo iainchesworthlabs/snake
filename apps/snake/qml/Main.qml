@@ -54,6 +54,14 @@ Window {
     SoundDirector {
         game: gameModel
         profile: profileModel
+        // Put away (a phone's home button, another program in front): no music, no sound. Inactive, as a call or the
+        // notification shade makes it, is not put away: the game pauses itself and its title music goes on.
+        active: Application.state === Qt.ApplicationActive || Application.state === Qt.ApplicationInactive
+    }
+
+    // What the hand feels, on a phone: a tap for eating and a knock for a crash.
+    HapticsDirector {
+        game: gameModel
     }
 
     ProfileViewModel {

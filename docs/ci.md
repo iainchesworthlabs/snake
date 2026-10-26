@@ -27,8 +27,9 @@ are several gigabytes and a macOS runner costs a multiple. Run one by hand anywh
 
 - **Android** (Linux runner): Qt's Android kit and the Linux host kit from aqtinstall, the NDK, platform and build tools
   of `.github/toolchain-versions.json` (`android.*`) from the runner's SDK, the runner's JDK 17, the vcpkg toolchain
-  chained to Qt's. The `android-arm64-debuggable` preset makes a debug-signed APK, and `verify_apk.sh` reads it: the
-  application id, the version, the platform levels, **no permission**, `arm64-v8a` only, the library, the icon and the
+  chained to Qt's, and the `qtsensors` module. The `android-arm64-debuggable` preset makes a debug-signed APK, and
+  `verify_apk.sh` reads it: the application id, the version, the platform levels, **no permission but the vibrator**,
+  `arm64-v8a` only, the library, the icon and the
   signature. The APK is uploaded for 14 days.
 - **iOS** (macOS runner): Qt's iOS kit and the macOS host kit, the `ios-release` preset through Xcode, unsigned, and
   `verify_app.sh` reads the bundle.

@@ -66,8 +66,8 @@ jobs:
         uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
 
       # Two kits: Qt's iOS kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the macOS
-      # kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease). The game uses Qt Quick
-      # only, so no add-on module is installed. Not cached: the iOS kit is several gigabytes, and the repository's cache
+      # kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease). The game uses Qt Quick and Qt
+      # Sensors (the accelerometer), so that module is installed. Not cached: the iOS kit is several gigabytes, and the repository's cache
       # quota is better spent on the builds that run on every push.
       - name: Install Qt (iOS kit and macOS host kit)
         uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
@@ -78,6 +78,7 @@ jobs:
           arch: ios
           dir: ${{ runner.temp }}
           aqtsource: "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
+          modules: "qtsensors"
           cache: false
 
       - name: Name the Qt kits

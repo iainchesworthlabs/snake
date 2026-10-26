@@ -337,3 +337,33 @@ TEST_CASE("The default sink is the one the program set", "[sound]")
     UiEvents::instance().buttonPressed();
     CHECK(sink.take() == QStringList{effect(Effect::SELECT)});
 }
+
+TEST_CASE("A program that is put away makes no music and no sound, and gets its tune back", "[sound]")
+{
+    Rig rig;
+    rig.sink.take();
+    CHECK(rig.director.active());
+
+    rig.director.setActive(false);
+    CHECK_FALSE(rig.director.active());
+    CHECK(rig.sink.take() == QStringList{"stop"});
+    emit rig.game.tickEvent(Event::Ate);
+    UiEvents::instance().buttonPressed();
+    CHECK(rig.sink.take().isEmpty());
+
+    rig.director.setActive(false);
+    CHECK(rig.sink.take().isEmpty());
+
+    rig.director.setActive(true);
+    CHECK(rig.sink.take() == QStringList{music(Tune::TITLE)});
+}
+
+TEST_CASE("A game that goes on while the program is away has its own tune when it comes back", "[sound]")
+{
+    Rig rig;
+    rig.game.start();
+    rig.director.setActive(false);
+    rig.sink.take();
+    rig.director.setActive(true);
+    CHECK(rig.sink.take() == QStringList{music(Tune::GAME)});
+}

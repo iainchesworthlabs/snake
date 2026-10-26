@@ -105,8 +105,8 @@ jobs:
 
       # Two kits: Qt's Android kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the
       # Linux kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease, androiddeployqt).
-      # From Qt 6.7 the Android repository is `all_os`, not the host's own name. The game uses Qt Quick only, so no add-on
-      # module is installed. Not cached: the kits are several gigabytes, and the repository's cache quota is better spent
+      # From Qt 6.7 the Android repository is `all_os`, not the host's own name. The game uses Qt Quick and Qt Sensors (the
+      # accelerometer), so that module is installed. Not cached: the kits are several gigabytes, and the repository's cache quota is better spent
       # on the builds that run on every push.
       - name: Install Qt (Android kit and Linux host kit)
         uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
@@ -117,6 +117,7 @@ jobs:
           arch: android_arm64_v8a
           dir: ${{ runner.temp }}
           aqtsource: "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
+          modules: "qtsensors"
           cache: false
 
       # Where the action put the two kits, which the preset reads (the runner context is not available in a job-level env).
