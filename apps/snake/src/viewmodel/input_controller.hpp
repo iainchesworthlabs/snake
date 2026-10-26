@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include "snake/input/direction_selector.hpp"
-#include "snake/input/gamepad_map.hpp"
+#include "snake/input/eight_way_selector.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
@@ -131,9 +130,10 @@ public:
     /// The system took the touches away.
     Q_INVOKABLE void touchCancelled();
 
-    /// The knob of the on-screen joystick, as a fraction of the way it can travel: -1 to 1, right and up positive. A
-    /// direction is set once the knob is far enough out (TOUCH_STICK_SELECTOR) and stays while it is not near the
-    /// middle.
+    /// The knob of the on-screen joystick, as a fraction of the way it can travel: -1 to 1, right and up positive. It
+    /// reads in eight ways (input::EightWaySelector): straight is that way, and a diagonal is a turn across the snake's
+    /// line. The knob is read when it moves and again every frame (update()), so a thumb held on a diagonal steers a
+    /// staircase.
     Q_INVOKABLE void joystickMoved(double right, double up);
     /// The thumb came off the joystick.
     Q_INVOKABLE void joystickReleased();
@@ -146,13 +146,19 @@ signals:
 
 private:
     void on_game_started();
+    /// Reads the joystick's knob and offers the turn it asks for, if there is one.
+    void steer_by_joystick();
     void on_settings_changed();
 
     std::unique_ptr<input::SampleSource> m_Source;
     input::TiltProcessor m_Tilt;
     input::TiltReading m_Reading;
     input::SwipeRecogniser m_Swipe;
-    input::DirectionSelector m_Stick{input::TOUCH_STICK_SELECTOR};
+    input::EightWaySelector m_Stick{input::TOUCH_JOYSTICK};
+    // Where the knob is, while a thumb is on it.
+    float m_StickRight = 0.0F;
+    float m_StickUp = 0.0F;
+    bool m_StickHeld = false;
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
     bool m_TouchDevice = false;

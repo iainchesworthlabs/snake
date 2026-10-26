@@ -2,10 +2,12 @@
 #include "viewmodel/input_controller.hpp"
 
 #include "device/device.hpp"
+#include "snake/input/eight_way_selector.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
 #include "snake/sim/direction.hpp"
+#include "snake/sim/simulation.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/profile_view_model.hpp"
 
@@ -158,6 +160,11 @@ void InputController::on_game_started()
 
 void InputController::update()
 {
+    if (controls() == Scheme::Joystick)
+    {
+        // A thumb that is held still still steers: the heading it is read against changes with each turn.
+        steer_by_joystick();
+    }
     if (m_Source == nullptr)
     {
         return;
@@ -223,17 +230,45 @@ void InputController::joystickMoved(double right, double up)
     {
         return;
     }
-    const auto direction = m_Stick.update(static_cast<float>(right), static_cast<float>(up));
-    if (direction && m_Game->state() == GameViewModel::State::Running)
-    {
-        // Offered on every move: the input buffer drops a repeat of the direction already in force.
-        static_cast<void>(m_Game->turn(*direction));
-    }
+    m_StickRight = static_cast<float>(right);
+    m_StickUp = static_cast<float>(up);
+    m_StickHeld = true;
+    steer_by_joystick();
 }
 
 void InputController::joystickReleased()
 {
+    m_StickHeld = false;
+    m_StickRight = 0.0F;
+    m_StickUp = 0.0F;
     m_Stick.reset();
+}
+
+void InputController::steer_by_joystick()
+{
+    if (m_Game == nullptr || !m_StickHeld || m_Game->state() != GameViewModel::State::Running)
+    {
+        return;
+    }
+    const sim::Simulation& simulation = m_Game->session().simulation();
+    const auto& pending = simulation.pending_turns();
+    // The heading the snake will have when a turn made now takes effect: the last turn waiting, or the one it has.
+    const sim::Direction heading = pending.empty() ? simulation.heading() : pending.at(pending.size() - 1);
+    const auto selection = m_Stick.update(m_StickRight, m_StickUp, heading);
+    if (!selection)
+    {
+        return;
+    }
+    // A diagonal is a turn across the snake's line, and the line changes with each turn, so while a turn is waiting it
+    // is left until the tick has taken it (held on a diagonal, the knob then asks for the next one: a staircase). A
+    // straight direction is offered at once, so that a flick to the diagonal and back, inside one tick, is two turns:
+    // up, and right again.
+    if (selection->diagonal && !pending.empty())
+    {
+        return;
+    }
+    // The input buffer drops a repeat of the direction already in force.
+    static_cast<void>(m_Game->turn(selection->direction));
 }
 
 } // namespace snake::ui

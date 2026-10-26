@@ -7,6 +7,7 @@
 # business of the platform. Exceptions and RTTI are switched off for its sources.
 add_library(snake_input
     src/direction_selector.cpp
+    src/eight_way_selector.cpp
     src/gamepad_map.cpp
     src/key_map.cpp
     src/swipe_recogniser.cpp

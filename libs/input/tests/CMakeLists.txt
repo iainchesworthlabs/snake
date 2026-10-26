@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 add_executable(snake_input_tests
     test_direction_selector.cpp
+    test_eight_way_selector.cpp
     test_gamepad_map.cpp
     test_key_map.cpp
     test_swipe_recogniser.cpp
