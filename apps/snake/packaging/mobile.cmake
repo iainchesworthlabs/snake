@@ -19,9 +19,10 @@ set(SNAKE_PACKAGING_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set(SNAKE_IOS_SIGNING_TEAM "" CACHE STRING "Apple team ID the iOS application is signed for (empty: an unsigned build)")
 set(SNAKE_IOS_SIGNING_PROFILE "" CACHE STRING "Name of the ad-hoc provisioning profile the iOS application is signed with (empty: an unsigned build)")
 
-# The application id on Android and the bundle identifier on iOS: the reverse of the repository's address, as the macOS
-# bundle has it.
-set(SNAKE_APPLICATION_ID "io.github.iainchesworthlabs.snake")
+# The application id on Android and the bundle identifier on iOS: com.iainchesworthlabs.<app>, as Cubeulator's, which is
+# the App ID registered with Apple and what the provisioning profile names. (The macOS bundle has its own identifier,
+# apps/snake/CMakeLists.txt.)
+set(SNAKE_APPLICATION_ID "com.iainchesworthlabs.snake")
 set(SNAKE_DISPLAY_NAME "Snake")
 
 # Android platform levels. 28 is the lowest Qt 6.12 supports. The target and compile levels are the newest Google Play

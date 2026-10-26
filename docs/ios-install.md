@@ -40,6 +40,6 @@ If iOS says the developer is untrusted, go to *Settings, General, VPN & Device M
 ## Add a device
 
 A device installs only builds signed with a profile that lists it. Register the device in the Apple developer portal, edit
-the ad-hoc profile for `io.github.iainchesworthlabs.snake` to include it, download it, set `IOS_PROVISIONING_PROFILE_BASE64`
+the ad-hoc profile for `com.iainchesworthlabs.snake` to include it, download it, set `IOS_PROVISIONING_PROFILE_BASE64`
 again and build again. A build made before the device was added never installs on it. A profile lasts a year; when it
 expires the build says so before it starts.

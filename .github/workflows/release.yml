@@ -161,7 +161,7 @@ jobs:
     permissions:
       contents: read
     env:
-      BUNDLE_ID: io.github.iainchesworthlabs.snake
+      BUNDLE_ID: com.iainchesworthlabs.snake
       VCPKG_DISABLE_METRICS: "1"
     steps:
       - name: Check out
