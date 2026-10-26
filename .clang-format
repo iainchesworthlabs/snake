@@ -23,3 +23,15 @@ IncludeCategories:
     Priority: 4
   - Regex: '.*'
     Priority: 3
+---
+# Objective-C++ (the .mm files of src/device/ios): the same layout as the C++.
+Language: ObjC
+BasedOnStyle: LLVM
+BreakBeforeBraces: Allman
+IndentWidth: 4
+ColumnLimit: 120
+PointerAlignment: Left
+AccessModifierOffset: -4
+NamespaceIndentation: None
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: Never
