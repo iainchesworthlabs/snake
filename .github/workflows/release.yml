@@ -112,6 +112,9 @@ jobs:
           test -n "$exe"
           "$exe" --version | tee version.txt
           grep -q '^snake [0-9]' version.txt
+      - name: Check the glibc the package needs
+        if: runner.os == 'Linux'
+        run: tools/ci/check_glibc_floor.sh stage
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'

@@ -100,14 +100,23 @@ void TiltProcessor::filter(const AccelSample& sample) noexcept
     m_LastTimeUs = sample.time_us;
 }
 
+/// The angle of the point (x, y) from the x axis, in radians; the arguments are y then x, as std::atan2 takes them. It
+/// is worked in double: the float function is `atan2f`, which glibc 2.43 gave a new symbol version, so a program that
+/// called it would not start on any system older than that. The double one has been in glibc for ever. The result is
+/// the same to the precision of a float.
+static float angle_between(float y, float x) noexcept
+{
+    return static_cast<float>(std::atan2(static_cast<double>(y), static_cast<double>(x)));
+}
+
 void TiltProcessor::measure() noexcept
 {
     const float plane = std::hypot(m_X, m_Z);
     if (plane >= MIN_ROLL_PLANE)
     {
-        m_Roll = std::atan2(m_X, m_Z) * DEGREES_PER_RADIAN;
+        m_Roll = angle_between(m_X, m_Z) * DEGREES_PER_RADIAN;
     }
-    m_Pitch = std::atan2(m_Y, plane) * DEGREES_PER_RADIAN;
+    m_Pitch = angle_between(m_Y, plane) * DEGREES_PER_RADIAN;
 }
 
 void TiltProcessor::publish() noexcept

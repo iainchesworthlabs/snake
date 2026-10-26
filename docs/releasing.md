@@ -18,6 +18,8 @@
    built from), which `icl_install_qt_app` in `apps/snake/CMakeLists.txt` installs. The notices are generated
    from the licence file of each runtime dependency, so adding a dependency to `vcpkg.json` without a licence
    file in its port stops the configure step. Test-only packages are listed in `NOTICE_EXCLUDE`.
+   The Linux package must start on glibc 2.39 (Ubuntu 24.04): `tools/ci/check_glibc_floor.sh` fails the package job when a
+   program or library in it needs a newer one, which a build on a newer runner can do with a single function.
    The package job starts the installed program (`snake --version`), which needs no display, so a package that lacks a
    library fails before anything is published. To try the packaging without a tag, run the workflow on a branch:
    `gh workflow run release.yml --ref <branch>`. It builds and uploads the three packages and publishes nothing.
