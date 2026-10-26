@@ -30,6 +30,16 @@ Window {
         overlay = "leaderboard";
     }
 
+    // How the snake is steered on a phone or a tablet: tilt, a swipe or the d-pad. The keyboard goes straight to the game.
+    InputController {
+        id: inputModel
+
+        objectName: "input"
+        game: gameModel
+        profile: profileModel
+        touchDevice: root.touchDevice
+    }
+
     // The title starts on Easy, as the design does. The mode played last will come back with the settings.
     Component.onCompleted: gameModel.mode = GameViewModel.Mode.Easy
 
@@ -90,7 +100,11 @@ Window {
     // game runs the ticks that are due.
     FrameAnimation {
         running: gameModel.state === GameViewModel.State.Running
-        onTriggered: gameModel.advance(frameTime)
+        onTriggered: {
+            // The tilt is read first, so that a turn is in place for the tick that the frame runs.
+            inputModel.update();
+            gameModel.advance(frameTime);
+        }
     }
 
     // The screen follows the state of the game: the title before a game, the board while it runs, the pause dialog over
@@ -117,6 +131,7 @@ Window {
         game: gameModel
         profile: profileModel
         effects: effectsModel
+        input: inputModel
     }
 
     PauseScreen {
@@ -126,7 +141,7 @@ Window {
         focus: visible
         game: gameModel
         profile: profileModel
-        touchDevice: root.touchDevice
+        input: inputModel
     }
 
     GameOverScreen {

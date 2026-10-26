@@ -9,8 +9,9 @@ FocusScope {
 
     required property GameViewModel game
     required property ProfileViewModel profile
-    // True on a device with a touch screen, where the way of steering can be chosen.
-    required property bool touchDevice
+    // How the snake is steered now, and whether the device can feel its tilt. The way of steering is chosen only where there
+    // is a touch screen to steer with.
+    required property InputController input
 
     // Each time the screen shows, the keyboard starts on its main button.
     onVisibleChanged: {
@@ -103,7 +104,7 @@ FocusScope {
 
                 // How to steer: only where there is a touch screen to steer with.
                 Column {
-                    visible: root.touchDevice
+                    visible: root.input.controls !== InputController.Scheme.Keys
                     width: parent.width
                     spacing: 8
 
@@ -123,17 +124,20 @@ FocusScope {
                                 {
                                     name: "Tilt",
                                     label: qsTr("Tilt"),
-                                    value: ProfileViewModel.Controls.Tilt
+                                    value: ProfileViewModel.Controls.Tilt,
+                                    scheme: InputController.Scheme.Tilt
                                 },
                                 {
                                     name: "Swipe",
                                     label: qsTr("Swipe"),
-                                    value: ProfileViewModel.Controls.Swipe
+                                    value: ProfileViewModel.Controls.Swipe,
+                                    scheme: InputController.Scheme.Swipe
                                 },
                                 {
                                     name: "Dpad",
                                     label: qsTr("D-pad"),
-                                    value: ProfileViewModel.Controls.Dpad
+                                    value: ProfileViewModel.Controls.Dpad,
+                                    scheme: InputController.Scheme.Dpad
                                 }
                             ]
 
@@ -143,9 +147,11 @@ FocusScope {
                                 required property var modelData
 
                                 objectName: "controls" + choice.modelData.name
+                                // A device that cannot feel its tilt is not offered it.
+                                visible: choice.modelData.scheme !== InputController.Scheme.Tilt || root.input.tiltAvailable
                                 width: 88
                                 height: 42
-                                kind: root.profile.controls === choice.modelData.value ? "chosen" : "secondary"
+                                kind: root.input.controls === choice.modelData.scheme ? "chosen" : "secondary"
                                 activeFocusOnTab: false
                                 fontSize: 16
                                 drop: 3
@@ -157,7 +163,7 @@ FocusScope {
 
                     ToyButton {
                         objectName: "recalibrateButton"
-                        visible: root.profile.controls === ProfileViewModel.Controls.Tilt
+                        visible: root.input.controls === InputController.Scheme.Tilt
                         width: parent.width
                         height: 44
                         fontSize: 17
@@ -166,7 +172,7 @@ FocusScope {
                     }
 
                     Text {
-                        visible: root.profile.controls === ProfileViewModel.Controls.Tilt
+                        visible: root.input.controls === InputController.Scheme.Tilt
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap

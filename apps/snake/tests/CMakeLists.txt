@@ -17,6 +17,7 @@ add_executable(snake_viewmodel_tests
     test_qt_keys.cpp
     test_effects_model.cpp
     test_haptics.cpp
+    test_input_controller.cpp
     test_save_file.cpp
     test_sound_director.cpp
     ../src/input/qt_keys.cpp
@@ -31,6 +32,7 @@ add_executable(snake_viewmodel_tests
     ../src/platform/touch_screen.hpp
     ../src/board/effects.cpp
     ../src/board/effects.hpp
+    ../src/device/accelerometer.cpp
     ../src/device/haptics.cpp
     ../src/device/haptics.hpp
     ../src/viewmodel/effects_model.cpp
@@ -39,6 +41,8 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/game_view_model.hpp
     ../src/viewmodel/haptics_director.cpp
     ../src/viewmodel/haptics_director.hpp
+    ../src/viewmodel/input_controller.cpp
+    ../src/viewmodel/input_controller.hpp
     ../src/viewmodel/leaderboard_model.cpp
     ../src/viewmodel/leaderboard_model.hpp
     ../src/viewmodel/mode_list_model.cpp
@@ -50,6 +54,8 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/ui_events.cpp
     ../src/viewmodel/ui_events.hpp)
 set_target_properties(snake_viewmodel_tests PROPERTIES AUTOMOC ON)
+# The device's own accelerometer and motor, for the operating system this is built for.
+icl_platform_sources(snake_viewmodel_tests DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src/device")
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
 target_link_libraries(snake_viewmodel_tests
     PRIVATE snake::audio snake::input snake::profile snake::sim Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)

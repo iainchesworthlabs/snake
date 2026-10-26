@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>DPad</name>
+    <message>
+        <source>Up</source>
+        <translation>Hoch</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Links</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Rechts</translation>
+    </message>
+    <message>
+        <source>Down</source>
+        <translation>Runter</translation>
+    </message>
+</context>
+<context>
     <name>GameOverScreen</name>
     <message>
         <source>New best!</source>
@@ -96,6 +115,10 @@
     <message>
         <source>Game</source>
         <translation>Spiel</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pause</translation>
     </message>
     <message>
         <source>Score</source>
@@ -306,6 +329,13 @@
     <message>
         <source>Keep my scores</source>
         <translation>Punkte behalten</translation>
+    </message>
+</context>
+<context>
+    <name>TiltIndicator</name>
+    <message>
+        <source>Tilt</source>
+        <translation>Neigen</translation>
     </message>
 </context>
 <context>

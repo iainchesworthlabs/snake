@@ -127,3 +127,20 @@ All eight languages are machine translations that no speaker has read. Before a 
 look at every screen once (`snake --language fr`, and so on) and say what is wrong: wrong words, a rude or odd one, text
 that does not fit, a word that a child would not know. Yiddish and Hebrew need a reader most, because they are
 mirrored right to left, and Yiddish spelling is the least certain.
+
+## Steering on a phone (step 19)
+
+Nothing in this section has been done: the code is tested against recordings and synthetic touches, never against a real
+device. The numbers below are the library's defaults, picked without a phone in the hand, and the first thing to do on one
+is to see whether they feel right.
+
+- **Tilt.** Hold the phone as you like and start a game: that is neutral. The dead zone is 12 degrees and a turn is made
+  at 18, and the tilt indicator on the game screen shows both squares and where the phone is now. Write down whether the
+  snake turns when you meant it to and not when you did not, whether it steers the right way on both Android and iOS (the
+  signs of Qt's axes are assumed, not seen), and whether Recalibrate tilt on the pause dialog is easy to find.
+- **Inverted axes** in the settings turn the tilt the other way. Check that this does what its name says.
+- **Swipe.** A swipe turns the snake as soon as the finger has gone far enough (the library's distance). Write down whether
+  a short, quick swipe is caught and a slow drag is not mistaken for one.
+- **D-pad.** The four buttons are 64 pixels square, over the 44 a finger needs. Check that a thumb finds them without
+  looking.
+- **Pause.** The button between the score and the best pauses the game; the home button and a call also do.

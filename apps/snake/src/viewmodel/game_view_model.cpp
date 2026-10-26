@@ -124,6 +124,7 @@ void GameViewModel::restart()
     static_cast<void>(m_Session.start());
     m_Pacer.reset();
     publish(state_before, score_before, true);
+    emit gameStarted();
 }
 
 void GameViewModel::start()
@@ -133,6 +134,10 @@ void GameViewModel::start()
     {
         m_Pacer.reset();
         publish(state_before, m_Session.simulation().score(), false);
+        if (state_before == sim::GameState::NOT_STARTED)
+        {
+            emit gameStarted();
+        }
     }
 }
 
@@ -236,6 +241,11 @@ void GameViewModel::advance(double seconds)
         restart();
     }
     emit progressChanged();
+}
+
+bool GameViewModel::turn(sim::Direction direction)
+{
+    return m_Session.turn(direction);
 }
 
 bool GameViewModel::handleKey(int qtKey, bool autoRepeat)

@@ -65,8 +65,10 @@ endfunction()
 # one, so the tests run the same screens against the same types.
 set(SNAKE_QML_FILES
     qml/AboutScreen.qml
+    qml/ArrowButton.qml
     qml/ConfirmDialog.qml
     qml/DashedFrame.qml
+    qml/DPad.qml
     qml/GameOverScreen.qml
     qml/GameScreen.qml
     qml/LeaderboardScreen.qml
@@ -80,6 +82,7 @@ set(SNAKE_QML_FILES
     qml/SettingsScreen.qml
     qml/ShadowText.qml
     qml/TitleScreen.qml
+    qml/TiltIndicator.qml
     qml/ToggleSwitch.qml
     qml/ToyButton.qml)
 # The QML files sit at the root of the module (SnakeApp/Main.qml), as the tools expect: qmllint finds the types of the
@@ -109,6 +112,7 @@ endif()
 add_library(snake::miniaudio ALIAS snake_miniaudio)
 
 set(SNAKE_UI_SOURCES
+    src/device/accelerometer.cpp
     src/device/accelerometer.hpp
     src/device/device.hpp
     src/device/haptics.cpp
@@ -142,6 +146,8 @@ set(SNAKE_UI_SOURCES
     src/viewmodel/game_view_model.hpp
     src/viewmodel/haptics_director.cpp
     src/viewmodel/haptics_director.hpp
+    src/viewmodel/input_controller.cpp
+    src/viewmodel/input_controller.hpp
     src/viewmodel/leaderboard_model.cpp
     src/viewmodel/leaderboard_model.hpp
     src/viewmodel/mode_list_model.cpp
