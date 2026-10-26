@@ -39,6 +39,10 @@
          ASSETCATALOG_COMPILER_APPICON_NAME names the same set). -->
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
+    <!-- The game uses no encryption of its own, and what the system gives it (https is not used) is exempt: without this key
+         TestFlight asks about encryption for every build. -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIRequiredDeviceCapabilities</key>
@@ -67,6 +71,10 @@
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
+    <!-- Not every orientation on an iPad, so the program takes the whole screen: Apple's upload check asks for either all four
+         orientations or this key. -->
+    <key>UIRequiresFullScreen</key>
+    <true/>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

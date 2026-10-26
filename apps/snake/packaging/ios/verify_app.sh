@@ -3,7 +3,7 @@
 # Check that an iOS application (a built .app, or an exported .ipa) is complete.
 #
 #   apps/snake/packaging/ios/verify_app.sh <snake.app | package.ipa>
-#       [--version <x.y.z>] [--signed]
+#       [--version <x.y.z>] [--signed [--store]]
 #
 # What it looks for:
 #
@@ -14,9 +14,12 @@
 #   * the executable is for arm64 and links nothing outside the system: Qt is
 #     static on iOS, so a link to a Qt framework or to a path on the build
 #     machine means the wrong kit was used;
+#   * Info.plist declares that the game uses no encryption beyond the system's, and a
+#     build number, as TestFlight asks;
 #   * with --signed: the code signature verifies, the profile is embedded, it is an
 #     ad-hoc one (it names devices and does not allow a debugger to attach) and it
-#     belongs to this bundle identifier.
+#     belongs to this bundle identifier. With --store it must be an App Store one
+#     instead: no devices, and no debugger.
 #
 # macOS only (plutil, otool, codesign, security).
 set -euo pipefail
@@ -24,10 +27,12 @@ set -euo pipefail
 target=""
 version=""
 signed=false
+store=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) version="${2:?}"; shift 2 ;;
     --signed) signed=true; shift ;;
+    --store) store=true; shift ;;
     -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     -*) echo "verify_app.sh: unknown argument '$1'" >&2; exit 2 ;;
     *) target="$1"; shift ;;
@@ -70,7 +75,9 @@ done
 if [ -n "$version" ]; then
   [ "$(key CFBundleShortVersionString)" = "$version" ] || fail "CFBundleShortVersionString is '$(key CFBundleShortVersionString)', expected $version"
 fi
-echo "    Info.plist: identifier, executable, version, icon, launch screen, no permission text, iOS $(key MinimumOSVersion) or later"
+[ "$(key ITSAppUsesNonExemptEncryption)" = "false" ] || fail "ITSAppUsesNonExemptEncryption is '$(key ITSAppUsesNonExemptEncryption)': TestFlight would ask about encryption for every build"
+[ -n "$(key CFBundleVersion)" ] || fail "Info.plist has no CFBundleVersion (the build number)"
+echo "    Info.plist: identifier, executable, version $(key CFBundleShortVersionString) build $(key CFBundleVersion), icon, launch screen, no permission text, iOS $(key MinimumOSVersion) or later"
 
 for required in \
     "$app/snake" \
@@ -97,9 +104,14 @@ if $signed; then
     *) fail "the profile is for '$(pkey Entitlements:application-identifier)', not $bundle_id" ;;
   esac
   devices="$(/usr/libexec/PlistBuddy -c "Print :ProvisionedDevices" "$decoded" 2>/dev/null | grep -c '^    ' || true)"
-  [ "$devices" -gt 0 ] || fail "the profile names no devices: it is not an ad-hoc profile"
+  if $store; then
+    [ "$devices" -eq 0 ] || fail "the profile names $devices device(s): it is not an App Store profile"
+  else
+    [ "$devices" -gt 0 ] || fail "the profile names no devices: it is not an ad-hoc profile"
+  fi
   [ "$(pkey Entitlements:get-task-allow)" = "false" ] || fail "the profile allows a debugger to attach (get-task-allow): it is a development profile"
-  echo "    signed: the signature verifies; ad-hoc profile '$(pkey Name)' for $devices device(s), expires $(pkey ExpirationDate)"
+  kind="ad-hoc"; $store && kind="App Store"
+  echo "    signed: the signature verifies; $kind profile '$(pkey Name)' ($devices device(s)), expires $(pkey ExpirationDate)"
   rm -f "$decoded"
 fi
 echo "OK: $target"

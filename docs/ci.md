@@ -42,16 +42,16 @@ is not reliable enough to stand behind a green tick.
 Signing is the owner's. These two workflows use no secret.
 
 **The signed iPhone and iPad build** is the `ios` job of `release.yml`, and it is the only place a secret is used for iOS. It
-is off until the owner sets the repository variable `SIGN_IOS_ADHOC` to `true`. It imports the Apple Distribution
-certificate and this repository's ad-hoc provisioning profile with `import-ios-signing`, configures with
-`SNAKE_IOS_SIGNING_TEAM` and `SNAKE_IOS_SIGNING_PROFILE` (read out of the profile; see `mobile.cmake` for why the application
-target alone is signed), archives and exports with `export-ios-ipa`, and checks the IPA with `verify_app.sh --signed`. Both
-actions are in `icl-common-infra` (`docs/ios-signing.md` there says where each secret comes from). The secrets are
-`IOS_DIST_CERT_P12_BASE64` and `IOS_DIST_CERT_PASSWORD` (organisation) and `IOS_PROVISIONING_PROFILE_BASE64` (this
-repository). A run on a branch (`gh workflow run release.yml --ref <branch>`) does everything but publish. The IPA is kept as
-the workflow artifact `ios-adhoc` for 7 days; it goes to the release only if `IOS_IPA_ON_RELEASE` is `true`. The IPA carries
-its profile and the profile lists the UDIDs of the devices. Neither place is private in a public repository: any signed-in
-GitHub account can download an artifact, and a release asset is open to everyone. How to install it is in
+is off until the owner sets a repository variable: `SIGN_IOS_UPLOAD=true` for **TestFlight**, or `SIGN_IOS_ADHOC=true` for an
+ad-hoc IPA. It imports the Apple Distribution certificate and this repository's provisioning profile with
+`import-ios-signing`, configures with `SNAKE_IOS_SIGNING_TEAM`, `SNAKE_IOS_SIGNING_PROFILE` (both read out of the profile; see
+`mobile.cmake` for why the application target alone is signed) and `SNAKE_IOS_BUILD_NUMBER` (the number of the run), archives
+and exports with `export-ios-ipa`, and checks the IPA with `verify_app.sh --signed` (`--store` for TestFlight). For TestFlight
+it then has Apple validate the build and, for a tag or a manual run with `upload_testflight`, uploads it
+(`upload-testflight`). The actions are in `icl-common-infra` (`docs/ios-signing.md` there says where each secret comes
+from). A run on a branch (`gh workflow run release.yml --ref <branch>`) publishes nothing. An ad-hoc IPA is the workflow
+artifact `ios-adhoc` for 7 days and goes to the release only if `IOS_IPA_ON_RELEASE` is `true`; it carries the UDIDs of the
+devices, and neither place is private in a public repository. How to install is in
 [Installing on an iPhone or iPad](ios-install.md). The Android upload key is a later step.
 
 ## Required checks
