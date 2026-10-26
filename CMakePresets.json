@@ -72,6 +72,81 @@
       "displayName": "Windows, MSVC, AddressSanitizer, /O1",
       "inherits": "windows-msvc-release",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "ICL_SANITIZERS": "address" }
+    },
+    {
+      "name": "mobile-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "A phone or a tablet. vcpkg's toolchain is the toolchain file, as everywhere, and chains to Qt's kit for the device (VCPKG_CHAINLOAD_TOOLCHAIN_FILE); VCPKG_ROOT is a vcpkg checkout at the baseline of vcpkg.json (CI's setup-vcpkg action sets it). No tests are built: nothing runs on a device or an emulator here.",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "SNAKE_BUILD_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "android-arm64-base",
+      "hidden": true,
+      "inherits": "mobile-base",
+      "description": "An Android phone or tablet (arm64-v8a), built from any host with Qt's Android kit (QT_ANDROID_DIR), a desktop Qt of the same version for its host tools and androiddeployqt (QT_HOST_PATH), the Android SDK (ANDROID_SDK_ROOT), the NDK the kit was built with (ANDROID_NDK_ROOT) and a JDK 17 or later. `cmake --build --preset <name>` makes the package (the apk target). The C++ module dependency scan is off: nothing here uses modules.",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-android",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{QT_ANDROID_DIR}/lib/cmake/Qt6/qt.toolchain.cmake",
+        "QT_HOST_PATH": "$env{QT_HOST_PATH}",
+        "ANDROID_SDK_ROOT": "$env{ANDROID_SDK_ROOT}",
+        "ANDROID_NDK_ROOT": "$env{ANDROID_NDK_ROOT}",
+        "CMAKE_CXX_SCAN_FOR_MODULES": "OFF"
+      }
+    },
+    {
+      "name": "android-arm64-release",
+      "displayName": "Android (arm64-v8a, Release)",
+      "description": "What a release is made from. The package is unsigned unless QT_ANDROID_SIGN_APK or QT_ANDROID_SIGN_AAB is ON and the QT_ANDROID_KEYSTORE_* environment variables name the upload key, which is the owner's.",
+      "inherits": [
+        "android-arm64-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "android-arm64-debuggable",
+      "displayName": "Android (arm64-v8a, debuggable, debug-signed)",
+      "description": "A debuggable package signed with Android's own debug key, which installs on any device that allows apps from outside the store.",
+      "inherits": [
+        "android-arm64-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "QT_ANDROID_DEPLOYMENT_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "ios-release",
+      "displayName": "iOS (device, Release, unsigned)",
+      "description": "An iPhone or iPad (arm64), built by Xcode on a Mac with Qt's iOS kit (QT_ROOT_DIR) and a desktop Qt of the same version for its host tools (QT_HOST_PATH). Unsigned: it needs no Apple account.",
+      "inherits": [
+        "mobile-base"
+      ],
+      "generator": "Xcode",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
+        "VCPKG_TARGET_TRIPLET": "arm64-ios",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{QT_ROOT_DIR}/lib/cmake/Qt6/qt.toolchain.cmake",
+        "QT_HOST_PATH": "$env{QT_HOST_PATH}",
+        "CMAKE_OSX_SYSROOT": "iphoneos",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "18.0",
+        "CMAKE_XCODE_GENERATE_SCHEME": "ON",
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED": "NO",
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED": "NO",
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY": "",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
@@ -82,7 +157,10 @@
     { "name": "linux-coverage", "configurePreset": "linux-coverage" },
     { "name": "macos-release", "configurePreset": "macos-release" },
     { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release", "configuration": "Release" },
-    { "name": "windows-msvc-asan", "configurePreset": "windows-msvc-asan" }
+    { "name": "windows-msvc-asan", "configurePreset": "windows-msvc-asan" },
+    { "name": "android-arm64-release", "configurePreset": "android-arm64-release" },
+    { "name": "android-arm64-debuggable", "configurePreset": "android-arm64-debuggable" },
+    { "name": "ios-release", "configurePreset": "ios-release", "configuration": "Release" }
   ],
   "testPresets": [
     { "name": "linux-debug", "configurePreset": "linux-debug", "output": { "outputOnFailure": true } },

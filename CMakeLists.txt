@@ -15,6 +15,11 @@ project(snake
 
 set(ICL_PROJECT_PREFIX SNAKE)
 
+# miniaudio's code is Objective-C++ on iOS (apps/snake/CMakeLists.txt).
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    enable_language(OBJCXX)
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

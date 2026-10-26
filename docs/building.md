@@ -76,6 +76,51 @@ ctest --preset windows-msvc-release -C Release
 The PyPI release of aqtinstall cannot read the Windows repository for Qt 6.11 and later; CI installs the commit
 named by `aqtsource` in `.github/toolchain-versions.json`. Use `windows-msvc-asan` for AddressSanitizer.
 
+## Android
+
+The package is made by Qt's own tooling: `androiddeployqt` turns the program's library, Qt's libraries and plugins, the
+QML modules and the manifest in `apps/snake/packaging/android/package-source` into an APK, which Gradle signs with
+Android's debug key. It needs, besides the desktop kit above:
+
+- Qt's Android kit and a desktop Qt of the same version for its host tools: `aqt install-qt linux android 6.12.0
+  android_arm64_v8a -O ~/Qt --autodesktop` (use `all_os` as the host name from Qt 6.7 on, in CI's form below);
+- the Android SDK with the NDK the kit was built with (r27c, `27.2.12479018`), platform `android-36` and build tools
+  `36.0.0` (`sdkmanager "ndk;27.2.12479018" "platforms;android-36" "build-tools;36.0.0"`), and a JDK 17 or later;
+- a vcpkg checkout at the baseline of `vcpkg.json`, as `VCPKG_ROOT`.
+
+```bash
+export QT_ANDROID_DIR=~/Qt/6.12.0/android_arm64_v8a QT_HOST_PATH=~/Qt/6.12.0/gcc_64
+export ANDROID_SDK_ROOT=~/Android/Sdk ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/27.2.12479018 ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
+export VCPKG_ROOT=~/vcpkg
+cmake --preset android-arm64-debuggable
+cmake --build --preset android-arm64-debuggable
+```
+
+The APK is under `build/android-arm64-debuggable`. `apps/snake/packaging/android/verify_apk.sh <apk> --version 0.2.0 --signed`
+reads the finished package and checks the application id, the platform levels, that it asks for no permission, that
+it is for `arm64-v8a` only and that it has an icon. `android-arm64-release` is the unsigned release configuration: a
+package signed with an upload key needs `QT_ANDROID_SIGN_APK` or `QT_ANDROID_SIGN_AAB` and the `QT_ANDROID_KEYSTORE_*`
+variables, which are the owner's.
+
+## iOS
+
+On a Mac with Xcode, with Qt's iOS kit and a macOS kit of the same version for the host tools
+(`aqt install-qt mac ios 6.12.0 ios -O ~/Qt --autodesktop`) and a vcpkg checkout as `VCPKG_ROOT`:
+
+```bash
+export QT_ROOT_DIR=~/Qt/6.12.0/ios QT_HOST_PATH=~/Qt/6.12.0/macos VCPKG_ROOT=~/vcpkg
+cmake --preset ios-release
+cmake --build --preset ios-release
+```
+
+The build is unsigned and needs no Apple account. `apps/snake/packaging/ios/verify_app.sh build/ios-release/Release-iphoneos/snake.app`
+checks the bundle: the identifier, the icon, the launch screen, that no permission text is in `Info.plist`, that the
+executable is `arm64` and links only the system. A signed build, for a device or the store, is the owner's, with the
+owner's account and provisioning profile.
+
+Qt is static on iOS and the game's fonts and texts are resources, so the bundle is the executable, the property list
+and the compiled icons.
+
 To build without Qt, configure with `-DSNAKE_BUILD_GUI=OFF`; only the library and its tests are built.
 
 ## Presets
@@ -94,6 +139,8 @@ ctest --preset linux-debug
 | `linux-tsan` | ThreadSanitizer |
 | `linux-coverage` | Instrumented build for gcovr |
 | `macos-release`, `windows-msvc-release`, `windows-msvc-asan` | Platform builds |
+| `android-arm64-debuggable`, `android-arm64-release` | An Android package (above) |
+| `ios-release` | An iOS bundle, unsigned (above) |
 
 Sanitizers, Tracy, coverage and fuzzing exclude each other. The configure step stops with a
 message when two are enabled.

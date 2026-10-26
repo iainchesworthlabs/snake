@@ -1,0 +1,113 @@
+name: iOS build
+
+# An unsigned compile check of the application for an iPhone or iPad: Qt 6.12's iOS kit, the `ios-release` preset, and a look
+# inside the .app Xcode made (apps/snake/packaging/ios/verify_app.sh). It needs no Apple account and no secret; a signed
+# build is the owner's to make, with the owner's account.
+#
+# Not a required check, and not on the merge queue: it runs only when something the iOS build reads changes (a required
+# check that a path filter keeps from running never reports, which would hold every unrelated pull request), and a macOS
+# runner is billed at a multiple. Dispatch it by hand to run it anywhere:
+#   gh workflow run ios-build.yml --ref <branch>
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "libs/**"
+      - "apps/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/ios-build.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "libs/**"
+      - "apps/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/main' }}
+
+# No job gets more than it names below.
+permissions: {}
+
+env:
+  VCPKG_DISABLE_METRICS: "1"
+
+jobs:
+  ios-build:
+    name: iOS (device, unsigned compile)
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The vcpkg toolchain is the toolchain file of every preset, iOS's included (it chains to Qt's): the manifest has one
+      # dependency for a device, miniaudio, which is a header.
+      - name: Set up vcpkg
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      - name: Set up CMake
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      # Two kits: Qt's iOS kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the macOS
+      # kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease). The game uses Qt Quick
+      # only, so no add-on module is installed. Not cached: the iOS kit is several gigabytes, and the repository's cache
+      # quota is better spent on the builds that run on every push.
+      - name: Install Qt (iOS kit and macOS host kit)
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: "6.12.0"
+          host: mac
+          target: ios
+          arch: ios
+          dir: ${{ runner.temp }}
+          aqtsource: "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
+          cache: false
+
+      - name: Name the Qt kits
+        shell: bash
+        run: |
+          echo "QT_ROOT_DIR=$RUNNER_TEMP/Qt/6.12.0/ios" >> "$GITHUB_ENV"
+          echo "QT_HOST_PATH=$RUNNER_TEMP/Qt/6.12.0/macos" >> "$GITHUB_ENV"
+
+      - name: Show the toolchain
+        shell: bash
+        run: |
+          cmake --version | head -n 1
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          for kit in "$QT_ROOT_DIR/lib/cmake/Qt6/qt.toolchain.cmake" "$QT_HOST_PATH/lib/cmake/Qt6/Qt6Config.cmake"; do
+            [ -e "$kit" ] || { echo "::error::$kit is not there: the Qt install put its kits somewhere else (look at the install step's log)"; exit 1; }
+          done
+
+      - name: Configure
+        run: cmake --preset ios-release
+
+      - name: Build
+        run: cmake --build --preset ios-release
+
+      # What Xcode made, from the bundle alone: the identifier, the icon, the launch screen, no permission text, arm64 and no
+      # link to the build machine. (An unsigned build: no --signed.)
+      - name: Check the application bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find build/ios-release -name snake.app -type d | head -n 1)"
+          [ -n "$app" ] || { echo "::error::no snake.app under build/ios-release"; exit 1; }
+          apps/snake/packaging/ios/verify_app.sh "$app"

@@ -4,5 +4,11 @@
   "aqtsource": "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7",
   "gcc": "16",
   "llvm": "23",
-  "msvc_toolset": "14.51"
+  "msvc_toolset": "14.51",
+  "android": {
+    "ndk": "27.2.12479018",
+    "platform": "android-36",
+    "build_tools": "36.0.0",
+    "jdk": "17"
+  }
 }

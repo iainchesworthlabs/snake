@@ -1,0 +1,169 @@
+name: Android build
+
+# The Android application, built on a hosted Linux runner with Qt 6.12's Android kit and the NDK that kit was built with,
+# into a debug-signed APK, and a look inside that package (apps/snake/packaging/android/verify_apk.sh: the application id,
+# the platform levels, no permission, one architecture, the icon). The APK is uploaded as an artifact: it installs on a
+# phone that allows apps from outside the store (docs/building.md, "Android"). It needs no secret; a package signed with
+# the owner's upload key is the owner's to make, with the owner's keystore.
+#
+# Not a required check, and not on the merge queue: it runs only when something the Android build reads changes (a required
+# check that a path filter keeps from running never reports, which would hold every unrelated pull request), and the Qt
+# kits are a download of several gigabytes. Dispatch it by hand to run it anywhere:
+#   gh workflow run android-build.yml --ref <branch>
+#
+# Nothing here runs the program: there is no device and no emulator job, because a hosted emulator needs hardware
+# acceleration and an image download that is not reliable enough to stand behind a green tick. What a device has to show is
+# listed in docs/ci.md ("Phones and tablets").
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "libs/**"
+      - "apps/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/android-build.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "libs/**"
+      - "apps/**"
+      - "cmake/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/android-build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/main' }}
+
+# No job gets more than it names below.
+permissions: {}
+
+env:
+  VCPKG_DISABLE_METRICS: "1"
+
+jobs:
+  android-build:
+    name: Android (arm64-v8a, debug-signed APK)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      # The pins are .github/toolchain-versions.json's (android.*). The NDK is the one Qt 6.12's kit is built with (r27c),
+      # not the newest the runner image carries.
+      ANDROID_NDK_VERSION: "27.2.12479018"
+      ANDROID_PLATFORM: "android-36"
+      ANDROID_BUILD_TOOLS: "36.0.0"
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The vcpkg toolchain is the toolchain file of every preset, Android's included (it chains to Qt's): the manifest has
+      # one dependency for a device, miniaudio, which is a header.
+      - name: Set up vcpkg
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      - name: Set up CMake
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+
+      # Gradle (androiddeployqt runs it) needs a JDK 17 or later; the runner image carries one and says where, so no
+      # action is added to the supply chain for it.
+      - name: Use the runner's JDK 17
+        shell: bash
+        run: |
+          set -euo pipefail
+          jdk="${JAVA_HOME_17_X64:-}"
+          [ -x "$jdk/bin/java" ] || { echo "::error::the runner image has no JDK 17 (JAVA_HOME_17_X64 is '$jdk'); pick an image that has one or add an action that installs it"; exit 1; }
+          echo "JAVA_HOME=$jdk" >> "$GITHUB_ENV"
+          "$jdk/bin/java" -version
+
+      # The SDK on the runner image, with the exact NDK, platform and build-tools this build is pinned to added to it: the
+      # image's own NDKs are other versions. vcpkg wants the NDK too (ANDROID_NDK_HOME) to build the port for the device.
+      - name: Install the Android SDK parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          [ -d "$sdk" ] || { echo "::error::the runner image has no Android SDK (ANDROID_HOME is '$sdk')"; exit 1; }
+          sdkmanager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$sdkmanager" ] || { echo "::error::$sdkmanager is not there"; exit 1; }
+          "$sdkmanager" --sdk_root="$sdk" --install "ndk;$ANDROID_NDK_VERSION" "platforms;$ANDROID_PLATFORM" "build-tools;$ANDROID_BUILD_TOOLS"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$sdk/ndk/$ANDROID_NDK_VERSION" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$sdk/ndk/$ANDROID_NDK_VERSION" >> "$GITHUB_ENV"
+
+      # Two kits: Qt's Android kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the
+      # Linux kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease, androiddeployqt).
+      # From Qt 6.7 the Android repository is `all_os`, not the host's own name. The game uses Qt Quick only, so no add-on
+      # module is installed. Not cached: the kits are several gigabytes, and the repository's cache quota is better spent
+      # on the builds that run on every push.
+      - name: Install Qt (Android kit and Linux host kit)
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        with:
+          version: "6.12.0"
+          host: all_os
+          target: android
+          arch: android_arm64_v8a
+          dir: ${{ runner.temp }}
+          aqtsource: "git+https://github.com/miurahr/aqtinstall.git@076e1659807d0b362a3ed684d54c2e9c775eb9c7"
+          cache: false
+
+      # Where the action put the two kits, which the preset reads (the runner context is not available in a job-level env).
+      - name: Name the Qt kits
+        shell: bash
+        run: |
+          echo "QT_ANDROID_DIR=$RUNNER_TEMP/Qt/6.12.0/android_arm64_v8a" >> "$GITHUB_ENV"
+          echo "QT_HOST_PATH=$RUNNER_TEMP/Qt/6.12.0/gcc_64" >> "$GITHUB_ENV"
+
+      - name: Show the toolchain
+        shell: bash
+        run: |
+          cmake --version | head -n 1
+          java -version
+          cat "$ANDROID_NDK_ROOT/source.properties"
+          # Two Qt kits, Gradle's caches and the build are several gigabytes of a runner's disk.
+          df -h "$RUNNER_TEMP" .
+          for kit in "$QT_ANDROID_DIR/lib/cmake/Qt6/qt.toolchain.cmake" "$QT_HOST_PATH/lib/cmake/Qt6/Qt6Config.cmake" "$QT_HOST_PATH/bin/androiddeployqt"; do
+            [ -e "$kit" ] || { echo "::error::$kit is not there: the Qt install put its kits somewhere else (look at the install step's log)"; exit 1; }
+          done
+
+      - name: Configure
+        run: cmake --preset android-arm64-debuggable
+
+      # The `apk` target: androiddeployqt gathers Qt's libraries and plugins and the QML modules the application imports,
+      # and Gradle signs the package with Android's debug key.
+      - name: Build the APK
+        run: cmake --build --preset android-arm64-debuggable
+
+      # What androiddeployqt made, from the package alone.
+      - name: Check the package
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find build/android-arm64-debuggable -name '*-debug.apk' -type f | head -n 1)"
+          [ -n "$apk" ] || { echo "::error::no debug APK under build/android-arm64-debuggable"; exit 1; }
+          version="$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' CMakeLists.txt | head -n 1)"
+          [ -n "$version" ] || { echo "::error::could not read the project version from CMakeLists.txt"; exit 1; }
+          mkdir -p android-dist
+          cp "$apk" "android-dist/snake-$version-android-arm64-debug-signed.apk"
+          ls -l android-dist
+          apps/snake/packaging/android/verify_apk.sh "android-dist/snake-$version-android-arm64-debug-signed.apk" --version "$version" --signed
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-apk-debug-signed
+          path: android-dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
