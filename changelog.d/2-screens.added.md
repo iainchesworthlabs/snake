@@ -1,0 +1,1 @@
+**A game you can play from the title to the leaderboard.** A title screen where you choose a mode, a pause dialog, and a game over screen that tells you how close you were to your best. A score that makes the top 10 asks for a name, and each mode has its own leaderboard. Scores, names and settings are kept between runs.

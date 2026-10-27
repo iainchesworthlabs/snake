@@ -1,1 +1,0 @@
-**The game can hold player names and leaderboards.** A new portable library, `libs/profile`, checks leaderboard names (up to 12 letters A to Z and spaces, kept in capitals), ranks scores in a top 10 for each mode where the earlier entry wins a tie, and remembers the three most recent names. Saving the lists to disk follows in later changes.

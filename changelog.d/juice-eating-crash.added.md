@@ -1,1 +1,0 @@
-**Eating and crashing have more life.** Eating throws a small burst of specks from the food (a bigger one in gold for the bonus item) and the points rise from where it was, and a crash gives the board a short shake. With reduced motion on, the board does not shake.

@@ -1,1 +1,0 @@
-**The title plays itself, and the snake looks for food.** The title screen now shows a game playing itself in a frame above the modes. In any game, the snake opens its mouth when food is a few cells straight ahead.

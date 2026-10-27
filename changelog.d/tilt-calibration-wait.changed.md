@@ -1,1 +1,0 @@
-**Tilt calibrates with a wait you can see.** When a game begins, and when you tap Resume or Recalibrate tilt, the game holds for a moment on "Hold the phone how you like to play" with a bar that fills, then takes that pose as level, gives a tap and carries on. Translated into the seven languages (machine translations, not read by a speaker).

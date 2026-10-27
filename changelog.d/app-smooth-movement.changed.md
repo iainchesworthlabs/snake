@@ -1,1 +1,0 @@
-**The snake glides from cell to cell.** Instead of jumping one cell at a time, the snake slides into its next cell between ticks, and the head turns as it moves into a turn. The game's speed and rules are the same. The stripes now travel with the snake, and a game that is paused keeps the picture where it was when it resumes.

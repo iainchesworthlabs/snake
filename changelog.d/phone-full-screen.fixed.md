@@ -1,1 +1,0 @@
-**The game fills a phone's screen.** The black bars above and below are gone: the window now runs under the status bar and the home indicator, and every screen keeps inside the parts that are free. About also says how the save file was found and last written, to find out why scores did not last.

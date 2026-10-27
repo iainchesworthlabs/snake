@@ -1,1 +1,0 @@
-**The game has sound.** Eating, the bonus item, a crash, pressing a button, starting a game and a new best score each have a sound, and the title and the game have music that stops when you pause. The sound and music switches in Settings and in the pause dialog now work. The sounds are placeholders made in code. A computer with no audio device plays in silence.

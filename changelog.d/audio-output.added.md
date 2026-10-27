@@ -1,1 +1,0 @@
-**The game can open the sound device.** The game now links miniaudio and has an audio output that plays the synthesiser's samples on the default device, or stays silent on a machine without one. Nothing asks it to play yet; the effects and music, and their toggles, come next.

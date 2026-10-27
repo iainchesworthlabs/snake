@@ -1,1 +1,0 @@
-**About is tidier.** The revision is the short form of a commit (seven characters) instead of the whole of it, and the details that a bug report needs (the language the game chose, how the save file was found) are shown only when the version is tapped five times.

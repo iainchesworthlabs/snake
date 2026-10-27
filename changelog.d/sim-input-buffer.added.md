@@ -1,1 +1,0 @@
-**Direction inputs queue up to two deep.** The simulation library has the input buffer the requirements describe: each input is checked against the direction the snake will be travelling once the input before it has applied, so a fast up-then-down while moving right cannot turn the snake back into itself. Repeats and a third waiting input are dropped.

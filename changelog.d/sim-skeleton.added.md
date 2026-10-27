@@ -1,1 +1,0 @@
-**The game rules start with a portable simulation library.** `libs/sim` holds the 20 by 20 board cells, directions, fixed-capacity containers and a seeded random number generator that gives the same numbers on every platform. It has no Qt dependency and allocates nothing after construction. The rules themselves follow in later changes.
