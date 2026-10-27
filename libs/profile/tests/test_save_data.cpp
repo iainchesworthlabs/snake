@@ -209,17 +209,22 @@ TEST_CASE("Every combination of settings survives a round trip", "[save][roundtr
     for (const ControlScheme controls :
          {ControlScheme::TILT, ControlScheme::SWIPE, ControlScheme::DPAD, ControlScheme::JOYSTICK})
     {
-        for (unsigned flags = 0; flags < 16; ++flags)
+        for (const TiltSensitivity sensitivity :
+             {TiltSensitivity::NORMAL, TiltSensitivity::QUICK, TiltSensitivity::GENTLE})
         {
-            SaveData data;
-            data.settings = Settings{.controls = controls,
-                                     .invert_axes = (flags & 1U) != 0,
-                                     .sound = (flags & 2U) != 0,
-                                     .music = (flags & 4U) != 0,
-                                     .reduced_motion = (flags & 8U) != 0};
-            const auto result = decode_save(encoded(data));
-            REQUIRE(result.has_value());
-            CHECK(result->settings == data.settings);
+            for (unsigned flags = 0; flags < 16; ++flags)
+            {
+                SaveData data;
+                data.settings = Settings{.controls = controls,
+                                         .tilt_sensitivity = sensitivity,
+                                         .invert_axes = (flags & 1U) != 0,
+                                         .sound = (flags & 2U) != 0,
+                                         .music = (flags & 4U) != 0,
+                                         .reduced_motion = (flags & 8U) != 0};
+                const auto result = decode_save(encoded(data));
+                REQUIRE(result.has_value());
+                CHECK(result->settings == data.settings);
+            }
         }
     }
 }
@@ -350,6 +355,19 @@ TEST_CASE("A control scheme that does not exist is refused", "[save][decode][inv
     Bytes bytes = to_bytes(SAMPLE_BYTES);
     bytes[8] = 4; // 0 to 3 are the schemes (the joystick is 3)
     check_invalid(with_new_checksum(bytes));
+}
+
+TEST_CASE("A tilt sensitivity that does not exist is refused, and one that does is read", "[save][decode][invalid]")
+{
+    Bytes bytes = to_bytes(SAMPLE_BYTES);
+    const std::uint8_t scheme = bytes[8];
+    bytes[8] = static_cast<std::uint8_t>(scheme | 0x30U); // 0 to 2 are the sensitivities
+    check_invalid(with_new_checksum(bytes));
+    bytes[8] = static_cast<std::uint8_t>(scheme | 0x20U);
+    const auto result = decode_save(with_new_checksum(bytes));
+    REQUIRE(result.has_value());
+    CHECK(result->settings.tilt_sensitivity == TiltSensitivity::GENTLE);
+    CHECK(result->settings.controls == ControlScheme::SWIPE);
 }
 
 TEST_CASE("A flag that does not exist is refused", "[save][decode][invalid]")

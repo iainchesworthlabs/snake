@@ -60,6 +60,9 @@ class ProfileViewModel : public QObject
 
     /// How the player steers on a touch device. Keyboard and gamepad always work.
     Q_PROPERTY(Controls controls READ controls WRITE setControls NOTIFY settingsChanged FINAL)
+    /// How far the phone is tipped to steer by tilt. The values are those of profile::TiltSensitivity.
+    Q_PROPERTY(
+        TiltSensitivity tiltSensitivity READ tiltSensitivity WRITE setTiltSensitivity NOTIFY settingsChanged FINAL)
     /// Tilt and the touch pad steer the other way round.
     Q_PROPERTY(bool invertAxes READ invertAxes WRITE setInvertAxes NOTIFY settingsChanged FINAL)
     Q_PROPERTY(bool sound READ sound WRITE setSound NOTIFY settingsChanged FINAL)
@@ -100,6 +103,14 @@ public:
         Joystick,
     };
     Q_ENUM(Controls)
+
+    enum class TiltSensitivity : std::uint8_t
+    {
+        Normal,
+        Quick,
+        Gentle,
+    };
+    Q_ENUM(TiltSensitivity)
 
     /// The clock is the system's.
     explicit ProfileViewModel(QObject* parent = nullptr);
@@ -175,6 +186,8 @@ public:
 
     [[nodiscard]] Controls controls() const noexcept;
     void setControls(Controls controls);
+    [[nodiscard]] TiltSensitivity tiltSensitivity() const noexcept;
+    void setTiltSensitivity(TiltSensitivity sensitivity);
     [[nodiscard]] bool invertAxes() const noexcept
     {
         return m_Data.settings.invert_axes;

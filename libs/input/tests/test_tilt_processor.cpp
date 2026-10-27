@@ -541,3 +541,22 @@ TEST_CASE("Draining a source with nothing in it changes nothing", "[tilt][trace]
     CHECK_FALSE(tilt.drain(source).direction);
     CHECK(tilt.drain(source).right_degrees == 0.0F);
 }
+
+TEST_CASE("The quick sensitivity steers at 12 degrees and the gentle one waits for 24", "[tilt][sensitivity]")
+{
+    for (const auto& [selector, below, over] :
+         {std::tuple{TILT_SELECTOR_QUICK, 10.0F, 14.0F}, std::tuple{TILT_SELECTOR_GENTLE, 20.0F, 26.0F}})
+    {
+        for (const bool steers : {false, true})
+        {
+            TiltProcessor tilt;
+            tilt.set_selector(selector);
+            CHECK(tilt.config().selector.engage == selector.engage);
+            const Recording recording =
+                Recording().hold_for(0.5F, 0.0F, 0.0F).hold_for(0.5F, 0.0F, steers ? over : below);
+            TraceSource source(recording.samples());
+            const TiltReading reading = tilt.drain(source);
+            CHECK(reading.direction == (steers ? std::optional<Direction>(Direction::UP) : std::nullopt));
+        }
+    }
+}

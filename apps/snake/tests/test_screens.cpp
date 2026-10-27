@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "about/about_info.hpp"
 #include "device/device.hpp"
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
@@ -1352,7 +1353,28 @@ TEST_CASE("About shows the version, the licence, the source and the revision", "
     CHECK(url == "https://github.com/iainchesworthlabs/snake");
     // The revision is a tag or a commit, or "unknown" where there is no git: never empty.
     CHECK_FALSE(revision.isEmpty());
-    CHECK(app.text_of("aboutRevision") == "Revision: " + revision);
+    CHECK(app.text_of("aboutRevision") == "Revision: " + snake::ui::AboutInfo::shortened(revision));
+    // The details for a bug report are not on the page until the version is tapped five times.
+    CHECK_FALSE(app.shows("aboutLanguage"));
+    CHECK_FALSE(app.shows("aboutSaveStatus"));
+    for (int tap = 0; tap < 5; ++tap)
+    {
+        QTest::mouseClick(&app.window(), Qt::LeftButton, Qt::NoModifier, app.centre_of(app.item("aboutVersion")));
+    }
+    CHECK(app.shows("aboutLanguage"));
+    CHECK(app.shows("aboutSaveStatus"));
+    CHECK(app.text_of("aboutSaveStatus").startsWith("Saves: "));
+}
+
+TEST_CASE("About shows a commit as seven characters and a tag as it is", "[screens][about]")
+{
+    using snake::ui::AboutInfo;
+    CHECK(AboutInfo::shortened("0b66ebe4f1ac93b75323b3065777b4dd3f287cdf") == "0b66ebe");
+    CHECK(AboutInfo::shortened("0b66ebe4f1ac") == "0b66ebe");
+    CHECK(AboutInfo::shortened("v0.2.0-rc.2") == "v0.2.0-rc.2");
+    CHECK(AboutInfo::shortened("unknown") == "unknown");
+    CHECK(AboutInfo::shortened("abc123") == "abc123");
+    CHECK(AboutInfo::shortened("") == "");
 }
 
 TEST_CASE("Each licence has its text one tap away and Back returns to About", "[screens][about]")

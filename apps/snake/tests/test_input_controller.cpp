@@ -450,8 +450,9 @@ TEST_CASE("The d-pad is nothing on a computer", "[input-controller][dpad]")
 
 TEST_CASE("The angles of the indicator are the tilt processor's", "[input-controller]")
 {
-    CHECK(InputController::deadZone() == Catch::Approx(12.0));
-    CHECK(InputController::threshold() == Catch::Approx(18.0));
+    InputController input(nullptr);
+    CHECK(input.deadZone() == Catch::Approx(12.0));
+    CHECK(input.threshold() == Catch::Approx(18.0));
 }
 
 TEST_CASE("The controller reads the accelerometer that the device gives, or the one a test gives", "[input-controller]")
@@ -590,4 +591,32 @@ TEST_CASE("Letting go of the joystick stops steering, and a paused knob steers n
     CHECK_FALSE(rig.pending());
     rig.input.joystickMoved(0.0, 0.0);
     CHECK_FALSE(rig.pending());
+}
+
+TEST_CASE("The tilt sensitivity moves the angles that steer, and the raw reading is passed on",
+          "[input-controller][tilt]")
+{
+    Rig rig;
+    QSignalSpy changed(&rig.input, &InputController::tiltSettingsChanged);
+    rig.profile.setTiltSensitivity(ProfileViewModel::TiltSensitivity::Quick);
+    CHECK(changed.count() >= 1);
+    CHECK(rig.input.threshold() == Catch::Approx(12.0));
+    CHECK(rig.input.deadZone() == Catch::Approx(8.0));
+    rig.profile.setTiltSensitivity(ProfileViewModel::TiltSensitivity::Gentle);
+    CHECK(rig.input.threshold() == Catch::Approx(24.0));
+    CHECK(rig.input.deadZone() == Catch::Approx(16.0));
+    rig.profile.setTiltSensitivity(ProfileViewModel::TiltSensitivity::Normal);
+    CHECK(rig.input.threshold() == Catch::Approx(18.0));
+
+    // A quick tilt steers where a normal one does not: 14 degrees.
+    rig.profile.setTiltSensitivity(ProfileViewModel::TiltSensitivity::Quick);
+    rig.start_level();
+    rig.queue->hold(0.5F, 0.0F, 14.0F);
+    rig.input.update(0.016);
+    CHECK(rig.input.tiltHeading() == Heading::Up);
+
+    // The sensor as it came: held 55 degrees above the horizontal, the screen's y is 0.82 g and z is 0.57.
+    CHECK(rig.input.rawCount() > 0);
+    CHECK(rig.input.rawY() == Catch::Approx(std::sin(radians(41.0F))).margin(0.02));
+    CHECK(rig.input.rawZ() == Catch::Approx(std::cos(radians(41.0F))).margin(0.02));
 }

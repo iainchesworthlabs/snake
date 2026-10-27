@@ -275,8 +275,20 @@
         <translation>Recalibrate tilt</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>Hold it how you like to play, then tap.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>Tilt sensitivity</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>Gentle</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>Quick</translation>
     </message>
     <message>
         <source>Sound</source>

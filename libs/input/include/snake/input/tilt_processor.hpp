@@ -14,6 +14,11 @@ namespace snake::input
 /// values of the requirements, to be tuned in playtests.
 inline constexpr SelectorConfig TILT_SELECTOR = {.release = 12.0F, .engage = 18.0F, .switch_margin = 5.0F};
 
+/// The two other settings of the tilt's sensitivity: quick turns at 12 degrees (8 to let go), for a player who finds
+/// the default hard to reach, and gentle at 24 (16), for one who tips the phone too easily.
+inline constexpr SelectorConfig TILT_SELECTOR_QUICK = {.release = 8.0F, .engage = 12.0F, .switch_margin = 4.0F};
+inline constexpr SelectorConfig TILT_SELECTOR_GENTLE = {.release = 16.0F, .engage = 24.0F, .switch_margin = 6.0F};
+
 struct TiltConfig
 {
     /// The angles in degrees, see DirectionSelector.
@@ -66,6 +71,13 @@ public:
     void set_invert_axes(bool invert) noexcept
     {
         m_Config.invert_axes = invert;
+    }
+
+    /// Changes how far the device must be tipped to steer, and how far back it must come to let go.
+    void set_selector(SelectorConfig selector) noexcept
+    {
+        m_Config.selector = selector;
+        m_Selector.set_config(selector);
     }
 
     [[nodiscard]] const TiltReading& reading() const noexcept

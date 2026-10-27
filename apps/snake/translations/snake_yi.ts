@@ -275,8 +275,20 @@
         <translation>שטעל איבער דעם נייג</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>האַלט עס ווי דו ווילסט שפּילן, דערנאָך טאַפּ.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>סענסיטיוויטעט פֿון נייגן</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>ווייך</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>געוויינלעך</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>שנעל</translation>
     </message>
     <message>
         <source>Sound</source>

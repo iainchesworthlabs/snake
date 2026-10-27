@@ -59,11 +59,48 @@ InputController::Heading to_heading(sim::Direction direction)
 
 } // namespace
 
+/// Passes the readings on and remembers the latest, for the readout.
+class InputController::RecordingSource final : public input::SampleSource
+{
+public:
+    explicit RecordingSource(std::unique_ptr<input::SampleSource> inner) : m_Inner(std::move(inner)) {}
+
+    std::optional<input::AccelSample> next() noexcept override
+    {
+        auto sample = m_Inner->next();
+        if (sample)
+        {
+            m_Last = *sample;
+            ++m_Count;
+        }
+        return sample;
+    }
+
+    [[nodiscard]] input::AccelSample last() const noexcept
+    {
+        return m_Last;
+    }
+    [[nodiscard]] int count() const noexcept
+    {
+        return m_Count;
+    }
+
+private:
+    std::unique_ptr<input::SampleSource> m_Inner;
+    input::AccelSample m_Last{};
+    int m_Count = 0;
+};
+
 InputController::InputController(QObject* parent) : InputController(device::accelerometer(), parent) {}
 
-InputController::InputController(std::unique_ptr<input::SampleSource> source, QObject* parent)
-    : QObject(parent), m_Source(std::move(source))
+InputController::InputController(std::unique_ptr<input::SampleSource> source, QObject* parent) : QObject(parent)
 {
+    if (source != nullptr)
+    {
+        auto recording = std::make_unique<RecordingSource>(std::move(source));
+        m_Recording = recording.get();
+        m_Source = std::move(recording);
+    }
 }
 
 void InputController::setGame(GameViewModel* game)
@@ -155,6 +192,23 @@ InputController::Heading InputController::tiltHeading() const noexcept
 void InputController::on_settings_changed()
 {
     m_Tilt.set_invert_axes(m_Profile != nullptr && m_Profile->invertAxes());
+    input::SelectorConfig selector = input::TILT_SELECTOR;
+    if (m_Profile != nullptr)
+    {
+        switch (m_Profile->tiltSensitivity())
+        {
+        case ProfileViewModel::TiltSensitivity::Quick:
+            selector = input::TILT_SELECTOR_QUICK;
+            break;
+        case ProfileViewModel::TiltSensitivity::Gentle:
+            selector = input::TILT_SELECTOR_GENTLE;
+            break;
+        case ProfileViewModel::TiltSensitivity::Normal:
+            break;
+        }
+    }
+    m_Tilt.set_selector(selector);
+    emit tiltSettingsChanged();
     // The choice of the profile may have changed what steers.
     m_Swipe.cancel();
     m_Stick.reset();
@@ -247,6 +301,12 @@ void InputController::update(double seconds)
     }
     // The readings are taken in whatever the game is doing, so the filter is up to date when a game begins.
     const input::TiltReading reading = m_Tilt.drain(*m_Source);
+    if (m_Recording != nullptr && m_Recording->count() != m_RawCount)
+    {
+        m_RawCount = m_Recording->count();
+        m_Raw = m_Recording->last();
+        emit rawChanged();
+    }
     const bool changed = reading.right_degrees != m_Reading.right_degrees ||
                          reading.up_degrees != m_Reading.up_degrees || reading.direction != m_Reading.direction;
     m_Reading = reading;

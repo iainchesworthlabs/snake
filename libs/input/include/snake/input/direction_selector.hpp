@@ -50,6 +50,12 @@ public:
         m_Current.reset();
     }
 
+    /// Changes the thresholds. The direction in force stays until the next update decides.
+    void set_config(SelectorConfig config) noexcept
+    {
+        m_Config = config;
+    }
+
     [[nodiscard]] const SelectorConfig& config() const noexcept
     {
         return m_Config;

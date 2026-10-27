@@ -275,8 +275,20 @@
         <translation>重新校准倾斜</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>按你喜欢的姿势拿好，然后点一下。</translation>
+        <source>Tilt sensitivity</source>
+        <translation>倾斜灵敏度</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>轻柔</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>正常</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>灵敏</translation>
     </message>
     <message>
         <source>Sound</source>

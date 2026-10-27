@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QIODevice>
 #include <QLocale>
+#include <QRegularExpression>
 #include <QString>
 
 namespace snake::ui
@@ -48,6 +49,17 @@ QString AboutInfo::repositoryUrl()
 QString AboutInfo::sourceRevision()
 {
     return QString::fromUtf8(SOURCE_REVISION.data(), static_cast<qsizetype>(SOURCE_REVISION.size()));
+}
+
+QString AboutInfo::shortRevision()
+{
+    return shortened(sourceRevision());
+}
+
+QString AboutInfo::shortened(const QString& revision)
+{
+    static const QRegularExpression commit(QStringLiteral("^[0-9a-fA-F]{12,}$"));
+    return commit.match(revision).hasMatch() ? revision.left(7) : revision;
 }
 
 QString AboutInfo::languageDetail()
