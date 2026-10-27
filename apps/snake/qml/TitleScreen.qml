@@ -30,14 +30,26 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // Lying down the page has two columns: the name, the attract mode, Play and the other screens on the leading side, and the
+        // choice of mode on the other. In a language read from right to left the columns swap.
+        readonly property real margin: 16
+        readonly property real columnWidth: (pageWidth - 3 * margin) / 2
+        readonly property real leadingX: Theme.mirrored(margin, columnWidth, pageWidth)
+        readonly property real trailingX: Theme.mirrored(2 * margin + columnWidth, columnWidth, pageWidth)
+
         ShadowText {
             objectName: "wordmark"
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 28
+            x: (page.landscape ? page.leadingX + page.columnWidth / 2 : page.pageWidth / 2) - width / 2
+            y: page.landscape ? 6 : 28
             offset: 5
+            maxWidth: page.landscape ? page.columnWidth : 360
             // The pixel font has Latin letters only; the name in another script is drawn in a font that is taller, so
             // it is set smaller to stay above the preview.
-            pixelSize: /^[\u0000-\u024F]*$/.test(text) ? 76 : 54
+            pixelSize: /^[\u0000-\u024F]*$/.test(text) ? (page.landscape ? 48 : 76) : (page.landscape ? 36 : 54)
             text: qsTr("Snake")
         }
 
@@ -57,10 +69,10 @@ FocusScope {
 
         Item {
             objectName: "attractPreview"
-            x: 15
-            y: 118
-            width: 360
-            height: 168
+            x: page.landscape ? page.leadingX : 15
+            y: page.landscape ? 80 : 118
+            width: page.landscape ? page.columnWidth : 360
+            height: page.landscape ? 132 : 168
 
             Rectangle {
                 y: 6
@@ -104,9 +116,9 @@ FocusScope {
         }
 
         Column {
-            x: 15
-            y: 300
-            width: 360
+            x: page.landscape ? page.trailingX : 15
+            y: page.landscape ? 14 : 300
+            width: page.landscape ? page.columnWidth : 360
             spacing: 10
 
             Text {
@@ -140,13 +152,13 @@ FocusScope {
             id: playButton
 
             objectName: "playButton"
-            x: 15
-            y: 686
-            width: 360
-            height: 62
+            x: page.landscape ? page.leadingX : 15
+            y: page.landscape ? 224 : 686
+            width: page.landscape ? page.columnWidth : 360
+            height: page.landscape ? 56 : 62
             focus: true
             kind: "primary"
-            fontSize: 28
+            fontSize: page.landscape ? 26 : 28
             drop: 6
             radius: 14
             text: qsTr("Play")
@@ -155,20 +167,20 @@ FocusScope {
 
         ToyButton {
             objectName: "leaderboardButton"
-            x: Theme.mirrored(15, width, 390)
-            y: 762
-            width: 300
-            height: 50
+            x: page.landscape ? Theme.mirrored(page.margin, width, page.pageWidth) : Theme.mirrored(15, width, 390)
+            y: page.landscape ? 296 : 762
+            width: page.landscape ? page.columnWidth - 56 : 300
+            height: page.landscape ? 48 : 50
             text: qsTr("Leaderboard")
             onClicked: root.leaderboardRequested()
         }
 
         ToyButton {
             objectName: "settingsButton"
-            x: Theme.mirrored(325, width, 390)
-            y: 762
-            width: 50
-            height: 50
+            x: page.landscape ? Theme.mirrored(page.margin + page.columnWidth - 48, width, page.pageWidth) : Theme.mirrored(325, width, 390)
+            y: page.landscape ? 296 : 762
+            width: page.landscape ? 48 : 50
+            height: page.landscape ? 48 : 50
             Accessible.name: qsTr("Settings")
             onClicked: root.settingsRequested()
 

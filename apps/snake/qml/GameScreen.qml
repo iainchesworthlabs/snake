@@ -21,6 +21,18 @@ FocusScope {
     readonly property real safeLeft: SafeArea.margins.left
     readonly property real safeRight: SafeArea.margins.right
 
+    // Lying down (the window is wider than it is tall) the board takes the height and the rest is two columns beside it: the
+    // score, the best and the pause button on the leading side and the controls on the other, as the design's wide pages have it.
+    readonly property bool landscape: width > height
+    readonly property real boardSide: height - safeTop - safeBottom - 24
+    // The width of each column: what is left of the width after the board, but room enough for the score.
+    readonly property real columnWidth: Math.max(190, (width - safeLeft - safeRight - boardSide) / 2)
+    // How the steering controls are shrunk to fit the column, when it is narrower than they are.
+    readonly property real controlsCentre: Theme.rightToLeft ? safeLeft + columnWidth / 2 : width - safeRight - columnWidth / 2
+    function fitted(item) {
+        return Math.min(1, (columnWidth - 16) / item.implicitWidth);
+    }
+
     // The score on the leading side and the best on the other: the other way round in a language read from right to left.
     LayoutMirroring.enabled: Theme.rightToLeft
     LayoutMirroring.childrenInherit: true
@@ -76,7 +88,7 @@ FocusScope {
         anchors.left: parent.left
         anchors.leftMargin: 16 + root.safeLeft
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24 + root.safeBottom
+        anchors.bottomMargin: (root.landscape ? 12 : 24) + root.safeBottom
         width: 56
         height: 56
         radius: 14
@@ -159,29 +171,32 @@ FocusScope {
     }
 
     DPad {
+        id: dpad
+
         objectName: "dpad"
         visible: root.input.controls === InputController.Scheme.Dpad
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24 + root.safeBottom
+        x: root.landscape ? root.controlsCentre - width / 2 : (root.width - width) / 2
+        y: root.landscape ? (root.height - height) / 2 : root.height - height - 24 - root.safeBottom
+        scale: root.landscape ? root.fitted(dpad) : 1
         input: root.input
     }
 
     JoystickPad {
+        id: joystick
+
         objectName: "joystick"
         visible: root.input.controls === InputController.Scheme.Joystick
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24 + root.safeBottom
+        x: root.landscape ? root.controlsCentre - width / 2 : (root.width - width) / 2
+        y: root.landscape ? (root.height - height) / 2 : root.height - height - 24 - root.safeBottom
+        scale: root.landscape ? root.fitted(joystick) : 1
         input: root.input
     }
 
     TiltIndicator {
         objectName: "tiltIndicator"
         visible: root.input.controls === InputController.Scheme.Tilt
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 48 + root.safeBottom
+        x: root.landscape ? root.controlsCentre - width / 2 : (root.width - width) / 2
+        y: root.landscape ? (root.height - height) / 2 : root.height - height - 48 - root.safeBottom
         input: root.input
     }
 
@@ -190,12 +205,12 @@ FocusScope {
 
         objectName: "board"
         anchors.fill: parent
-        anchors.leftMargin: 16 + root.safeLeft
-        anchors.rightMargin: 16 + root.safeRight
-        anchors.topMargin: 64 + root.safeTop
+        anchors.leftMargin: root.landscape ? root.safeLeft + root.columnWidth : 16 + root.safeLeft
+        anchors.rightMargin: root.landscape ? root.safeRight + root.columnWidth : 16 + root.safeRight
+        anchors.topMargin: root.landscape ? 12 + root.safeTop : 64 + root.safeTop
         // Room for the d-pad (208 high, 24 up), the joystick (184 high, 24 up) or the tilt indicator (132 high, 48 up) and a
         // gap above it; with swiping, for the pause button (56 high, 24 up).
-        anchors.bottomMargin: root.safeBottom + (root.input.controls === InputController.Scheme.Dpad ? 242 : root.input.controls === InputController.Scheme.Joystick ? 218 : root.input.controls === InputController.Scheme.Tilt ? 196 : root.touchControls ? 96 : 16)
+        anchors.bottomMargin: root.safeBottom + (root.landscape ? 12 : root.input.controls === InputController.Scheme.Dpad ? 242 : root.input.controls === InputController.Scheme.Joystick ? 218 : root.input.controls === InputController.Scheme.Tilt ? 196 : root.touchControls ? 96 : 16)
         game: root.game
         effects: root.effects
 
@@ -227,10 +242,12 @@ FocusScope {
     }
 
     Column {
+        id: scoreColumn
+
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.leftMargin: 16 + root.safeLeft
-        anchors.topMargin: 16 + root.safeTop
+        anchors.topMargin: (root.landscape ? 12 : 16) + root.safeTop
 
         Text {
             color: Theme.ink
@@ -246,15 +263,19 @@ FocusScope {
         }
     }
 
+    // The best score: at the top on the other side, or lying down under the score.
     Column {
-        anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.left: root.landscape ? parent.left : undefined
+        anchors.right: root.landscape ? undefined : parent.right
+        anchors.top: root.landscape ? scoreColumn.bottom : parent.top
+        anchors.leftMargin: 16 + root.safeLeft
         anchors.rightMargin: 16 + root.safeRight
-        anchors.topMargin: 16 + root.safeTop
+        anchors.topMargin: root.landscape ? 14 : 16 + root.safeTop
         spacing: 4
 
         Text {
-            anchors.right: parent.right
+            anchors.left: root.landscape ? parent.left : undefined
+            anchors.right: root.landscape ? undefined : parent.right
             color: Theme.ink
             font.pixelSize: 16
             font.weight: Font.Medium
