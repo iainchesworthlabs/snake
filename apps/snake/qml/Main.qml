@@ -52,6 +52,14 @@ Window {
             gameModel.pause();
     }
 
+    // A phone that turns during a game anyway (the orientation could not be held) waits for the player too: the layout is
+    // new and the tilt was calibrated for the old one, and resuming calibrates it again.
+    readonly property bool lyingDown: width > height
+    onLyingDownChanged: {
+        if (touchDevice && gameModel.state === GameViewModel.State.Running)
+            gameModel.pause();
+    }
+
     GameViewModel {
         id: gameModel
 
@@ -70,6 +78,12 @@ Window {
         // Put away (a phone's home button, another program in front): no music, no sound. Inactive, as a call or the
         // notification shade makes it, is not put away: the game pauses itself and its title music goes on.
         active: Application.state === Qt.ApplicationActive || Application.state === Qt.ApplicationInactive
+    }
+
+    // A phone's screen stays as it is from Play to the title, so that tilting to steer cannot turn it; the menus turn with the phone.
+    OrientationDirector {
+        game: gameModel
+        active: root.touchDevice
     }
 
     // What the hand feels, on a phone: a tap for eating and a knock for a crash.

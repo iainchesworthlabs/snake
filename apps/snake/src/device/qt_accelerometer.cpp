@@ -30,9 +30,10 @@ class QtAccelerometerSource final : public QObject, public input::SampleSource
 public:
     QtAccelerometerSource()
     {
-        // The axes are those of the screen, which does not turn: the game is portrait and the activity or the
-        // application is fixed to it, so the readings need no rotation.
-        m_Sensor.setAxesOrientationMode(QAccelerometer::FixedOrientation);
+        // The axes are those of the screen, which may be on its side: Qt turns the readings with the screen's
+        // orientation, so x is to the player's right and y is up the screen whichever way the phone is held. The screen
+        // does not turn during a game (device::lock_orientation()), so the calibrated pose stays in the same frame.
+        m_Sensor.setAxesOrientationMode(QAccelerometer::AutomaticOrientation);
         m_Sensor.setDataRate(DATA_RATE_HZ);
         connect(&m_Sensor, &QSensor::readingChanged, this, &QtAccelerometerSource::on_reading);
     }

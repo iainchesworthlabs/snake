@@ -37,14 +37,15 @@
         android:icon="-- %%INSERT_APP_ICON%% --"
         android:theme="@style/Theme.Snake"
         android:enableOnBackInvokedCallback="true">
-        <!-- Portrait, and the screen does not turn while the game is played: the design is a portrait page. -->
+        <!-- Upright or on its side, as the person has set rotation, and the screen does not turn while the game is played: the program
+             holds it (device::lock_orientation()). -->
         <activity
             android:name="org.qtproject.qt.android.bindings.QtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
             android:label="-- %%INSERT_APP_NAME%% --"
             android:launchMode="singleTop"
             android:resizeableActivity="true"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullUser"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

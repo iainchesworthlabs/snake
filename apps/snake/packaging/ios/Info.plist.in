@@ -65,20 +65,25 @@
         <string>LaunchBackground</string>
     </dict>
 
-    <!-- Portrait: the design is a portrait page, and the screen does not turn while the game is played. On an iPad the
-         page is centred, as on a desktop window. -->
+    <!-- Upright or on its side: every screen has a layout for each. An iPhone is not shown upside down (the notch would be at
+         the bottom). The screen does not turn while a game is played: the program holds it (device::lock_orientation()),
+         asking UIKit through the application delegate. -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
-    <!-- Not every orientation on an iPad, so the program takes the whole screen: Apple's upload check asks for either all four
-         orientations or this key. -->
+    <!-- The program takes the whole screen on an iPad, with no split view or slide over, so the layouts only have to fit the
+         screen turned either way. -->
     <key>UIRequiresFullScreen</key>
     <true/>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
         <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
     <key>UIStatusBarHidden</key>
