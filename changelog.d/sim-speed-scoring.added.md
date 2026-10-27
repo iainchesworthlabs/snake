@@ -1,1 +1,0 @@
-**The simulation library has the speed curves and the scoring rules.** Easy starts at 180 ms and Classic at 150 ms, each getting faster with every food down to a floor. Food scores 10 points times a combo that rises to x5 when the next food comes within 20 ticks, bonus food scores 50, and a score shows as six digits.

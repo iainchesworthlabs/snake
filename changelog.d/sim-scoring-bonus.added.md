@@ -1,1 +1,0 @@
-**Eating now scores in the simulation library.** Food adds 10 points times the combo, every fifth food puts a bonus item worth 50 points on the board for 40 ticks, and bonus food grows the snake like normal food. The score, the combo and the number of foods eaten are available from the game, and a saved game can carry them.

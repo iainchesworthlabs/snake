@@ -1,1 +1,0 @@
-**The keyboard comes back after the reset question.** After answering "Reset the leaderboard?" in Settings, with Escape or a button, the keyboard is back on the button that asked, so Escape then leaves Settings as it should. Before, it was lost until you pressed Tab.

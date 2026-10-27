@@ -1,1 +1,0 @@
-**A swipe anywhere on the screen can steer, in the input library.** The swipe recogniser turns a finger's travel into a direction as soon as it has gone far enough, without waiting for the finger to lift, and one stroke can turn the snake more than once. A tap gives nothing.

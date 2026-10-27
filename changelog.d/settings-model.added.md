@@ -1,1 +1,0 @@
-**Settings are stored.** The game now remembers how you steer (tilt, swipe or d-pad), inverted axes, sound, music and reduced motion in the save file, and can empty the leaderboard of one mode while keeping the modes you unlocked. On a first run reduced motion starts on if your system asks for less motion. The screens that change these come next.

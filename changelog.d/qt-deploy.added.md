@@ -1,1 +1,0 @@
-**Release packages contain the Qt libraries.** The install step copies the Qt libraries, plugins and QML modules next to the executable (a snake.app bundle on macOS), so a package runs on a machine without Qt, and installs the licence. A dry run of the packaging can be started from a branch.

@@ -1,1 +1,0 @@
-**The window uses the Toybox Pixel colours and the Pixelify Sans font.** The background, the score and the messages follow the design tokens, and the font is bundled with the program, so it looks the same on every system. The board keeps its placeholder colours until the board art follows.

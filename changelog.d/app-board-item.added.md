@@ -1,1 +1,0 @@
-**The board is drawn.** The window now shows the game: the snake with its head, the food and the bonus item on a square board that fits the window. Together with the previous change, the game can be played with the keyboard. It is plain rectangles in placeholder colours, and the art follows.

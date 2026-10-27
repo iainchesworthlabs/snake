@@ -1,1 +1,0 @@
-**The snake dies with a show.** When the snake crashes it flashes white twice, then its pieces pop off one by one from the tail with a puff each, leaving the head with crossed-out eyes; the end of the game shows when that is over, and a key or a tap skips it. With reduced motion on there is no flashing and no shake, and the pieces still pop.

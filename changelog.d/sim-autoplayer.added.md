@@ -1,1 +1,0 @@
-**The game can play itself for the title screen.** The simulation library has an autoplayer that steers a game towards the food by the shortest safe path and avoids trapping itself, for the attract mode on the title screen. It uses a game with its own seed, so it never changes the food of a real game. In tests it eats between 63 and 197 foods per game.

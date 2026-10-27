@@ -1,1 +1,0 @@
-**A game can be saved and compared.** The simulation library can take a snapshot of a whole game, write it as bytes that are the same on every platform, read it back and carry on from it, and give a 64-bit hash of the state. The tick count is now part of the game.
