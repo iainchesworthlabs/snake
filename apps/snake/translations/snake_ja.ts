@@ -121,6 +121,14 @@
         <translation>一時停止</translation>
     </message>
     <message>
+        <source>Calibrating tilt</source>
+        <translation>かたむきを あわせています</translation>
+    </message>
+    <message>
+        <source>Hold the phone how you like to play.</source>
+        <translation>あそびやすい もちかたで スマホを もってね。</translation>
+    </message>
+    <message>
         <source>Score</source>
         <translation>スコア</translation>
     </message>

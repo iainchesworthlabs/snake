@@ -47,6 +47,12 @@ class InputController : public QObject
     /// The angles of the dead zone and of the turn, for the indicator.
     Q_PROPERTY(double deadZone READ deadZone CONSTANT FINAL)
     Q_PROPERTY(double threshold READ threshold CONSTANT FINAL)
+    /// True while the phone is being calibrated: a short wait, with the game held, in which the player holds the phone
+    /// the way they like to play and the pose is taken as neutral. It follows the start of a game and a resume from the
+    /// pause dialog when tilt steers, and the dialog's Recalibrate tilt.
+    Q_PROPERTY(bool calibrating READ calibrating NOTIFY calibratingChanged FINAL)
+    /// How far through it is, 0 to 1.
+    Q_PROPERTY(double calibrationProgress READ calibrationProgress NOTIFY calibrationProgressChanged FINAL)
 
 public:
     enum class Scheme : std::uint8_t
@@ -117,8 +123,30 @@ public:
     }
 
     /// Once a frame: takes in the accelerometer's readings, and while a game runs with tilt chosen steers by them. Call
-    /// it before the game advances, so the turn is in place for the tick.
-    Q_INVOKABLE void update();
+    /// it before the game advances, so the turn is in place for the tick. `seconds` is how long the frame took: it
+    /// moves a calibration on.
+    Q_INVOKABLE void update(double seconds = 0.0);
+
+    /// How long a calibration takes: long enough for the filter to settle on the pose and for the player to see it
+    /// happen.
+    static constexpr double CALIBRATION_SECONDS = 1.5;
+
+    [[nodiscard]] bool calibrating() const noexcept
+    {
+        return m_Calibrating;
+    }
+    [[nodiscard]] double calibrationProgress() const noexcept
+    {
+        return m_CalibrationProgress;
+    }
+
+    /// Resumes a paused game. With tilt chosen the game stays held while the phone is calibrated, and then carries on;
+    /// otherwise it resumes at once.
+    Q_INVOKABLE void resume();
+
+    /// Calibrates tilt after the wait, then resumes the game if it was held for it. Does nothing when tilt does not
+    /// steer.
+    Q_INVOKABLE void startCalibration();
 
     /// A d-pad button was pressed.
     Q_INVOKABLE void steer(Heading heading);
@@ -143,9 +171,13 @@ signals:
     void profileChanged();
     void controlsChanged();
     void tiltChanged();
+    void calibratingChanged();
+    void calibrationProgressChanged();
 
 private:
     void on_game_started();
+    void finish_calibration();
+    void cancel_calibration();
     /// Reads the joystick's knob and offers the turn it asks for, if there is one.
     void steer_by_joystick();
     void on_settings_changed();
@@ -159,6 +191,9 @@ private:
     float m_StickRight = 0.0F;
     float m_StickUp = 0.0F;
     bool m_StickHeld = false;
+    bool m_Calibrating = false;
+    double m_CalibrationElapsed = 0.0;
+    double m_CalibrationProgress = 0.0;
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
     bool m_TouchDevice = false;

@@ -250,7 +250,20 @@ flick to the diagonal and back within a tick queues two, which is one row aside.
 in the save file, so a file with it is refused by a build from before it. On a phone the game screen keeps the score, the
 best and the controls inside `SafeArea.margins` (the status bar, the camera cut-out, the home indicator), and the pause
 button, which is also the way to leave a game (Pause has Quit to menu), is at the bottom on the leading side, clear of a score
-that can be six digits wide. `TiltIndicator` draws the tilt read as a dot on a plate with the dead zone and the turning angle marked, so a player sees
+that can be six digits wide. Tilt has a wait at the start of a game and on every resume or Recalibrate tilt (`InputController::calibrating`, 1.5 s of
+frames): the controller holds the game by pausing it, the game screen shows `calibrationOverlay` (a bar that fills), the
+filter settles on the pose meanwhile, and at the end the pose is taken as neutral, the phone gives a tap and the game
+resumes. The pause dialog stays hidden during the wait, so it does not flash up, and `InputController::resume()` replaces
+`GameViewModel::resume()` in the dialog. A game that is left or restarted ends the wait. Scores, the best score and the
+leaderboard numbers are drawn by `PixelNumber` from squares on a 3 by 5 grid at a whole pixel size, because Pixelify Sans
+draws a 2, a 3 and a 5 as an 8, an 8 and an S at those sizes. On a phone the window carries `Qt.ExpandedClientAreaHint`, so
+it fills the screen under the system's bars, and every page keeps inside the safe area: `PhonePage` reads
+`SafeArea.margins` of a probe item over the whole screen and fits the 390 by 844 page in what is left; the game screen
+does the same for its own layout. The board's shadow is one frame deep and a lighter brown than the frame, where the design
+has two frames of the same navy, because the dark band under the board read as a wall three times as thick as the others in a
+mode where a wall ends the game. About shows the language the game chose and how the save file was found and last
+written (`ProfileViewModel::saveStatus`), for reports about the wrong language or scores that did not last.
+`TiltIndicator` draws the tilt read as a dot on a plate with the dead zone and the turning angle marked, so a player sees
 why the snake does or does not turn; `DPad` is four `ArrowButton`s in a cross. Where there is a touch screen the game
 screen also has a pause button, since there is no Escape. The accelerometer comes from `device::accelerometer()`, which
 is the device's own unless a test has set a factory (`set_accelerometer_factory`): the tests give it a recording.

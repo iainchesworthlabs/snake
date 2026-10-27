@@ -182,6 +182,8 @@ void ProfileViewModel::setSaveFile(const QString& path)
     }
     m_File.reset();
     m_Writing = false;
+    m_LoadStatus = QStringLiteral("no save file (kept in memory)");
+    m_WriteStatus = QStringLiteral("nothing written yet");
     if (!path.isEmpty())
     {
         m_File = std::make_unique<SaveFile>(path);
@@ -190,6 +192,9 @@ void ProfileViewModel::setSaveFile(const QString& path)
         {
             m_Data = *loaded;
             m_Writing = true;
+            m_LoadStatus = QStringLiteral("loaded, %1 + %2 scores")
+                               .arg(m_Data.leaderboards.of(sim::Mode::EASY).size())
+                               .arg(m_Data.leaderboards.of(sim::Mode::CLASSIC).size());
         }
         else
         {
@@ -199,6 +204,7 @@ void ProfileViewModel::setSaveFile(const QString& path)
                 // A first run: the game starts as the system asks for motion.
                 m_Data.settings.reduced_motion = m_MotionPreference();
                 m_Writing = true;
+                m_LoadStatus = QStringLiteral("no file yet (a first run)");
                 break;
             case SaveFile::Error::DAMAGED:
                 qWarning() << "The save file is damaged. It was moved to" << m_File->damaged_path()
@@ -206,12 +212,15 @@ void ProfileViewModel::setSaveFile(const QString& path)
                 m_Data = profile::SaveData{};
                 m_Data.settings.reduced_motion = m_MotionPreference();
                 m_Writing = true;
+                m_LoadStatus = QStringLiteral("the file was damaged and was set aside; started afresh");
                 break;
             case SaveFile::Error::NEWER_VERSION:
                 qWarning() << "The save file was written by a newer version of the game and is left alone:" << path;
+                m_LoadStatus = QStringLiteral("the file is from a newer version: NOT WRITING");
                 break;
             case SaveFile::Error::UNREADABLE:
                 qWarning() << "The save file could not be read and is left alone:" << path;
+                m_LoadStatus = QStringLiteral("the file could not be read: NOT WRITING");
                 break;
             }
         }
@@ -235,7 +244,19 @@ void ProfileViewModel::write()
     if (!m_File->save(m_Data))
     {
         qWarning() << "The save file could not be written:" << m_File->path();
+        m_WriteStatus = QStringLiteral("the last write FAILED");
     }
+    else
+    {
+        m_WriteStatus = QStringLiteral("last write ok");
+    }
+    emit saveFileChanged();
+}
+
+QString ProfileViewModel::saveStatus() const
+{
+    const QString where = m_File ? m_File->path() : QString();
+    return QStringLiteral("%1; %2; %3").arg(m_LoadStatus, m_WriteStatus, where.isEmpty() ? QStringLiteral("-") : where);
 }
 
 template <typename Change>

@@ -22,6 +22,10 @@ namespace snake::ui::board_scene
 namespace
 {
 
+/// The board's shadow on the page: the shadow token at 40 percent over the background. It is lighter than the frame on
+/// purpose, so that the shadow cannot be taken for a wall.
+constexpr std::uint32_t BOARD_SHADOW = 0xA37F39;
+
 /// Measures of the design, in 32nds of a cell (the desktop size). tokens.json and the desktop screen give them.
 constexpr int UNITS = 32;
 constexpr int SEGMENT_RADIUS = 7;
@@ -368,7 +372,9 @@ Layout layout_for(QSize available)
     Layout layout;
     layout.cell = cell;
     layout.frame = frame_for(cell);
-    layout.drop = 2 * layout.frame;
+    // One frame, not two: with the shadow as dark as the frame, the bottom of the board read as a wall three times as
+    // thick as the others, in a mode where a wall ends the game.
+    layout.drop = layout.frame;
     const int width = (columns * cell) + (2 * layout.frame);
     const int height = (rows * cell) + (2 * layout.frame) + layout.drop;
     layout.origin =
@@ -385,7 +391,7 @@ std::vector<Shape> background_shapes(const Layout& layout)
     }
     const QRect outer = layout.outer();
     const int radius = 2 * layout.frame;
-    add_rounded(shapes, outer.translated(0, layout.drop), radius, opaque(tokens::SHADOW));
+    add_rounded(shapes, outer.translated(0, layout.drop), radius, opaque(BOARD_SHADOW));
     add_rounded(shapes, outer, radius, opaque(tokens::INK));
 
     const QRect cells = layout.cells();

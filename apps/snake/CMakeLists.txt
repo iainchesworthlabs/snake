@@ -80,6 +80,7 @@ set(SNAKE_QML_FILES
     qml/NoticeScreen.qml
     qml/PauseScreen.qml
     qml/PhonePage.qml
+    qml/PixelNumber.qml
     qml/SettingsScreen.qml
     qml/ShadowText.qml
     qml/TitleScreen.qml

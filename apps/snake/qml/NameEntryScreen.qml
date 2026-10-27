@@ -127,13 +127,11 @@ FocusScope {
                                 text: row.modelData.name
                             }
 
-                            Text {
+                            PixelNumber {
                                 anchors.right: parent.right
                                 anchors.rightMargin: 10
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: Theme.ink
-                                font.pixelSize: 16
-                                font.weight: Font.DemiBold
+                                cell: 3
                                 text: row.modelData.score
                             }
                         }

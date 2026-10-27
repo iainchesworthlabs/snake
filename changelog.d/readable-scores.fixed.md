@@ -1,0 +1,1 @@
+**Scores are easy to read, and the arrows look like arrows.** The score, the best score and the leaderboard numbers are drawn from squares on a grid, so a 2 can no longer be taken for an 8 or a 5 for an S, and the d-pad's arrows have a proper head and shaft.

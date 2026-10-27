@@ -169,13 +169,12 @@ FocusScope {
                                 text: line.name
                             }
 
-                            Text {
+                            PixelNumber {
+                                objectName: "lineScore"
                                 anchors.right: parent.right
                                 anchors.rightMargin: 12
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: Theme.ink
-                                font.pixelSize: 17
-                                font.weight: Font.DemiBold
+                                cell: 3
                                 text: line.score
                             }
                         }

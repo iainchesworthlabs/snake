@@ -133,7 +133,9 @@ TEST_CASE("The desktop layout has the cell, frame and shadow of the design", "[b
     const Layout layout = desktop_layout();
     CHECK(layout.cell == 32);
     CHECK(layout.frame == 8);
-    CHECK(layout.drop == 16);
+    // The design has a shadow two frames deep, as dark as the frame; on the phone the bottom of the board read as a
+    // wall three times as thick as the others, so it is one frame deep and lighter.
+    CHECK(layout.drop == 8);
     CHECK(layout.cells().size() == QSize(640, 640));
     CHECK(layout.pixel() == 2);
 }
@@ -157,7 +159,7 @@ TEST_CASE("The background is a shadow, a frame and a checkerboard", "[board-scen
     // The frame is drawn above its shadow, and the shadow shows below it.
     const QRect outer = layout.outer();
     CHECK(colour_at(shapes, QPoint(outer.center().x(), outer.top() + 1)) == opaque(tokens::INK));
-    CHECK(colour_at(shapes, QPoint(outer.center().x(), outer.bottom() + (layout.drop / 2))) == opaque(tokens::SHADOW));
+    CHECK(colour_at(shapes, QPoint(outer.center().x(), outer.bottom() + (layout.drop / 2))) == opaque(0xA37F39));
     CHECK(colour_at(shapes, QPoint(outer.center().x(), outer.bottom() + layout.drop + 2)) == 0);
     // The corners of the frame are cut.
     CHECK(colour_at(shapes, outer.topLeft()) == 0);

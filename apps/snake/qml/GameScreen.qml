@@ -100,6 +100,64 @@ FocusScope {
         }
     }
 
+    // The wait while tilt is calibrated: the game is held, the phone is held how the player likes to play, and the bar fills. A tap
+    // is felt when it is done.
+    Rectangle {
+        objectName: "calibrationOverlay"
+        anchors.fill: parent
+        visible: root.input.calibrating
+        color: Theme.overlay
+
+        MouseArea {
+            anchors.fill: parent
+        }
+
+        Column {
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 64, 300)
+            spacing: 18
+
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                color: Theme.surface
+                font.pixelSize: 30
+                font.weight: Font.Bold
+                text: qsTr("Calibrating tilt")
+            }
+
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                color: Theme.surface
+                font.pixelSize: 18
+                font.weight: Font.Medium
+                text: qsTr("Hold the phone how you like to play.")
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 20
+                radius: 6
+                color: "transparent"
+                border.width: 3
+                border.color: Theme.surface
+
+                Rectangle {
+                    objectName: "calibrationBar"
+                    x: 3
+                    y: 3
+                    height: parent.height - 6
+                    width: (parent.width - 6) * root.input.calibrationProgress
+                    radius: 3
+                    color: Theme.accent
+                }
+            }
+        }
+    }
+
     DPad {
         objectName: "dpad"
         visible: root.input.controls === InputController.Scheme.Dpad
@@ -181,11 +239,9 @@ FocusScope {
             text: qsTr("Score")
         }
 
-        Text {
+        PixelNumber {
             objectName: "score"
-            color: Theme.ink
-            font.pixelSize: 46
-            font.weight: Font.Bold
+            cell: 7
             text: root.game.score
         }
     }
@@ -211,14 +267,13 @@ FocusScope {
             radius: 8
             color: Theme.ink
 
-            Text {
+            PixelNumber {
                 id: bestText
 
                 objectName: "bestScore"
                 anchors.centerIn: parent
                 color: Theme.surface
-                font.pixelSize: 24
-                font.weight: Font.Bold
+                cell: 4
                 text: root.profile.best
             }
         }
