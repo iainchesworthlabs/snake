@@ -36,9 +36,13 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
         Item {
             anchors.centerIn: parent
-            width: 330
+            width: page.landscape ? 480 : 330
             height: dialogColumn.height + 44
 
             Rectangle {
@@ -88,27 +92,33 @@ FocusScope {
                     text: root.message
                 }
 
-                ToyButton {
-                    id: cancelButton
+                // Upright the buttons are one over the other; lying down, side by side.
+                Grid {
+                    columns: page.landscape ? 2 : 1
+                    spacing: 14
 
-                    objectName: "cancelButton"
-                    width: parent.width
-                    height: 52
-                    focus: true
-                    kind: "primary"
-                    fontSize: 22
-                    drop: 5
-                    text: root.cancelText
-                    onClicked: root.cancelled()
-                }
+                    ToyButton {
+                        id: cancelButton
 
-                ToyButton {
-                    objectName: "confirmButton"
-                    width: parent.width
-                    height: 46
-                    kind: "accent"
-                    text: root.confirmText
-                    onClicked: root.confirmed()
+                        objectName: "cancelButton"
+                        width: page.landscape ? (dialogColumn.width - 14) / 2 : dialogColumn.width
+                        height: page.landscape ? 50 : 52
+                        focus: true
+                        kind: "primary"
+                        fontSize: page.landscape ? 20 : 22
+                        drop: 5
+                        text: root.cancelText
+                        onClicked: root.cancelled()
+                    }
+
+                    ToyButton {
+                        objectName: "confirmButton"
+                        width: page.landscape ? (dialogColumn.width - 14) / 2 : dialogColumn.width
+                        height: page.landscape ? 50 : 46
+                        kind: "accent"
+                        text: root.confirmText
+                        onClicked: root.confirmed()
+                    }
                 }
             }
         }

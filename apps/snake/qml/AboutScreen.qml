@@ -28,12 +28,21 @@ FocusScope {
     Keys.onEscapePressed: root.closed()
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // Lying down the facts are on the leading side and the buttons on the other.
+        readonly property real columnWidth: (pageWidth - 3 * 15) / 2
+        readonly property real leadingX: Theme.mirrored(15, columnWidth, pageWidth)
+        readonly property real trailingX: Theme.mirrored(2 * 15 + columnWidth, columnWidth, pageWidth)
+
         ToyButton {
             objectName: "aboutBackButton"
-            x: Theme.mirrored(15, width, 390)
-            y: 28
-            width: 46
-            height: 46
+            x: Theme.mirrored(15, width, page.pageWidth)
+            y: page.landscape ? 10 : 28
+            width: page.landscape ? 42 : 46
+            height: page.landscape ? 42 : 46
             radius: 10
             text: LayoutMirroring.enabled ? ">" : "<"
             fontSize: 24
@@ -42,18 +51,18 @@ FocusScope {
         }
 
         ShadowText {
-            x: Theme.mirrored(74, width, 390)
+            x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
             maxWidth: 300
-            y: 26
+            y: page.landscape ? 8 : 26
             offset: 3
-            pixelSize: 34
+            pixelSize: page.landscape ? 30 : 34
             text: qsTr("About")
         }
 
         Item {
-            x: 15
-            y: 100
-            width: 360
+            x: page.landscape ? page.leadingX : 15
+            y: page.landscape ? 62 : 100
+            width: page.landscape ? page.columnWidth : 360
             height: panel.height + 6
 
             Rectangle {
@@ -158,17 +167,17 @@ FocusScope {
         }
 
         Column {
-            x: 15
-            y: 100 + panel.height + 30
-            width: 360
-            spacing: 12
+            x: page.landscape ? page.trailingX : 15
+            y: page.landscape ? 62 : 100 + panel.height + 30
+            width: page.landscape ? page.columnWidth : 360
+            spacing: page.landscape ? 10 : 12
 
             ToyButton {
                 id: licenceButton
 
                 objectName: "licenceButton"
                 width: parent.width
-                height: 50
+                height: page.landscape ? 44 : 50
                 focus: true
                 text: qsTr("Licence")
                 onClicked: root.noticeRequested("licence")
@@ -177,7 +186,7 @@ FocusScope {
             ToyButton {
                 objectName: "noticesButton"
                 width: parent.width
-                height: 50
+                height: page.landscape ? 44 : 50
                 text: qsTr("Third-party notices")
                 onClicked: root.noticeRequested("notices")
             }
@@ -185,7 +194,7 @@ FocusScope {
             ToyButton {
                 objectName: "fontLicenceButton"
                 width: parent.width
-                height: 50
+                height: page.landscape ? 44 : 50
                 text: qsTr("Font licence")
                 onClicked: root.noticeRequested("font")
             }
@@ -193,7 +202,7 @@ FocusScope {
             ToyButton {
                 objectName: "sourceButton"
                 width: parent.width
-                height: 50
+                height: page.landscape ? 44 : 50
                 text: qsTr("Open the source page")
                 onClicked: Qt.openUrlExternally(AboutInfo.repositoryUrl)
             }

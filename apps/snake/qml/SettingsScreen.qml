@@ -42,6 +42,15 @@ FocusScope {
     Keys.onEscapePressed: root.closed()
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // Lying down the switches are on the leading side and the rest on the other; the width of each.
+        readonly property real columnWidth: (pageWidth - 3 * 15) / 2
+        readonly property real leadingX: Theme.mirrored(15, columnWidth, pageWidth)
+        readonly property real trailingX: Theme.mirrored(2 * 15 + columnWidth, columnWidth, pageWidth)
+
         // The page without the dialog: it takes no focus or touch while the dialog is up.
         Item {
             anchors.fill: parent
@@ -49,10 +58,10 @@ FocusScope {
 
             ToyButton {
                 objectName: "settingsBackButton"
-                x: Theme.mirrored(15, width, 390)
-                y: 28
-                width: 46
-                height: 46
+                x: Theme.mirrored(15, width, page.pageWidth)
+                y: page.landscape ? 10 : 28
+                width: page.landscape ? 42 : 46
+                height: page.landscape ? 42 : 46
                 radius: 10
                 text: LayoutMirroring.enabled ? ">" : "<"
                 fontSize: 24
@@ -61,19 +70,19 @@ FocusScope {
             }
 
             ShadowText {
-                x: Theme.mirrored(74, width, 390)
+                x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
                 maxWidth: 300
-                y: 26
+                y: page.landscape ? 8 : 26
                 offset: 3
-                pixelSize: 34
+                pixelSize: page.landscape ? 30 : 34
                 text: qsTr("Settings")
             }
 
             // The switches, in a panel of the design's kind.
             Item {
-                x: 15
-                y: 100
-                width: 360
+                x: page.landscape ? page.leadingX : 15
+                y: page.landscape ? 64 : 100
+                width: page.landscape ? page.columnWidth : 360
                 height: switches.height + 6
 
                 Rectangle {
@@ -100,7 +109,7 @@ FocusScope {
                         x: 22
                         y: 16
                         width: parent.width - 44
-                        spacing: 10
+                        spacing: page.landscape ? 6 : 10
 
                         ToggleSwitch {
                             id: soundToggle
@@ -142,8 +151,8 @@ FocusScope {
             }
 
             Text {
-                x: Theme.mirrored(15, width, 390)
-                y: 100 + switches.height + 26
+                x: page.landscape ? Theme.mirrored(2 * 15 + page.columnWidth, width, page.pageWidth) : Theme.mirrored(15, width, 390)
+                y: page.landscape ? 70 : 100 + switches.height + 26
                 objectName: "resetLabel"
                 color: Theme.ink
                 font.pixelSize: 17
@@ -152,14 +161,14 @@ FocusScope {
             }
 
             Row {
-                x: 15
-                y: 100 + switches.height + 56
+                x: page.landscape ? page.trailingX : 15
+                y: page.landscape ? 98 : 100 + switches.height + 56
                 spacing: 8
 
                 ToyButton {
                     objectName: "resetEasyButton"
-                    width: 176
-                    height: 46
+                    width: page.landscape ? (page.columnWidth - 8) / 2 : 176
+                    height: page.landscape ? 42 : 46
                     text: qsTr("Easy")
                     onClicked: {
                         root.resetMode = GameViewModel.Mode.Easy;
@@ -170,8 +179,8 @@ FocusScope {
 
                 ToyButton {
                     objectName: "resetClassicButton"
-                    width: 176
-                    height: 46
+                    width: page.landscape ? (page.columnWidth - 8) / 2 : 176
+                    height: page.landscape ? 42 : 46
                     text: qsTr("Classic")
                     onClicked: {
                         root.resetMode = GameViewModel.Mode.Classic;
@@ -183,10 +192,10 @@ FocusScope {
 
             ToyButton {
                 objectName: "aboutButton"
-                x: 15
-                y: 100 + switches.height + 56 + 46 + 40
-                width: 360
-                height: 50
+                x: page.landscape ? page.trailingX : 15
+                y: page.landscape ? 168 : 100 + switches.height + 56 + 46 + 40
+                width: page.landscape ? page.columnWidth : 360
+                height: page.landscape ? 46 : 50
                 text: qsTr("About")
                 onClicked: root.aboutRequested()
             }

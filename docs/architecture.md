@@ -291,8 +291,8 @@ keyboard when it shows and puts it on its main button. The screens are drawn on 
 (`PhonePage`), scaled to fit the window and centred, so the phone layout is used at any window size; the design has no
 desktop title, pause or game over screen yet. A screen that sets `PhonePage.landscapeLayout` has a second layout for a
 window that is wider than it is tall: the page lies down, 360 high and 600 to 900 wide by the shape of the window, and
-the screen reads `PhonePage.landscape` to place its parts in two columns (the title and the pause dialog do; the other
-screens are still the upright page, scaled). The game screen reads its own size: lying down the board takes the height,
+the screen reads `PhonePage.landscape` to place its parts in two columns (every screen does: the leaderboard's ten
+lines become two columns of five, and the name entry's letters eight to a row). The game screen reads its own size: lying down the board takes the height,
 and the score, the best and the pause button are on the leading side and the steering controls on the other. The buttons (`ToyButton`) and the mode cards (`ModeCard`) are drawn from
 rectangles in the style of the design, with a hard shadow, an outline and a focus ring. The up and down arrows move
 between them along the Tab order, so a locked mode is skipped, and a mode takes the choice when it gets the focus. The

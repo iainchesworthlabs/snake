@@ -27,12 +27,16 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
         ToyButton {
             objectName: "backButton"
-            x: Theme.mirrored(15, width, 390)
-            y: 28
-            width: 46
-            height: 46
+            x: Theme.mirrored(15, width, page.pageWidth)
+            y: page.landscape ? 10 : 28
+            width: page.landscape ? 42 : 46
+            height: page.landscape ? 42 : 46
             radius: 10
             text: LayoutMirroring.enabled ? ">" : "<"
             fontSize: 24
@@ -41,23 +45,24 @@ FocusScope {
         }
 
         ShadowText {
-            x: Theme.mirrored(74, width, 390)
-            maxWidth: 300
-            y: 26
+            x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
+            maxWidth: page.landscape ? page.pageWidth - 66 - 15 - 256 - 10 : 300
+            y: page.landscape ? 8 : 26
             offset: 3
-            pixelSize: 34
+            pixelSize: page.landscape ? 30 : 34
             text: qsTr("Leaderboard")
         }
 
+        // The tabs: under the title, or lying down on the other side of the title.
         Row {
-            x: 15
-            y: 92
+            x: page.landscape ? Theme.mirrored(page.pageWidth - 15 - width, width, page.pageWidth) : 15
+            y: page.landscape ? 10 : 92
             spacing: 8
 
             ToyButton {
                 objectName: "easyTab"
-                width: 176
-                height: 46
+                width: page.landscape ? 124 : 176
+                height: page.landscape ? 42 : 46
                 kind: root.profile.boardMode === GameViewModel.Mode.Easy ? "primary" : "secondary"
                 text: qsTr("Easy")
                 onClicked: root.profile.boardMode = GameViewModel.Mode.Easy
@@ -65,8 +70,8 @@ FocusScope {
 
             ToyButton {
                 objectName: "classicTab"
-                width: 176
-                height: 46
+                width: page.landscape ? 124 : 176
+                height: page.landscape ? 42 : 46
                 kind: root.profile.boardMode === GameViewModel.Mode.Classic ? "primary" : "secondary"
                 text: qsTr("Classic")
                 onClicked: root.profile.boardMode = GameViewModel.Mode.Classic
@@ -74,6 +79,7 @@ FocusScope {
         }
 
         Text {
+            visible: !page.landscape
             x: Theme.mirrored(15, width, 390)
             y: 152
             color: Theme.ink
@@ -84,8 +90,8 @@ FocusScope {
 
         Item {
             x: 15
-            y: 186
-            width: 360
+            y: page.landscape ? 62 : 186
+            width: page.landscape ? page.pageWidth - 30 : 360
             height: board.height + 6
 
             Rectangle {
@@ -100,7 +106,9 @@ FocusScope {
                 id: board
 
                 width: parent.width
-                height: 10 * 48 + 20
+                // Upright the ten lines are one column; lying down they are two of five, the first five on the leading side.
+                readonly property int lineHeight: page.landscape ? 42 : 48
+                height: (page.landscape ? 5 : 10) * lineHeight + 20
                 radius: 18
                 color: Theme.surface
                 border.width: 4
@@ -116,10 +124,15 @@ FocusScope {
                     text: qsTr("No scores yet.")
                 }
 
-                Column {
+                Grid {
+                    id: grid
+
                     x: 10
                     y: 10
                     width: parent.width - 20
+                    rows: page.landscape ? 5 : 10
+                    flow: Grid.TopToBottom
+                    columnSpacing: 12
 
                     Repeater {
                         id: lines
@@ -135,8 +148,8 @@ FocusScope {
                             required property bool latest
 
                             objectName: "line" + line.place
-                            width: parent.width
-                            height: 48
+                            width: page.landscape ? (grid.width - grid.columnSpacing) / 2 : grid.width
+                            height: board.lineHeight
                             radius: 10
                             color: line.latest ? Theme.accent : "transparent"
 
@@ -187,13 +200,13 @@ FocusScope {
             id: playButton
 
             objectName: "leaderboardPlayButton"
-            x: 15
-            y: 754
-            width: 360
-            height: 56
+            x: page.landscape ? Theme.mirrored((page.pageWidth - width) / 2, width, page.pageWidth) : 15
+            y: page.landscape ? 296 : 754
+            width: page.landscape ? 320 : 360
+            height: page.landscape ? 50 : 56
             focus: true
             kind: "primary"
-            fontSize: 26
+            fontSize: page.landscape ? 24 : 26
             drop: 6
             radius: 14
             text: qsTr("Play")

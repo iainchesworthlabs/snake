@@ -2253,3 +2253,158 @@ TEST_CASE("The title, the game and the pause dialog fit in every language lying 
         check_fit(app, "pause");
     }
 }
+
+TEST_CASE("Lying down, the leaderboard is two columns of five lines", "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    for (unsigned place = 1; place <= 10; ++place)
+    {
+        app.profile().record_game(Mode::CLASSIC, 1000u * place);
+        app.save_score_as(QString("P%1").arg(place));
+    }
+    app.click("leaderboardButton");
+    app.click("classicTab");
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    for (int place = 1; place <= 10; ++place)
+    {
+        const QString name = QString("line%1").arg(place);
+        INFO(name.toStdString());
+        CHECK(window.contains(scene_rect(app, name.toLatin1().constData())));
+    }
+    // The first five run down the leading side, and the next five down the other.
+    CHECK(scene_rect(app, "line1").left() == Catch::Approx(scene_rect(app, "line5").left()));
+    CHECK(scene_rect(app, "line1").left() < scene_rect(app, "line6").left());
+    CHECK(scene_rect(app, "line1").top() == Catch::Approx(scene_rect(app, "line6").top()));
+    CHECK(scene_rect(app, "line5").right() <= scene_rect(app, "line6").left());
+    CHECK(scene_rect(app, "line10").bottom() <= scene_rect(app, "leaderboardPlayButton").top());
+    for (const char* name : {"backButton", "easyTab", "classicTab", "leaderboardPlayButton"})
+    {
+        INFO(name);
+        CHECK(window.contains(scene_rect(app, name)));
+    }
+}
+
+TEST_CASE("Lying down, the settings, the about page and the licence fit the window", "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    app.click("settingsButton");
+    for (const char* name : {"settingsBackButton", "soundToggle", "invertAxesToggle", "resetEasyButton",
+                             "resetClassicButton", "aboutButton"})
+    {
+        INFO(name);
+        CHECK(window.contains(scene_rect(app, name)));
+    }
+    // The switches are on one side and the rest on the other.
+    CHECK(scene_rect(app, "soundToggle").right() < scene_rect(app, "aboutButton").left());
+    app.click("resetClassicButton");
+    CHECK(window.contains(scene_rect(app, "cancelButton")));
+    CHECK(window.contains(scene_rect(app, "confirmButton")));
+    CHECK(scene_rect(app, "cancelButton").right() <= scene_rect(app, "confirmButton").left());
+    app.press(Qt::Key_Escape);
+    app.click("aboutButton");
+    for (const char* name : {"aboutBackButton", "aboutVersion", "aboutRevision", "licenceButton", "sourceButton"})
+    {
+        INFO(name);
+        CHECK(window.contains(scene_rect(app, name)));
+    }
+    CHECK(scene_rect(app, "aboutVersion").right() < scene_rect(app, "licenceButton").left());
+    app.click("licenceButton");
+    CHECK(window.contains(scene_rect(app, "noticeBackButton")));
+    CHECK(window.contains(scene_rect(app, "noticeScroller")));
+    CHECK(scene_rect(app, "noticeScroller").height() > 200);
+}
+
+TEST_CASE("Lying down, the game over screen has the board on one side and the score and buttons on the other",
+          "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    app.start_classic();
+    app.crash();
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF finalScore = scene_rect(app, "finalScore");
+    const QRectF menu = scene_rect(app, "menuButton");
+    const QRectF play = scene_rect(app, "playAgainButton");
+    CHECK(window.contains(finalScore));
+    CHECK(window.contains(menu));
+    CHECK(window.contains(play));
+    CHECK(play.bottom() <= menu.top());
+    CHECK(finalScore.bottom() <= play.top());
+    // The board, which is the first thing the screen draws, is to the left of all of them.
+    for (const QRectF& part : {finalScore, menu, play})
+    {
+        CHECK(part.left() > LANDSCAPE_HEIGHT - 24);
+    }
+}
+
+TEST_CASE("Lying down, the name entry shows the whole alphabet and Save without anything running into anything",
+          "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    fill_the_profile(app);
+    app.start_classic();
+    app.crash();
+    app.profile().record_game(Mode::CLASSIC, 5000);
+    app.click("saveScoreButton");
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF save = scene_rect(app, "saveNameButton");
+    CHECK(window.contains(save));
+    CHECK(window.contains(scene_rect(app, "pendingScore")));
+    CHECK(window.contains(scene_rect(app, "standing1")));
+    for (int slot = 0; slot < 12; ++slot)
+    {
+        const QString name = QString("slot%1").arg(slot);
+        CHECK(window.contains(scene_rect(app, name.toLatin1().constData())));
+    }
+    QRectF keys;
+    for (const char letter : std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+    {
+        const QString name = QString("key%1").arg(letter);
+        const QRectF where = scene_rect(app, name.toLatin1().constData());
+        INFO(name.toStdString());
+        CHECK(window.contains(where));
+        CHECK(where.left() > save.right());
+        CHECK_FALSE(where.intersects(save));
+        keys = keys.united(where);
+    }
+    CHECK(window.contains(scene_rect(app, "keySpace")));
+    CHECK(window.contains(scene_rect(app, "keyDelete")));
+    // The standing is on the same side as Save, above it, and the name is on the other.
+    CHECK(scene_rect(app, "standing1").right() < keys.left());
+    CHECK(scene_rect(app, "standing1").bottom() < save.top());
+    // The letters are big enough for a thumb.
+    CHECK(scene_rect(app, "keyA").width() >= 36);
+}
+
+TEST_CASE("The leaderboard, the settings, the game over and the name entry fit in every language lying down",
+          "[screens][languages][landscape]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        fill_the_profile(app);
+        app.click("settingsButton");
+        check_fit(app, "settings");
+        app.click("resetClassicButton");
+        check_fit(app, "confirm");
+        app.press(Qt::Key_Escape);
+        app.click("aboutButton");
+        check_fit(app, "about");
+        app.press(Qt::Key_Escape);
+        app.press(Qt::Key_Escape);
+        app.click("leaderboardButton");
+        app.click("classicTab");
+        check_fit(app, "leaderboard");
+        app.press(Qt::Key_Escape);
+
+        app.start_classic();
+        app.crash();
+        app.profile().record_game(Mode::CLASSIC, 5000);
+        check_fit(app, "game over");
+        app.click("saveScoreButton");
+        app.type("maya");
+        check_fit(app, "name entry");
+    }
+}

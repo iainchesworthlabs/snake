@@ -53,27 +53,37 @@ FocusScope {
     Accessible.name: qsTr("Game over")
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // Lying down the final board is on the leading side, square and as tall as the page, and the rest is on the other.
+        readonly property real boardSide: 336
+        readonly property real sideWidth: pageWidth - boardSide - 3 * 12
+        readonly property real sideX: Theme.mirrored(boardSide + 2 * 12, sideWidth, pageWidth)
+
         ShadowText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 28
+            x: (page.landscape ? page.sideX + page.sideWidth / 2 : page.pageWidth / 2) - width / 2
+            y: page.landscape ? 10 : 28
             offset: 4
-            pixelSize: 48
+            maxWidth: page.landscape ? page.sideWidth : 360
+            pixelSize: page.landscape ? 38 : 48
             text: qsTr("Game over")
         }
 
         BoardItem {
-            x: 0
-            y: 100
-            width: 390
-            height: 390
+            x: page.landscape ? Theme.mirrored(12, width, page.pageWidth) : 0
+            y: page.landscape ? 12 : 100
+            width: page.landscape ? page.boardSide : 390
+            height: width
             game: root.game
             effects: root.effects
         }
 
         Item {
-            x: 15
-            y: 502
-            width: 360
+            x: page.landscape ? page.sideX : 15
+            y: page.landscape ? 62 : 502
+            width: page.landscape ? page.sideWidth : 360
             height: panel.height + 6
 
             Rectangle {
@@ -187,12 +197,12 @@ FocusScope {
 
             objectName: "saveScoreButton"
             visible: root.profile.qualifies
-            x: 15
-            y: 690
-            width: 360
-            height: 60
+            x: page.landscape ? page.sideX : 15
+            y: page.landscape ? 238 : 690
+            width: page.landscape ? page.sideWidth : 360
+            height: page.landscape ? 54 : 60
             kind: "primary"
-            fontSize: 26
+            fontSize: page.landscape ? 22 : 26
             drop: 6
             radius: 14
             text: qsTr("Save score")
@@ -204,13 +214,13 @@ FocusScope {
 
             objectName: "playAgainButton"
             visible: !root.profile.qualifies
-            x: 15
-            y: 690
-            width: 360
-            height: 60
+            x: page.landscape ? page.sideX : 15
+            y: page.landscape ? 238 : 690
+            width: page.landscape ? page.sideWidth : 360
+            height: page.landscape ? 54 : 60
             focus: true
             kind: "primary"
-            fontSize: 26
+            fontSize: page.landscape ? 22 : 26
             drop: 6
             radius: 14
             text: qsTr("Play again")
@@ -219,10 +229,10 @@ FocusScope {
 
         ToyButton {
             objectName: "menuButton"
-            x: 15
-            y: 762
-            width: 360
-            height: 50
+            x: page.landscape ? page.sideX : 15
+            y: page.landscape ? 302 : 762
+            width: page.landscape ? page.sideWidth : 360
+            height: page.landscape ? 46 : 50
             text: qsTr("Menu")
             onClicked: {
                 root.profile.discardScore();
