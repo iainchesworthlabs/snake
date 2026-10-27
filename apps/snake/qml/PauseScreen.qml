@@ -2,6 +2,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
 
 // The pause dialog over the dimmed game: resume, restart or leave for the menu.
 FocusScope {
@@ -35,10 +36,17 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // The space between the dialog's edge and what is in it.
+        readonly property real padding: landscape ? 16 : 22
+
         Item {
             anchors.centerIn: parent
-            width: 330
-            height: dialogColumn.height + 44
+            width: dialogGrid.width + 2 * page.padding
+            height: dialogGrid.height + 2 * page.padding
 
             Rectangle {
                 y: 8
@@ -57,55 +65,75 @@ FocusScope {
                 border.color: Theme.ink
             }
 
-            Column {
-                id: dialogColumn
+            // Upright the dialog is one column. Lying down, where the page is only 360 high, it is two when there is a way
+            // of steering to choose: the buttons, the sound and the way out on one side, how to steer on the other.
+            GridLayout {
+                id: dialogGrid
 
-                x: 22
-                y: 22
-                width: parent.width - 44
-                spacing: 14
-
-                Text {
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    color: Theme.ink
-                    font.pixelSize: 38
-                    font.weight: Font.Bold
-                    text: qsTr("Paused")
-                }
+                x: page.padding
+                y: page.padding
+                // Two columns when lying down with a way of steering to show.
+                readonly property bool wide: page.landscape && controlsBlock.visible
+                columns: wide ? 2 : 1
+                columnSpacing: 20
+                rowSpacing: page.landscape ? 10 : 14
 
                 Column {
-                    width: parent.width
-                    spacing: 15
+                    id: mainBlock
 
-                    ToyButton {
-                        id: resumeButton
+                    Layout.row: 0
+                    Layout.column: 0
+                    Layout.preferredWidth: page.landscape ? 250 : 286
+                    spacing: page.landscape ? 10 : 14
 
-                        objectName: "resumeButton"
+                    Text {
                         width: parent.width
-                        height: 56
-                        focus: true
-                        kind: "primary"
-                        fontSize: 22
-                        drop: 5
-                        text: qsTr("Resume")
-                        onClicked: root.input.resume()
+                        horizontalAlignment: Text.AlignHCenter
+                        color: Theme.ink
+                        font.pixelSize: page.landscape ? 30 : 38
+                        font.weight: Font.Bold
+                        text: qsTr("Paused")
                     }
 
-                    ToyButton {
-                        objectName: "restartButton"
+                    Column {
                         width: parent.width
-                        height: 48
-                        kind: "accent"
-                        text: qsTr("Restart")
-                        onClicked: root.game.restart()
+                        spacing: page.landscape ? 10 : 15
+
+                        ToyButton {
+                            id: resumeButton
+
+                            objectName: "resumeButton"
+                            width: parent.width
+                            height: page.landscape ? 46 : 56
+                            focus: true
+                            kind: "primary"
+                            fontSize: page.landscape ? 20 : 22
+                            drop: 5
+                            text: qsTr("Resume")
+                            onClicked: root.input.resume()
+                        }
+
+                        ToyButton {
+                            objectName: "restartButton"
+                            width: parent.width
+                            height: page.landscape ? 40 : 48
+                            kind: "accent"
+                            text: qsTr("Restart")
+                            onClicked: root.game.restart()
+                        }
                     }
                 }
 
                 // How to steer: only where there is a touch screen to steer with.
                 Column {
+                    id: controlsBlock
+
                     visible: root.input.controls !== InputController.Scheme.Keys
-                    width: parent.width
+                    Layout.row: dialogGrid.wide ? 0 : 1
+                    Layout.column: dialogGrid.wide ? 1 : 0
+                    Layout.rowSpan: dialogGrid.wide ? 2 : 1
+                    Layout.alignment: Qt.AlignTop
+                    Layout.preferredWidth: page.landscape ? 252 : 286
                     spacing: 8
 
                     Text {
@@ -156,8 +184,8 @@ FocusScope {
                                 objectName: "controls" + choice.modelData.name
                                 // A device that cannot feel its tilt is not offered it.
                                 visible: choice.modelData.scheme !== InputController.Scheme.Tilt || root.input.tiltAvailable
-                                width: 139
-                                height: 42
+                                width: (controlsBlock.width - 8) / 2
+                                height: page.landscape ? 38 : 42
                                 kind: root.input.controls === choice.modelData.scheme ? "chosen" : "secondary"
                                 activeFocusOnTab: false
                                 fontSize: 16
@@ -172,7 +200,7 @@ FocusScope {
                         objectName: "recalibrateButton"
                         visible: root.input.controls === InputController.Scheme.Tilt
                         width: parent.width
-                        height: 44
+                        height: page.landscape ? 38 : 44
                         fontSize: 17
                         text: qsTr("Recalibrate tilt")
                         onClicked: root.input.startCalibration()
@@ -218,8 +246,8 @@ FocusScope {
                                 required property var modelData
 
                                 objectName: "sensitivity" + sensitivity.modelData.name
-                                width: 90
-                                height: 42
+                                width: (controlsBlock.width - 16) / 3
+                                height: page.landscape ? 38 : 42
                                 kind: root.profile.tiltSensitivity === sensitivity.modelData.value ? "chosen" : "secondary"
                                 activeFocusOnTab: false
                                 fontSize: 16
@@ -232,34 +260,45 @@ FocusScope {
                 }
 
                 Column {
-                    width: parent.width
-                    spacing: 10
+                    id: leaveBlock
 
-                    ToggleSwitch {
-                        objectName: "pauseSoundToggle"
+                    Layout.row: dialogGrid.wide ? 1 : 2
+                    Layout.column: 0
+                    Layout.preferredWidth: page.landscape ? 250 : 286
+                    spacing: page.landscape ? 10 : 14
+
+                    Column {
                         width: parent.width
-                        text: qsTr("Sound")
-                        checked: root.profile.sound
-                        onClicked: root.profile.sound = !root.profile.sound
+                        spacing: page.landscape ? 6 : 10
+
+                        ToggleSwitch {
+                            objectName: "pauseSoundToggle"
+                            width: parent.width
+                            height: page.landscape ? 38 : 44
+                            text: qsTr("Sound")
+                            checked: root.profile.sound
+                            onClicked: root.profile.sound = !root.profile.sound
+                        }
+
+                        ToggleSwitch {
+                            objectName: "pauseMusicToggle"
+                            width: parent.width
+                            height: page.landscape ? 38 : 44
+                            text: qsTr("Music")
+                            checked: root.profile.music
+                            onClicked: root.profile.music = !root.profile.music
+                        }
                     }
 
-                    ToggleSwitch {
-                        objectName: "pauseMusicToggle"
+                    ToyButton {
+                        objectName: "quitButton"
                         width: parent.width
-                        text: qsTr("Music")
-                        checked: root.profile.music
-                        onClicked: root.profile.music = !root.profile.music
+                        height: page.landscape ? 40 : 48
+                        kind: "secondary"
+                        fontSize: 18
+                        text: qsTr("Quit to menu")
+                        onClicked: root.game.newGame()
                     }
-                }
-
-                ToyButton {
-                    objectName: "quitButton"
-                    width: parent.width
-                    height: 48
-                    kind: "secondary"
-                    fontSize: 18
-                    text: qsTr("Quit to menu")
-                    onClicked: root.game.newGame()
                 }
             }
         }

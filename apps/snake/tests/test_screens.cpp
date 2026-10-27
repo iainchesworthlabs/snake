@@ -71,7 +71,7 @@ public:
 class App
 {
 public:
-    explicit App(bool touch_device = false)
+    explicit App(bool touch_device = false, int width = PAGE_WIDTH, int height = PAGE_HEIGHT)
     {
         QQmlComponent component(&m_Engine, "SnakeApp", "Main");
         INFO(component.errorString().toStdString());
@@ -79,7 +79,7 @@ public:
         // The computer these run on has no accelerometer; a phone does.
         snake::ui::device::set_accelerometer_factory([] { return std::make_unique<SilentAccelerometer>(); });
         m_Root.reset(component.createWithInitialProperties(
-            {{"windowWidth", PAGE_WIDTH}, {"windowHeight", PAGE_HEIGHT}, {"touchDevice", touch_device}}));
+            {{"windowWidth", width}, {"windowHeight", height}, {"touchDevice", touch_device}}));
         snake::ui::device::set_accelerometer_factory({});
         m_Window = qobject_cast<QQuickWindow*>(m_Root.get());
         REQUIRE(m_Window != nullptr);
@@ -1783,7 +1783,7 @@ QStringList misfits(QQuickWindow& window)
     std::vector<QQuickItem*> texts;
     collect_texts(window.contentItem(), texts);
     QStringList complaints;
-    const QRectF page(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+    const QRectF page(0, 0, window.width(), window.height());
     for (QQuickItem* text : texts)
     {
         const QString words = text->property("text").toString();
@@ -1812,6 +1812,8 @@ QStringList misfits(QQuickWindow& window)
 /// Checks that everything on the screen fits, naming the language and the screen if it does not.
 void check_fit(App& app, const char* screen)
 {
+    // The layouts place their items when the window is next polished.
+    static_cast<void>(app.render());
     const QStringList bad = misfits(app.window());
     INFO("screen " << screen << ": " << bad.join("; ").toStdString());
     CHECK(bad.isEmpty());
@@ -2077,4 +2079,177 @@ TEST_CASE("A computer has no accelerometer and a motor that does nothing", "[scr
     REQUIRE(haptics != nullptr);
     haptics->tap();
     haptics->thud();
+}
+
+namespace
+{
+
+// A phone on its side: the width and height in points of an iPhone 16 Pro, less its safe area.
+constexpr int LANDSCAPE_WIDTH = 852;
+constexpr int LANDSCAPE_HEIGHT = 393;
+
+QRectF scene_rect(App& app, const char* name)
+{
+    // The layouts place their items when the window is next polished.
+    QTest::qWait(20);
+    const QQuickItem* item = app.item(name);
+    return item->mapRectToScene(QRectF(0, 0, item->width(), item->height()));
+}
+
+} // namespace
+
+TEST_CASE("Lying down, the title is two columns that fit the window and do not run into each other",
+          "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF play = scene_rect(app, "playButton");
+    const QRectF preview = scene_rect(app, "attractPreview");
+    const QRectF leaderboard = scene_rect(app, "leaderboardButton");
+    const QRectF settings = scene_rect(app, "settingsButton");
+    const QRectF wordmark = scene_rect(app, "wordmark");
+    for (const QRectF& part : {play, preview, leaderboard, settings, wordmark})
+    {
+        CHECK(window.contains(part));
+    }
+    // The name, the preview, Play and the other screens are one column, in that order, and no part touches another.
+    CHECK(wordmark.bottom() <= preview.top());
+    CHECK(preview.bottom() <= play.top());
+    CHECK(play.bottom() <= leaderboard.top());
+    CHECK(leaderboard.right() <= settings.left());
+
+    // Every mode is in the other column, and the cards are on top of each other without overlapping.
+    QRectF previous;
+    for (const char* card : {"modeCard0", "modeCard1", "modeCard2", "modeCard3"})
+    {
+        const QRectF where = scene_rect(app, card);
+        INFO(card);
+        CHECK(window.contains(where));
+        CHECK(where.left() > play.right());
+        CHECK_FALSE(where.intersects(play));
+        if (!previous.isNull())
+        {
+            CHECK(where.top() >= previous.bottom());
+        }
+        previous = where;
+    }
+}
+
+TEST_CASE("The title follows the shape of the window", "[screens][landscape]")
+{
+    App app(true);
+    // Upright: Play is under the modes, across the width.
+    CHECK(scene_rect(app, "playButton").top() > scene_rect(app, "modeCard3").bottom());
+    app.window().resize(LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    QTest::qWait(20);
+    CHECK(scene_rect(app, "playButton").right() < scene_rect(app, "modeCard0").left());
+    app.window().resize(PAGE_WIDTH, PAGE_HEIGHT);
+    QTest::qWait(20);
+    CHECK(scene_rect(app, "playButton").top() > scene_rect(app, "modeCard3").bottom());
+}
+
+TEST_CASE("Lying down, the title mirrors in a language read from the right", "[screens][landscape][rtl]")
+{
+    const InLanguage language("he");
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    CHECK(scene_rect(app, "playButton").center().x() > LANDSCAPE_WIDTH / 2.0);
+    CHECK(scene_rect(app, "modeCard0").center().x() < LANDSCAPE_WIDTH / 2.0);
+    CHECK(scene_rect(app, "settingsButton").center().x() < scene_rect(app, "leaderboardButton").center().x());
+}
+
+TEST_CASE("Lying down, the pause dialog is two columns that fit a phone on its side", "[screens][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    app.profile().setControls(ProfileViewModel::Controls::Tilt);
+    app.start_classic();
+    app.game().pause();
+    REQUIRE(app.shows("pauseScreen"));
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    const QRectF resume = scene_rect(app, "resumeButton");
+    const QRectF quit = scene_rect(app, "quitButton");
+    const QRectF tilt = scene_rect(app, "controlsTilt");
+    const QRectF quick = scene_rect(app, "sensitivityQuick");
+    const QRectF recalibrate = scene_rect(app, "recalibrateButton");
+    for (const QRectF& part : {resume, quit, tilt, quick, recalibrate, scene_rect(app, "pauseSoundToggle"),
+                               scene_rect(app, "pauseMusicToggle")})
+    {
+        CHECK(window.contains(part));
+    }
+    // How to steer is beside the buttons, not under them.
+    CHECK(tilt.left() > resume.right());
+    CHECK(recalibrate.left() > quit.right());
+    CHECK(quick.bottom() < window.bottom());
+    CHECK(quit.bottom() < window.bottom());
+}
+
+TEST_CASE("Lying down, the pause dialog of a computer is one column", "[screens][landscape]")
+{
+    App app(false, 1024, 768);
+    app.start_classic();
+    app.game().pause();
+    REQUIRE(app.shows("pauseScreen"));
+    CHECK_FALSE(app.shows("controlsTilt"));
+    CHECK(scene_rect(app, "resumeButton").center().x() == Catch::Approx(scene_rect(app, "quitButton").center().x()));
+}
+
+TEST_CASE("Lying down, the board takes the height with the score on one side and the controls on the other",
+          "[screens][landscape][touch]")
+{
+    for (const auto controls : {ProfileViewModel::Controls::Tilt, ProfileViewModel::Controls::Swipe,
+                                ProfileViewModel::Controls::Dpad, ProfileViewModel::Controls::Joystick})
+    {
+        INFO("controls " << static_cast<int>(controls));
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        app.profile().setControls(controls);
+        app.start_classic();
+        const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        const QRectF board = scene_rect(app, "board");
+        CHECK(window.contains(board));
+        // Almost the whole height, and about square.
+        CHECK(board.height() > LANDSCAPE_HEIGHT - 30);
+        CHECK(board.width() == Catch::Approx(board.height()).margin(2.0));
+        // The score and the pause button are on the leading side.
+        CHECK(scene_rect(app, "score").right() <= board.left());
+        CHECK(scene_rect(app, "bestScore").right() <= board.left());
+        CHECK(scene_rect(app, "pauseButton").right() <= board.left());
+        CHECK(window.contains(scene_rect(app, "pauseButton")));
+        // The steering is on the other, inside the window.
+        const char* control = controls == ProfileViewModel::Controls::Tilt       ? "tiltIndicator"
+                              : controls == ProfileViewModel::Controls::Dpad     ? "dpad"
+                              : controls == ProfileViewModel::Controls::Joystick ? "joystick"
+                                                                                 : nullptr;
+        if (control != nullptr)
+        {
+            const QRectF where = scene_rect(app, control);
+            CHECK(window.contains(where));
+            CHECK(where.left() >= board.right());
+        }
+    }
+}
+
+TEST_CASE("Lying down, a computer's game has the board in the middle and the score on the left", "[screens][landscape]")
+{
+    App app(false, 1024, 768);
+    app.start_classic();
+    const QRectF board = scene_rect(app, "board");
+    CHECK(board.center().x() == Catch::Approx(512.0).margin(2.0));
+    CHECK(scene_rect(app, "score").right() <= board.left());
+    CHECK_FALSE(app.shows("pauseButton"));
+}
+
+TEST_CASE("The title, the game and the pause dialog fit in every language lying down",
+          "[screens][languages][landscape]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        fill_the_profile(app);
+        check_fit(app, "title");
+        app.start_classic();
+        check_fit(app, "game");
+        app.game().pause();
+        check_fit(app, "pause");
+    }
 }

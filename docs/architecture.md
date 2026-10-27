@@ -287,9 +287,13 @@ keeps the keyboard on the screen itself, so letters and Space type into the name
 steering the letter grid with tilt or a gamepad comes with the settings and the tilt work. `Main.qml` shows the title
 screen while the game has not started, the game screen (the score, the best score and the board) while it runs or is
 paused, the pause dialog over the game while it is paused, and the game over screen after it. Each screen takes the
-keyboard when it shows and puts it on its main button. The three screens are drawn on the 390 by 844 page of the design
+keyboard when it shows and puts it on its main button. The screens are drawn on the 390 by 844 page of the design
 (`PhonePage`), scaled to fit the window and centred, so the phone layout is used at any window size; the design has no
-desktop title, pause or game over screen yet. The buttons (`ToyButton`) and the mode cards (`ModeCard`) are drawn from
+desktop title, pause or game over screen yet. A screen that sets `PhonePage.landscapeLayout` has a second layout for a
+window that is wider than it is tall: the page lies down, 360 high and 600 to 900 wide by the shape of the window, and
+the screen reads `PhonePage.landscape` to place its parts in two columns (the title and the pause dialog do; the other
+screens are still the upright page, scaled). The game screen reads its own size: lying down the board takes the height,
+and the score, the best and the pause button are on the leading side and the steering controls on the other. The buttons (`ToyButton`) and the mode cards (`ModeCard`) are drawn from
 rectangles in the style of the design, with a hard shadow, an outline and a focus ring. The up and down arrows move
 between them along the Tab order, so a locked mode is skipped, and a mode takes the choice when it gets the focus. The
 QML files sit at the root of the `SnakeApp` module, which is where `qmllint` looks for the types of the other files.

@@ -22,14 +22,14 @@ One codebase ships to six platforms, with the ESP32-P4 as the performance floor 
 
 | Platform | Form factor | Primary input | Alternatives | Frame rate target |
 | --- | --- | --- | --- | --- |
-| iOS, Android phones | Portrait, full screen | Tilt | Swipe, on-screen d-pad | 60 fps; 120 on high-refresh displays |
+| iOS, Android phones | Portrait or landscape, full screen | Tilt | Swipe, on-screen d-pad | 60 fps; 120 on high-refresh displays |
 | iOS, Android tablets | Portrait or landscape, full screen | Tilt | Swipe, d-pad, gamepad | 60 fps; 120 on high-refresh displays |
 | Windows, macOS, Linux | Window or full screen, landscape | Keyboard | Gamepad | 60 fps; match display refresh where higher |
 | ESP32-P4 handheld | Landscape panel with touch and accelerometer | Tilt | Touch for menus and pause | 60 fps target, 30 fps floor |
 
-- Screen orientation locks for the whole game session on mobile, so tilting never rotates the display.
+- Phones and tablets play in either orientation, and every screen has a layout for each. The orientation locks for the whole game session on mobile, so tilting never rotates the display; the menus turn with the device.
 - A direction change takes effect on the next simulation tick, and rendering adds no more than one frame of delay on top.
-- Tablets in landscape use the ESP layout; tablets in portrait use the phone layout.
+- Phones in landscape and tablets in landscape use the wide layout (the ESP's: the board in the middle, the score on one side and the controls on the other); phones and tablets in portrait use the portrait layout.
 
 ## Core game rules
 
