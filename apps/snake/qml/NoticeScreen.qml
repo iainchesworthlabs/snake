@@ -44,12 +44,16 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
         ToyButton {
             objectName: "noticeBackButton"
-            x: Theme.mirrored(15, width, 390)
-            y: 28
-            width: 46
-            height: 46
+            x: Theme.mirrored(15, width, page.pageWidth)
+            y: page.landscape ? 10 : 28
+            width: page.landscape ? 42 : 46
+            height: page.landscape ? 42 : 46
             radius: 10
             activeFocusOnTab: false
             text: LayoutMirroring.enabled ? ">" : "<"
@@ -60,9 +64,9 @@ FocusScope {
 
         ShadowText {
             objectName: "noticeTitle"
-            x: Theme.mirrored(74, width, 390)
-            maxWidth: 300
-            y: 26
+            x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
+            maxWidth: page.landscape ? page.pageWidth - 66 - 15 : 300
+            y: page.landscape ? 12 : 26
             offset: 3
             pixelSize: 28
             text: root.title
@@ -70,9 +74,9 @@ FocusScope {
 
         Rectangle {
             x: 15
-            y: 96
-            width: 360
-            height: 732
+            y: page.landscape ? 60 : 96
+            width: page.pageWidth - 30
+            height: page.landscape ? 288 : 732
             radius: 14
             color: Theme.surface
             border.width: 4

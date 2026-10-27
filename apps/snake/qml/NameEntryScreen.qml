@@ -46,28 +46,44 @@ FocusScope {
     }
 
     PhonePage {
+        id: page
+
+        landscapeLayout: true
+
+        // Lying down the place the score takes, with Save under it, is on the leading side, and the name and the letters are on
+        // the other.
+        readonly property real leadingWidth: 260
+        readonly property real trailingWidth: pageWidth - leadingWidth - 3 * 15
+        readonly property real leadingX: Theme.mirrored(15, leadingWidth, pageWidth)
+        readonly property real trailingX: Theme.mirrored(2 * 15 + leadingWidth, trailingWidth, pageWidth)
+        // The width of the column that holds the name and the letters, and of the key.
+        readonly property real nameWidth: landscape ? trailingWidth : 360
+        readonly property real keySize: landscape ? Math.min(40, (trailingWidth - 7 * 5) / 8) : 46
+
         ShadowText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 22
+            x: (page.landscape ? page.leadingX + page.leadingWidth / 2 : page.pageWidth / 2) - width / 2
+            y: page.landscape ? 8 : 22
             offset: 3
-            pixelSize: 34
+            maxWidth: page.landscape ? page.leadingWidth : 360
+            pixelSize: page.landscape ? 26 : 34
             text: qsTr("New high score!")
         }
 
         ShadowText {
             objectName: "pendingScore"
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 72
+            x: (page.landscape ? page.leadingX + page.leadingWidth / 2 : page.pageWidth / 2) - width / 2
+            y: page.landscape ? 42 : 72
             offset: 4
-            pixelSize: 62
+            maxWidth: page.landscape ? page.leadingWidth : 360
+            pixelSize: page.landscape ? 46 : 62
             text: root.profile.pendingScore
         }
 
         // The place it will take, between its neighbours.
         Item {
-            x: 15
-            y: 153
-            width: 360
+            x: page.landscape ? page.leadingX : 15
+            y: page.landscape ? 108 : 153
+            width: page.landscape ? page.leadingWidth : 360
             height: standing.height + 6
 
             Rectangle {
@@ -105,7 +121,7 @@ FocusScope {
 
                             objectName: "standing" + row.modelData.place
                             width: standingColumn.width
-                            height: 36
+                            height: page.landscape ? 32 : 36
                             radius: 10
                             color: row.modelData.mine ? Theme.accent : "transparent"
 
@@ -119,7 +135,7 @@ FocusScope {
                             }
 
                             Text {
-                                x: Theme.mirrored(44, width, row.width)
+                                x: Theme.mirrored(page.landscape ? 34 : 44, width, row.width)
                                 anchors.verticalCenter: parent.verticalCenter
                                 color: Theme.ink
                                 font.pixelSize: 16
@@ -141,8 +157,8 @@ FocusScope {
         }
 
         Text {
-            x: Theme.mirrored(15, width, 390)
-            y: 300
+            x: page.landscape ? Theme.mirrored(2 * 15 + page.leadingWidth, width, page.pageWidth) : Theme.mirrored(15, width, 390)
+            y: page.landscape ? 8 : 300
             color: Theme.ink
             font.pixelSize: 15
             font.weight: Font.Medium
@@ -153,7 +169,7 @@ FocusScope {
             objectName: "nameCount"
             anchors.right: parent.right
             anchors.rightMargin: 15
-            y: 300
+            y: page.landscape ? 8 : 300
             color: Theme.ink
             font.pixelSize: 15
             font.weight: Font.Medium
@@ -162,8 +178,8 @@ FocusScope {
 
         // The twelve slots. The next free one is coral.
         Row {
-            x: 15
-            y: 326
+            x: page.landscape ? Theme.mirrored(2 * 15 + page.leadingWidth, width, page.pageWidth) : 15
+            y: page.landscape ? 30 : 326
             spacing: 5
             // The name is letters from A to Z, whatever the language: the first letter is on the left.
             LayoutMirroring.enabled: false
@@ -179,8 +195,8 @@ FocusScope {
                     readonly property string letter: root.profile.entryName.charAt(slot.index)
 
                     objectName: "slot" + slot.index
-                    width: (360 - 5 * (root.slotCount - 1)) / root.slotCount
-                    height: 41
+                    width: (page.nameWidth - 5 * (root.slotCount - 1)) / root.slotCount
+                    height: page.landscape ? 36 : 41
                     radius: 8
                     color: slot.index === root.profile.entryName.length ? Theme.accent : Theme.surface
                     border.width: 3
@@ -199,8 +215,8 @@ FocusScope {
 
         // The names used last, one tap each.
         Row {
-            x: Theme.mirrored(15, width, 390)
-            y: 386
+            x: page.landscape ? Theme.mirrored(2 * 15 + page.leadingWidth, width, page.pageWidth) : Theme.mirrored(15, width, 390)
+            y: page.landscape ? 74 : 386
             spacing: 8
 
             Text {
@@ -223,7 +239,7 @@ FocusScope {
 
                     objectName: "recentName" + chip.index
                     width: Math.max(70, chipText.implicitWidth + 28)
-                    height: 40
+                    height: page.landscape ? 36 : 40
                     activeFocusOnTab: false
                     fontSize: 16
                     drop: 3
@@ -245,14 +261,14 @@ FocusScope {
 
         // The letters, seven to a row, then a space and a delete.
         Grid {
-            x: 15
-            y: 448
-            columns: 7
+            x: page.landscape ? Theme.mirrored(2 * 15 + page.leadingWidth, width, page.pageWidth) : 15
+            y: page.landscape ? 118 : 448
+            columns: page.landscape ? 8 : 7
             // A to Z from the left, as on a keyboard.
             LayoutMirroring.enabled: false
             LayoutMirroring.childrenInherit: true
-            rowSpacing: 7
-            columnSpacing: 6
+            rowSpacing: page.landscape ? 5 : 7
+            columnSpacing: page.landscape ? 5 : 6
 
             Repeater {
                 model: root.letters.length
@@ -263,8 +279,8 @@ FocusScope {
                     required property int index
 
                     objectName: "key" + root.letters.charAt(key.index)
-                    width: 46
-                    height: 46
+                    width: page.keySize
+                    height: page.keySize
                     text: root.letters.charAt(key.index)
                     onClicked: root.profile.typeCharacter(key.text)
                 }
@@ -272,8 +288,8 @@ FocusScope {
 
             LetterKey {
                 objectName: "keySpace"
-                width: 46
-                height: 46
+                width: page.keySize
+                height: page.keySize
                 fontSize: 15
                 text: qsTr("Spc")
                 onClicked: root.profile.typeCharacter(" ")
@@ -281,8 +297,8 @@ FocusScope {
 
             LetterKey {
                 objectName: "keyDelete"
-                width: 46
-                height: 46
+                width: page.keySize
+                height: page.keySize
                 fontSize: 15
                 text: qsTr("Del")
                 onClicked: root.profile.eraseCharacter()
@@ -291,14 +307,14 @@ FocusScope {
 
         ToyButton {
             objectName: "saveNameButton"
-            x: 15
-            y: 754
-            width: 360
-            height: 56
+            x: page.landscape ? page.leadingX : 15
+            y: page.landscape ? 296 : 754
+            width: page.landscape ? page.leadingWidth : 360
+            height: page.landscape ? 50 : 56
             enabled: root.profile.canSave
             activeFocusOnTab: false
             kind: "primary"
-            fontSize: 26
+            fontSize: page.landscape ? 22 : 26
             drop: 6
             radius: 14
             text: qsTr("Save score")
