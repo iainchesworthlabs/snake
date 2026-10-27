@@ -8,6 +8,8 @@ import QtQuick
 FocusScope {
     id: root
 
+    required property ProfileViewModel profile
+
     // The player left the screen: the settings show next.
     signal closed
     // The player asked to read a licence: "licence", "notices" or "font".
@@ -131,6 +133,15 @@ FocusScope {
                         color: Theme.ink
                         font.pixelSize: 12
                         text: "Language: " + AboutInfo.languageDetail
+                    }
+
+                    Text {
+                        objectName: "aboutSaveStatus"
+                        width: parent.width
+                        wrapMode: Text.WrapAnywhere
+                        color: Theme.ink
+                        font.pixelSize: 12
+                        text: "Saves: " + root.profile.saveStatus
                     }
                 }
             }

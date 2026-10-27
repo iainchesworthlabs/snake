@@ -121,6 +121,14 @@
         <translation>Pause</translation>
     </message>
     <message>
+        <source>Calibrating tilt</source>
+        <translation>Calibrage de l'inclinaison</translation>
+    </message>
+    <message>
+        <source>Hold the phone how you like to play.</source>
+        <translation>Tiens le téléphone comme tu aimes jouer.</translation>
+    </message>
+    <message>
         <source>Score</source>
         <translation>Score</translation>
     </message>

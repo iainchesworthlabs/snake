@@ -13,6 +13,9 @@ Window {
 
     width: windowWidth
     height: windowHeight
+    // On a phone the window fills the screen, under the status bar, the camera cut-out and the home indicator, and the screens keep
+    // inside the safe area (Window.safeAreaMargins). Without this the phone leaves bars of black above and below the game.
+    flags: touchDevice ? (Qt.Window | Qt.ExpandedClientAreaHint) : Qt.Window
     visible: true
     title: qsTr("Snake")
     color: Theme.background
@@ -99,10 +102,11 @@ Window {
     // The frame animation runs in step with the display. Each frame it tells the game how long the frame took, and the
     // game runs the ticks that are due.
     FrameAnimation {
-        running: gameModel.state === GameViewModel.State.Running
+        running: gameModel.state === GameViewModel.State.Running || inputModel.calibrating
         onTriggered: {
-            // The tilt is read first, so that a turn is in place for the tick that the frame runs.
-            inputModel.update();
+            // The tilt is read first, so that a turn is in place for the tick that the frame runs. While it is calibrated the
+            // game is held, and the frames only move the wait on.
+            inputModel.update(frameTime);
             gameModel.advance(frameTime);
         }
     }
@@ -137,7 +141,8 @@ Window {
     PauseScreen {
         objectName: "pauseScreen"
         anchors.fill: parent
-        visible: gameModel.state === GameViewModel.State.Paused
+        // While tilt is being calibrated the game is held, and the game screen says so; the dialog waits.
+        visible: gameModel.state === GameViewModel.State.Paused && !inputModel.calibrating
         focus: visible
         game: gameModel
         profile: profileModel
@@ -178,6 +183,7 @@ Window {
     AboutScreen {
         objectName: "aboutScreen"
         anchors.fill: parent
+        profile: profileModel
         visible: root.overlay === "about"
         focus: visible
         onClosed: root.overlay = "settings"

@@ -119,11 +119,9 @@ FocusScope {
                                 text: qsTr("Score")
                             }
 
-                            Text {
+                            PixelNumber {
                                 objectName: "finalScore"
-                                color: Theme.ink
-                                font.pixelSize: 44
-                                font.weight: Font.Bold
+                                cell: 6
                                 text: root.game.score
                             }
                         }
@@ -147,13 +145,12 @@ FocusScope {
                                 radius: 8
                                 color: Theme.ink
 
-                                Text {
+                                PixelNumber {
                                     id: bestText
 
                                     anchors.centerIn: parent
                                     color: Theme.surface
-                                    font.pixelSize: 22
-                                    font.weight: Font.Bold
+                                    cell: 3
                                     text: root.profile.best
                                 }
                             }

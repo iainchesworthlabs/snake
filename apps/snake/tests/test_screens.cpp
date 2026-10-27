@@ -11,6 +11,7 @@
 #include "theme/tokens.hpp"
 #include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
+#include "viewmodel/input_controller.hpp"
 #include "viewmodel/profile_view_model.hpp"
 
 #include <QtTest/QTest>
@@ -88,6 +89,8 @@ public:
         m_Game = m_Window->findChild<GameViewModel*>("game");
         m_Profile = m_Window->findChild<ProfileViewModel*>("profile");
         m_Effects = m_Window->findChild<snake::ui::EffectsModel*>("effects");
+        m_Input = m_Window->findChild<snake::ui::InputController*>("input");
+        REQUIRE(m_Input != nullptr);
         REQUIRE(m_Game != nullptr);
         REQUIRE(m_Profile != nullptr);
         REQUIRE(m_Effects != nullptr);
@@ -179,11 +182,26 @@ public:
         }
     }
 
-    /// Chooses Classic and starts the game.
+    snake::ui::InputController& input()
+    {
+        return *m_Input;
+    }
+
+    /// Lets the wait that a tilt game has before it begins run out, so that the game runs.
+    void finish_calibration()
+    {
+        if (m_Input->calibrating())
+        {
+            m_Input->update(snake::ui::InputController::CALIBRATION_SECONDS + 0.1);
+        }
+    }
+
+    /// Chooses Classic and starts the game (through the calibration wait of a tilt game).
     void start_classic()
     {
         click("modeCard1");
         click("playButton");
+        finish_calibration();
     }
 
     /// Types `name` into the profile and saves the score that waits for it.
@@ -239,6 +257,7 @@ private:
     std::unique_ptr<QObject> m_Root;
     QQuickWindow* m_Window = nullptr;
     GameViewModel* m_Game = nullptr;
+    snake::ui::InputController* m_Input = nullptr;
     ProfileViewModel* m_Profile = nullptr;
     snake::ui::EffectsModel* m_Effects = nullptr;
 };
@@ -533,6 +552,35 @@ TEST_CASE("The pause button is clear of the score, even a long one, on a phone",
         const QRectF board_box(board->mapToScene(QPointF(0, 0)), QSizeF(board->width(), board->height()));
         CHECK_FALSE(pause_box.intersects(board_box));
     }
+}
+
+TEST_CASE("A tilt game begins with a wait that the screen shows, and the pause dialog does not flash up",
+          "[screens][touch]")
+{
+    App app(true);
+    app.click("modeCard1");
+    app.click("playButton");
+    REQUIRE(app.input().calibrating());
+    CHECK(app.game().state() == State::Paused);
+    CHECK(app.shows("calibrationOverlay"));
+    CHECK_FALSE(app.shows("pauseScreen"));
+    // The bar fills with the wait.
+    const QQuickItem* bar = app.item("calibrationBar");
+    CHECK(bar->width() == 0.0);
+    app.input().update(snake::ui::InputController::CALIBRATION_SECONDS / 2);
+    CHECK(bar->width() > 50.0);
+    app.finish_calibration();
+    CHECK_FALSE(app.shows("calibrationOverlay"));
+    CHECK(app.game().state() == State::Running);
+    // Resume from the pause dialog waits again.
+    app.game().pause();
+    REQUIRE(app.shows("pauseScreen"));
+    app.click("resumeButton");
+    CHECK(app.input().calibrating());
+    CHECK(app.shows("calibrationOverlay"));
+    CHECK_FALSE(app.shows("pauseScreen"));
+    app.finish_calibration();
+    CHECK(app.game().state() == State::Running);
 }
 
 TEST_CASE("The pause button of a phone pauses the game", "[screens][touch]")
@@ -1221,9 +1269,17 @@ TEST_CASE("On a touch device the pause dialog has the controls and recalibrates 
     app.game().pause();
     REQUIRE(app.shows("controlsTilt"));
     CHECK(app.shows("recalibrateButton"));
-    QSignalSpy asked(&app.profile(), &ProfileViewModel::calibrationRequested);
+    // Recalibrate tilt holds the game while the phone is held how the player likes it: the dialog gives way to the
+    // wait.
     app.click("recalibrateButton");
-    CHECK(asked.count() == 1);
+    CHECK(app.input().calibrating());
+    CHECK_FALSE(app.shows("pauseScreen"));
+    CHECK(app.shows("calibrationOverlay"));
+    app.finish_calibration();
+    CHECK_FALSE(app.shows("calibrationOverlay"));
+    CHECK(app.game().state() == State::Running);
+    app.game().pause();
+    REQUIRE(app.shows("pauseScreen"));
 
     // The choice is coral. Only tilt has anything to recalibrate.
     const QImage image = app.render();
@@ -1970,11 +2026,13 @@ TEST_CASE("The leaderboard lines mirror: the place and the name start on the rig
     QQuickItem* line = app.item("line1");
     std::vector<QQuickItem*> texts;
     collect_texts(line, texts);
-    REQUIRE(texts.size() == 3);
-    // Place, name and score, in the order they are made: the place and the name are to the right of the score.
-    const auto x_of = [](QQuickItem* item) { return item->mapToScene(QPointF(0, 0)).x(); };
-    CHECK(x_of(texts[0]) > x_of(texts[2]));
-    CHECK(x_of(texts[1]) > x_of(texts[2]));
+    // The place and the name are text; the score is drawn from squares (PixelNumber), and is the first "lineScore"
+    // (line 1's).
+    REQUIRE(texts.size() == 2);
+    const QQuickItem* score = app.item("lineScore");
+    const auto x_of = [](const QQuickItem* item) { return item->mapToScene(QPointF(0, 0)).x(); };
+    CHECK(x_of(texts[0]) > x_of(score));
+    CHECK(x_of(texts[1]) > x_of(score));
 }
 
 TEST_CASE("The licence text reads from the left in a language read from the right", "[screens][rtl]")

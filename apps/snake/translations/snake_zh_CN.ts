@@ -121,6 +121,14 @@
         <translation>暂停</translation>
     </message>
     <message>
+        <source>Calibrating tilt</source>
+        <translation>正在校准倾斜</translation>
+    </message>
+    <message>
+        <source>Hold the phone how you like to play.</source>
+        <translation>按你喜欢的姿势拿好手机。</translation>
+    </message>
+    <message>
         <source>Score</source>
         <translation>得分</translation>
     </message>

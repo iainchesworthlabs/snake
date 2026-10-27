@@ -50,6 +50,9 @@ class ProfileViewModel : public QObject
     /// True while changes are being written to the save file: false without a file, and after the file was found to
     /// come from a newer program, which this one must not overwrite.
     Q_PROPERTY(bool persistent READ persistent NOTIFY saveFileChanged FINAL)
+    /// What happened to the save file, in words, for About: how it was found, and how the last write went. For a report
+    /// of scores that did not last. Not translated.
+    Q_PROPERTY(QString saveStatus READ saveStatus NOTIFY saveFileChanged FINAL)
 
     /// The leaderboard the screen shows: its lines, and the mode they are of.
     Q_PROPERTY(snake::ui::LeaderboardModel* leaderboard READ leaderboard CONSTANT FINAL)
@@ -143,6 +146,7 @@ public:
 
     [[nodiscard]] QString saveFile() const;
     void setSaveFile(const QString& path);
+    [[nodiscard]] QString saveStatus() const;
     [[nodiscard]] bool persistent() const noexcept
     {
         return m_Writing;
@@ -263,6 +267,8 @@ private:
     LeaderboardModel m_Board;
     GameViewModel::Mode m_BoardMode = GameViewModel::Mode::Easy;
     std::unique_ptr<SaveFile> m_File;
+    QString m_LoadStatus;
+    QString m_WriteStatus = QStringLiteral("nothing written yet");
     bool m_Writing = false;
     std::optional<Pending> m_Pending;
     profile::PlayerName m_Name;

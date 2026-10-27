@@ -121,6 +121,14 @@
         <translation>השהיה</translation>
     </message>
     <message>
+        <source>Calibrating tilt</source>
+        <translation>מכיילים את ההטיה</translation>
+    </message>
+    <message>
+        <source>Hold the phone how you like to play.</source>
+        <translation>החזיקו את הטלפון כך שנוח לשחק.</translation>
+    </message>
+    <message>
         <source>Score</source>
         <translation>ניקוד</translation>
     </message>

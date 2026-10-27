@@ -2,6 +2,7 @@
 #include "viewmodel/input_controller.hpp"
 
 #include "device/device.hpp"
+#include "device/haptics.hpp"
 #include "snake/input/eight_way_selector.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
@@ -12,6 +13,7 @@
 #include "viewmodel/profile_view_model.hpp"
 
 #include <QObject>
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -78,7 +80,16 @@ void InputController::setGame(GameViewModel* game)
     if (m_Game != nullptr)
     {
         connect(m_Game, &GameViewModel::gameStarted, this, &InputController::on_game_started);
-        connect(m_Game, &GameViewModel::stateChanged, this, [this] { m_Swipe.cancel(); });
+        connect(m_Game, &GameViewModel::stateChanged, this,
+                [this]
+                {
+                    m_Swipe.cancel();
+                    // A game that is no longer held (it was left, restarted or ended) takes the calibration with it.
+                    if (m_Calibrating && m_Game->state() != GameViewModel::State::Paused)
+                    {
+                        cancel_calibration();
+                    }
+                });
     }
     emit gameChanged();
 }
@@ -97,7 +108,7 @@ void InputController::setProfile(ProfileViewModel* profile)
     if (m_Profile != nullptr)
     {
         connect(m_Profile, &ProfileViewModel::settingsChanged, this, &InputController::on_settings_changed);
-        connect(m_Profile, &ProfileViewModel::calibrationRequested, this, [this] { m_Tilt.calibrate(); });
+        connect(m_Profile, &ProfileViewModel::calibrationRequested, this, [this] { startCalibration(); });
     }
     on_settings_changed();
     emit profileChanged();
@@ -152,13 +163,78 @@ void InputController::on_settings_changed()
 
 void InputController::on_game_started()
 {
-    // A game begins with the device held as the player likes: that is neutral. A resume from a pause keeps it, unless
-    // the pause dialog's Recalibrate tilt asked.
-    m_Tilt.calibrate();
     m_Stick.reset();
+    // A game begins with the phone held as the player likes: that is neutral, taken after a short wait that the screen
+    // shows.
+    startCalibration();
 }
 
-void InputController::update()
+void InputController::startCalibration()
+{
+    if (m_Game == nullptr || controls() != Scheme::Tilt)
+    {
+        return;
+    }
+    m_CalibrationElapsed = 0.0;
+    m_CalibrationProgress = 0.0;
+    if (!m_Calibrating)
+    {
+        m_Calibrating = true;
+        emit calibratingChanged();
+    }
+    emit calibrationProgressChanged();
+    // The game is held while the player gets the phone how they like it.
+    if (m_Game->state() == GameViewModel::State::Running)
+    {
+        m_Game->pause();
+    }
+}
+
+void InputController::resume()
+{
+    if (m_Game == nullptr)
+    {
+        return;
+    }
+    if (controls() == Scheme::Tilt)
+    {
+        startCalibration();
+        return;
+    }
+    m_Game->resume();
+}
+
+void InputController::finish_calibration()
+{
+    m_Tilt.calibrate();
+    m_Calibrating = false;
+    m_CalibrationProgress = 1.0;
+    emit calibrationProgressChanged();
+    emit calibratingChanged();
+    // A tap, so that the player feels it happen as well as sees it.
+    if (device::Haptics* haptics = device::default_haptics(); haptics != nullptr)
+    {
+        haptics->tap();
+    }
+    if (m_Game != nullptr && m_Game->state() == GameViewModel::State::Paused)
+    {
+        m_Game->resume();
+    }
+}
+
+void InputController::cancel_calibration()
+{
+    if (!m_Calibrating)
+    {
+        return;
+    }
+    m_Calibrating = false;
+    m_CalibrationProgress = 0.0;
+    emit calibrationProgressChanged();
+    emit calibratingChanged();
+}
+
+void InputController::update(double seconds)
 {
     if (controls() == Scheme::Joystick)
     {
@@ -177,6 +253,18 @@ void InputController::update()
     if (changed)
     {
         emit tiltChanged();
+    }
+    if (m_Calibrating)
+    {
+        // The wait runs on the time of the frames, and the filter above settles on the pose meanwhile.
+        m_CalibrationElapsed += seconds;
+        m_CalibrationProgress = std::min(1.0, m_CalibrationElapsed / CALIBRATION_SECONDS);
+        emit calibrationProgressChanged();
+        if (m_CalibrationElapsed >= CALIBRATION_SECONDS)
+        {
+            finish_calibration();
+        }
+        return;
     }
     if (m_Game != nullptr && m_Game->state() == GameViewModel::State::Running && controls() == Scheme::Tilt &&
         reading.direction)

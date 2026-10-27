@@ -121,6 +121,14 @@
         <translation>אָפּשטעלן</translation>
     </message>
     <message>
+        <source>Calibrating tilt</source>
+        <translation>מען שטעלט איין דעם נייג</translation>
+    </message>
+    <message>
+        <source>Hold the phone how you like to play.</source>
+        <translation>האַלט דעם טעלעפאָן ווי דו ווילסט שפּילן.</translation>
+    </message>
+    <message>
         <source>Score</source>
         <translation>פּונקטן</translation>
     </message>

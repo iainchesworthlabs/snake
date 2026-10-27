@@ -14,7 +14,8 @@ ToyButton {
     radius: 14
     activeFocusOnTab: false
 
-    // The arrow: a head of three rows and a shaft, as a pixel triangle. It is drawn pointing up and turned.
+    // The arrow, on a 7 by 7 grid of 4 pixel squares: a head that widens from one square to seven, and a shaft of three. It is drawn
+    // pointing up and turned a quarter at a time, which keeps every edge on the grid.
     Item {
         anchors.centerIn: parent
         width: 28
@@ -22,8 +23,8 @@ ToyButton {
         rotation: [0, 180, 270, 90][root.arrow]
 
         Repeater {
-            // Rows from the point: the widths of the head, then the shaft.
-            model: [[12, 4, 4], [8, 8, 4], [4, 12, 4], [0, 20, 4], [10, 8, 4], [10, 8, 4]]
+            // Each row: the column it starts at, and how many squares wide it is.
+            model: [[3, 1], [2, 3], [1, 5], [0, 7], [2, 3], [2, 3], [2, 3]]
 
             Rectangle {
                 id: row
@@ -31,9 +32,9 @@ ToyButton {
                 required property var modelData
                 required property int index
 
-                x: modelData[0] + 4 - 2
-                y: row.index * 4 + 2
-                width: modelData[1]
+                x: row.modelData[0] * 4
+                y: row.index * 4
+                width: row.modelData[1] * 4
                 height: 4
                 color: Theme.ink
             }

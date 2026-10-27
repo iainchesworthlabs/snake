@@ -22,7 +22,7 @@ FocusScope {
     Accessible.role: Accessible.Dialog
     Accessible.name: qsTr("Paused")
 
-    Keys.onEscapePressed: root.game.resume()
+    Keys.onEscapePressed: root.input.resume()
 
     // The dimming covers the whole window and takes the clicks, so nothing below it is touched.
     Rectangle {
@@ -89,7 +89,7 @@ FocusScope {
                         fontSize: 22
                         drop: 5
                         text: qsTr("Resume")
-                        onClicked: root.game.resume()
+                        onClicked: root.input.resume()
                     }
 
                     ToyButton {
@@ -175,7 +175,7 @@ FocusScope {
                         height: 44
                         fontSize: 17
                         text: qsTr("Recalibrate tilt")
-                        onClicked: root.profile.calibrateTilt()
+                        onClicked: root.input.startCalibration()
                     }
 
                     Text {

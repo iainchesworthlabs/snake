@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/device.hpp"
+#include "device/haptics.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/sim/direction.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -106,12 +107,13 @@ struct Rig
         input.setTouchDevice(true);
     }
 
-    /// Starts the game with the device held level and lets the controller take that in.
+    /// Starts the game with the device held level and lets the controller take that in, through the wait that a tilt
+    /// game has before it begins.
     void start_level()
     {
         queue->hold(0.3F, 0.0F, 0.0F);
         game.start();
-        input.update();
+        input.update(InputController::CALIBRATION_SECONDS + 0.1);
     }
 
     [[nodiscard]] std::optional<Direction> pending() const
@@ -192,21 +194,55 @@ TEST_CASE("A tilt inside the dead zone does nothing", "[input-controller][tilt]"
     CHECK(rig.input.tiltUp() == Catch::Approx(8.0).margin(1.0));
 }
 
-TEST_CASE("The device is calibrated where it is held when a game starts", "[input-controller][tilt]")
+/// Counts the taps that the controller asks of the motor.
+class CountingHaptics final : public snake::ui::device::Haptics
+{
+public:
+    void tap() override
+    {
+        ++taps;
+    }
+    void thud() override {}
+
+    int taps = 0;
+};
+
+TEST_CASE("A tilt game waits while the phone is calibrated, then begins with where it is held as neutral",
+          "[input-controller][tilt][calibration]")
 {
     Rig rig;
+    CountingHaptics haptics;
+    snake::ui::device::set_default_haptics(&haptics);
     // Held at a steep angle, which is neutral because the game starts there.
     rig.queue->hold(0.3F, 0.0F, 0.0F, 80.0F);
+    QSignalSpy calibrating(&rig.input, &InputController::calibratingChanged);
     rig.game.start();
-    rig.input.update();
+    // The game is held, and the screen says why.
+    CHECK(rig.input.calibrating());
+    CHECK(rig.game.state() == GameViewModel::State::Paused);
+    CHECK(rig.input.calibrationProgress() == 0.0);
+    rig.input.update(0.75);
+    CHECK(rig.input.calibrating());
+    CHECK(rig.input.calibrationProgress() == Catch::Approx(0.5));
+    CHECK(rig.game.state() == GameViewModel::State::Paused);
+    CHECK(haptics.taps == 0);
     rig.queue->hold(0.3F, 0.0F, 0.0F, 80.0F);
-    rig.input.update();
+    rig.input.update(0.8);
+    // Done: a tap to feel, the game running, the pose neutral.
+    CHECK_FALSE(rig.input.calibrating());
+    CHECK(haptics.taps == 1);
+    CHECK(rig.game.state() == GameViewModel::State::Running);
+    CHECK(calibrating.count() == 2);
+    rig.queue->hold(0.3F, 0.0F, 0.0F, 80.0F);
+    rig.input.update(0.016);
     CHECK(rig.input.tiltHeading() == Heading::None);
     CHECK(rig.input.tiltUp() == Catch::Approx(0.0).margin(1.0));
     CHECK_FALSE(rig.pending());
+    snake::ui::device::set_default_haptics(nullptr);
 }
 
-TEST_CASE("Recalibrating takes the way the device is held as neutral", "[input-controller][tilt]")
+TEST_CASE("Resuming a tilt game calibrates again first, and the choice of the pause dialog's button does the same",
+          "[input-controller][tilt][calibration]")
 {
     Rig rig;
     rig.start_level();
@@ -214,33 +250,66 @@ TEST_CASE("Recalibrating takes the way the device is held as neutral", "[input-c
     rig.queue->hold(0.5F, 0.0F, 25.0F);
     rig.input.update();
     REQUIRE(rig.input.tiltHeading() == Heading::Up);
-    // Pause, tap Recalibrate tilt, and the snake stops being steered by it.
+
+    rig.game.pause();
+    rig.input.resume();
+    CHECK(rig.input.calibrating());
+    CHECK(rig.game.state() == GameViewModel::State::Paused);
+    rig.queue->hold(0.5F, 0.0F, 25.0F);
+    rig.input.update(InputController::CALIBRATION_SECONDS + 0.1);
+    CHECK_FALSE(rig.input.calibrating());
+    CHECK(rig.game.state() == GameViewModel::State::Running);
+    rig.queue->hold(0.3F, 0.0F, 25.0F);
+    rig.input.update(0.016);
+    // Where it is held now is neutral, so it no longer steers.
+    CHECK(rig.input.tiltHeading() == Heading::None);
+
+    // The same by Recalibrate tilt.
+    rig.queue->hold(0.5F, 0.0F, 0.0F);
+    rig.input.update(0.016);
+    REQUIRE(rig.input.tiltHeading() == Heading::Down);
     rig.game.pause();
     rig.profile.calibrateTilt();
-    rig.game.resume();
-    rig.queue->hold(0.5F, 0.0F, 25.0F);
-    rig.input.update();
+    CHECK(rig.input.calibrating());
+    rig.queue->hold(0.5F, 0.0F, 0.0F);
+    rig.input.update(InputController::CALIBRATION_SECONDS + 0.1);
+    CHECK(rig.game.state() == GameViewModel::State::Running);
+    rig.queue->hold(0.3F, 0.0F, 0.0F);
+    rig.input.update(0.016);
     CHECK(rig.input.tiltHeading() == Heading::None);
 }
 
-TEST_CASE("Resuming from a pause keeps the calibration but a new game takes a new one", "[input-controller][tilt]")
+TEST_CASE("Without tilt nothing waits: a game begins and a resume resumes at once", "[input-controller][calibration]")
 {
     Rig rig;
-    rig.start_level();
-    rig.queue->hold(0.5F, 0.0F, 25.0F);
-    rig.input.update();
+    rig.profile.setControls(ProfileViewModel::Controls::Dpad);
+    rig.game.start();
+    CHECK_FALSE(rig.input.calibrating());
+    CHECK(rig.game.state() == GameViewModel::State::Running);
     rig.game.pause();
-    rig.game.resume();
-    rig.queue->hold(0.3F, 0.0F, 25.0F);
-    rig.input.update();
-    CHECK(rig.input.tiltHeading() == Heading::Up);
+    rig.input.resume();
+    CHECK(rig.game.state() == GameViewModel::State::Running);
+    rig.input.startCalibration();
+    CHECK_FALSE(rig.input.calibrating());
+}
 
-    // Restarting from the pause is a new game, held as it is now.
-    rig.game.pause();
+TEST_CASE("Leaving or restarting while the phone is calibrated ends the wait", "[input-controller][tilt][calibration]")
+{
+    Rig rig;
+    rig.game.start();
+    REQUIRE(rig.input.calibrating());
+    rig.game.newGame();
+    CHECK_FALSE(rig.input.calibrating());
+    CHECK(rig.input.calibrationProgress() == 0.0);
+
+    rig.game.start();
+    REQUIRE(rig.input.calibrating());
     rig.game.restart();
-    rig.queue->hold(0.3F, 0.0F, 25.0F);
-    rig.input.update();
-    CHECK(rig.input.tiltHeading() == Heading::None);
+    // A restart is a new game, which waits for its own calibration.
+    CHECK(rig.input.calibrating());
+    CHECK(rig.input.calibrationProgress() == 0.0);
+    rig.input.update(InputController::CALIBRATION_SECONDS + 0.1);
+    CHECK(rig.game.state() == GameViewModel::State::Running);
 }
 
 TEST_CASE("Inverted axes steer the other way", "[input-controller][tilt]")
