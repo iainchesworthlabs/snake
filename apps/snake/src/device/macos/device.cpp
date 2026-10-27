@@ -9,7 +9,8 @@
 namespace snake::ui::device
 {
 
-// A computer: no accelerometer is used (a laptop that has one is held flat), and nothing buzzes.
+// A computer: no accelerometer is used (a laptop that has one is held flat), nothing buzzes, and the window does not
+// turn.
 
 std::unique_ptr<input::SampleSource> make_accelerometer()
 {
@@ -20,5 +21,7 @@ std::unique_ptr<Haptics> make_haptics()
 {
     return std::make_unique<NoHaptics>();
 }
+
+void lock_orientation(bool /*locked*/) {}
 
 } // namespace snake::ui::device

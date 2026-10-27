@@ -28,4 +28,9 @@ void set_accelerometer_factory(AccelerometerFactory factory);
 /// The motor of the device, or a Haptics that does nothing. Never null.
 [[nodiscard]] std::unique_ptr<Haptics> make_haptics();
 
+/// Holds the display in the orientation it is in now (true), so that tilting the phone to steer cannot turn the screen,
+/// or lets it follow the device again (false). A computer's window does not turn, so it does nothing there. Call it
+/// from the thread of the user interface.
+void lock_orientation(bool locked);
+
 } // namespace snake::ui::device

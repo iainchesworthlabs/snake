@@ -2408,3 +2408,25 @@ TEST_CASE("The leaderboard, the settings, the game over and the name entry fit i
         check_fit(app, "name entry");
     }
 }
+
+TEST_CASE("A phone that turns during a game waits for the player, and a computer's window does not stop it",
+          "[screens][landscape]")
+{
+    {
+        App app(true);
+        app.profile().setControls(ProfileViewModel::Controls::Swipe);
+        app.start_classic();
+        REQUIRE(app.game().state() == State::Running);
+        app.window().resize(LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        QTest::qWait(20);
+        CHECK(app.game().state() == State::Paused);
+    }
+    {
+        App app(false);
+        app.start_classic();
+        REQUIRE(app.game().state() == State::Running);
+        app.window().resize(1024, 768);
+        QTest::qWait(20);
+        CHECK(app.game().state() == State::Running);
+    }
+}

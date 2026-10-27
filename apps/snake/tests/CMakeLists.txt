@@ -19,6 +19,7 @@ add_executable(snake_viewmodel_tests
     test_haptics.cpp
     test_language_choice.cpp
     test_input_controller.cpp
+    test_orientation_director.cpp
     test_save_file.cpp
     test_sound_director.cpp
     ../src/input/qt_keys.cpp
@@ -50,6 +51,8 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/leaderboard_model.hpp
     ../src/viewmodel/mode_list_model.cpp
     ../src/viewmodel/mode_list_model.hpp
+    ../src/viewmodel/orientation_director.cpp
+    ../src/viewmodel/orientation_director.hpp
     ../src/viewmodel/profile_view_model.cpp
     ../src/viewmodel/profile_view_model.hpp
     ../src/viewmodel/sound_director.cpp

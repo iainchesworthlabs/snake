@@ -5,10 +5,13 @@
 #include "device/qt_accelerometer.hpp"
 #include "snake/input/sample_source.hpp"
 
+#include <jni.h>
+
 #include <QCoreApplication>
 #include <QJniEnvironment>
 #include <QJniObject>
 #include <QString>
+#include <QVariant>
 #include <memory>
 
 namespace snake::ui::device
@@ -68,6 +71,27 @@ std::unique_ptr<input::SampleSource> make_accelerometer()
 std::unique_ptr<Haptics> make_haptics()
 {
     return std::make_unique<AndroidHaptics>();
+}
+
+void lock_orientation(bool locked)
+{
+    // ActivityInfo.SCREEN_ORIENTATION_LOCKED holds the orientation the screen is in now; FULL_USER lets it follow the
+    // sensor again, as long as the person has not locked rotation in the system's settings.
+    constexpr jint SCREEN_ORIENTATION_FULL_USER = 13;
+    constexpr jint SCREEN_ORIENTATION_LOCKED = 14;
+    // The activity is changed on the thread of the Android user interface, which is not the one the game runs on.
+    QNativeInterface::QAndroidApplication::runOnAndroidMainThread(
+        [locked]
+        {
+            const QJniObject activity = QNativeInterface::QAndroidApplication::context();
+            if (activity.isValid())
+            {
+                activity.callMethod<void>("setRequestedOrientation", "(I)V",
+                                          locked ? SCREEN_ORIENTATION_LOCKED : SCREEN_ORIENTATION_FULL_USER);
+            }
+            QJniEnvironment().checkAndClearExceptions();
+            return QVariant();
+        });
 }
 
 } // namespace snake::ui::device

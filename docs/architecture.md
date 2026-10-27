@@ -273,8 +273,15 @@ a call and another program on a phone, and the music of a game follows it. `Soun
 is active or inactive (a call, the notification shade) and false when it is put away (suspended or hidden): then the music
 stops and no effect sounds, and the tune for the moment comes back with the program.
 
-**Orientation and storage.** The screen is fixed to portrait in the Android manifest and the iOS property list, so it does
-not turn during play. The save file is `save.snk` in `QStandardPaths::AppDataLocation`, which Qt makes the program's own
+**Orientation and storage.** A phone or a tablet may be held either way (the iOS property list and the Android manifest allow
+it, and every screen has a layout for each), but the screen does not turn during a game, so tilting to steer cannot turn it.
+`OrientationDirector` calls `device::lock_orientation(true)` when a game starts and `false` when the player is back at the
+title: on Android it is `Activity.setRequestedOrientation` (locked, then full user), and on iOS the program answers
+`application:supportedInterfaceOrientationsForWindow:` for Qt's delegate with the orientation the screen was in when the game
+began, because Qt's view controller takes its orientations from the property list and offers no way to hold one. A computer's
+window does nothing. If the screen turns anyway the game pauses (`Main.qml`), because the layout is new and the tilt was
+calibrated for the old one; resuming calibrates again. The accelerometer is read with `AutomaticOrientation`, so Qt turns its
+axes with the screen and x is to the player's right in either orientation. None of it has run on a device. The save file is `save.snk` in `QStandardPaths::AppDataLocation`, which Qt makes the program's own
 private folder on Android and `Library/Application Support` in the bundle's container on iOS: no storage permission, and
 Android's backup is off, so the scores stay on the device.
 
