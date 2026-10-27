@@ -112,8 +112,18 @@ void lock_orientation(bool locked)
     g_Locked = locked;
     if (!locked)
     {
-        // The phone may have been turned while the screen was held: let it catch up now.
-        [UIViewController attemptRotationToDeviceOrientation];
+        // The phone may have been turned while the screen was held: ask the views to read the allowed orientations
+        // again, so it catches up now.
+        for (UIScene* scene in UIApplication.sharedApplication.connectedScenes)
+        {
+            if ([scene isKindOfClass:UIWindowScene.class])
+            {
+                for (UIWindow* window in static_cast<UIWindowScene*>(scene).windows)
+                {
+                    [window.rootViewController setNeedsUpdateOfSupportedInterfaceOrientations];
+                }
+            }
+        }
     }
 }
 

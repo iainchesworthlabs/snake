@@ -79,15 +79,15 @@ void lock_orientation(bool locked)
     // sensor again, as long as the person has not locked rotation in the system's settings.
     constexpr jint SCREEN_ORIENTATION_FULL_USER = 13;
     constexpr jint SCREEN_ORIENTATION_LOCKED = 14;
+    const jint requested = locked ? SCREEN_ORIENTATION_LOCKED : SCREEN_ORIENTATION_FULL_USER;
     // The activity is changed on the thread of the Android user interface, which is not the one the game runs on.
     QNativeInterface::QAndroidApplication::runOnAndroidMainThread(
-        [locked]
+        [requested]
         {
             const QJniObject activity = QNativeInterface::QAndroidApplication::context();
             if (activity.isValid())
             {
-                activity.callMethod<void>("setRequestedOrientation", "(I)V",
-                                          locked ? SCREEN_ORIENTATION_LOCKED : SCREEN_ORIENTATION_FULL_USER);
+                activity.callMethod<void>("setRequestedOrientation", "(I)V", requested);
             }
             QJniEnvironment().checkAndClearExceptions();
             return QVariant();
