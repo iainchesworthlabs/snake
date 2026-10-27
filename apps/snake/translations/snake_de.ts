@@ -275,8 +275,20 @@
         <translation>Neigung neu einstellen</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>Halte es, wie du gern spielst, und tippe dann.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>Neigungsempfindlichkeit</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>Sanft</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>Schnell</translation>
     </message>
     <message>
         <source>Sound</source>

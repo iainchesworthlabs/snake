@@ -178,15 +178,56 @@ FocusScope {
                         onClicked: root.input.startCalibration()
                     }
 
+                    // How far the phone must be tipped to steer: gentle for a player who tips it too easily, quick for one who finds
+                    // the usual hard to reach.
                     Text {
                         visible: root.input.controls === InputController.Scheme.Tilt
                         width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
                         color: Theme.ink
-                        font.pixelSize: 14
+                        font.pixelSize: 16
                         font.weight: Font.Medium
-                        text: qsTr("Hold it how you like to play, then tap.")
+                        text: qsTr("Tilt sensitivity")
+                    }
+
+                    Row {
+                        visible: root.input.controls === InputController.Scheme.Tilt
+                        spacing: 8
+
+                        Repeater {
+                            model: [
+                                {
+                                    name: "Gentle",
+                                    label: qsTr("Gentle"),
+                                    value: ProfileViewModel.TiltSensitivity.Gentle
+                                },
+                                {
+                                    name: "Normal",
+                                    label: qsTr("Normal"),
+                                    value: ProfileViewModel.TiltSensitivity.Normal
+                                },
+                                {
+                                    name: "Quick",
+                                    label: qsTr("Quick"),
+                                    value: ProfileViewModel.TiltSensitivity.Quick
+                                }
+                            ]
+
+                            ToyButton {
+                                id: sensitivity
+
+                                required property var modelData
+
+                                objectName: "sensitivity" + sensitivity.modelData.name
+                                width: 90
+                                height: 42
+                                kind: root.profile.tiltSensitivity === sensitivity.modelData.value ? "chosen" : "secondary"
+                                activeFocusOnTab: false
+                                fontSize: 16
+                                drop: 3
+                                text: sensitivity.modelData.label
+                                onClicked: root.profile.tiltSensitivity = sensitivity.modelData.value
+                            }
+                        }
                     }
                 }
 

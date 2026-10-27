@@ -45,8 +45,14 @@ class InputController : public QObject
     /// The way the tilt steers now, or Heading::None.
     Q_PROPERTY(Heading tiltHeading READ tiltHeading NOTIFY tiltChanged FINAL)
     /// The angles of the dead zone and of the turn, for the indicator.
-    Q_PROPERTY(double deadZone READ deadZone CONSTANT FINAL)
-    Q_PROPERTY(double threshold READ threshold CONSTANT FINAL)
+    Q_PROPERTY(double deadZone READ deadZone NOTIFY tiltSettingsChanged FINAL)
+    Q_PROPERTY(double threshold READ threshold NOTIFY tiltSettingsChanged FINAL)
+    /// The latest reading of the accelerometer as it came, in g (flat and face up is z of 1), and how many have come.
+    /// For the readout that tapping the tilt indicator shows, which tells a bug report what the sensor says.
+    Q_PROPERTY(double rawX READ rawX NOTIFY rawChanged FINAL)
+    Q_PROPERTY(double rawY READ rawY NOTIFY rawChanged FINAL)
+    Q_PROPERTY(double rawZ READ rawZ NOTIFY rawChanged FINAL)
+    Q_PROPERTY(int rawCount READ rawCount NOTIFY rawChanged FINAL)
     /// True while the phone is being calibrated: a short wait, with the game held, in which the player holds the phone
     /// the way they like to play and the pose is taken as neutral. It follows the start of a game and a resume from the
     /// pause dialog when tilt steers, and the dialog's Recalibrate tilt.
@@ -113,13 +119,14 @@ public:
         return static_cast<double>(m_Reading.up_degrees);
     }
     [[nodiscard]] Heading tiltHeading() const noexcept;
-    [[nodiscard]] static double deadZone() noexcept
+    /// The angles, which follow the tilt sensitivity the profile has chosen.
+    [[nodiscard]] double deadZone() const noexcept
     {
-        return static_cast<double>(input::TILT_SELECTOR.release);
+        return static_cast<double>(m_Tilt.config().selector.release);
     }
-    [[nodiscard]] static double threshold() noexcept
+    [[nodiscard]] double threshold() const noexcept
     {
-        return static_cast<double>(input::TILT_SELECTOR.engage);
+        return static_cast<double>(m_Tilt.config().selector.engage);
     }
 
     /// Once a frame: takes in the accelerometer's readings, and while a game runs with tilt chosen steers by them. Call
@@ -130,6 +137,23 @@ public:
     /// How long a calibration takes: long enough for the filter to settle on the pose and for the player to see it
     /// happen.
     static constexpr double CALIBRATION_SECONDS = 1.5;
+
+    [[nodiscard]] double rawX() const noexcept
+    {
+        return static_cast<double>(m_Raw.x);
+    }
+    [[nodiscard]] double rawY() const noexcept
+    {
+        return static_cast<double>(m_Raw.y);
+    }
+    [[nodiscard]] double rawZ() const noexcept
+    {
+        return static_cast<double>(m_Raw.z);
+    }
+    [[nodiscard]] int rawCount() const noexcept
+    {
+        return m_RawCount;
+    }
 
     [[nodiscard]] bool calibrating() const noexcept
     {
@@ -171,10 +195,14 @@ signals:
     void profileChanged();
     void controlsChanged();
     void tiltChanged();
+    void tiltSettingsChanged();
+    void rawChanged();
     void calibratingChanged();
     void calibrationProgressChanged();
 
 private:
+    class RecordingSource;
+
     void on_game_started();
     void finish_calibration();
     void cancel_calibration();
@@ -183,6 +211,7 @@ private:
     void on_settings_changed();
 
     std::unique_ptr<input::SampleSource> m_Source;
+    RecordingSource* m_Recording = nullptr; ///< m_Source, when there is one.
     input::TiltProcessor m_Tilt;
     input::TiltReading m_Reading;
     input::SwipeRecogniser m_Swipe;
@@ -191,6 +220,8 @@ private:
     float m_StickRight = 0.0F;
     float m_StickUp = 0.0F;
     bool m_StickHeld = false;
+    input::AccelSample m_Raw{};
+    int m_RawCount = 0;
     bool m_Calibrating = false;
     double m_CalibrationElapsed = 0.0;
     double m_CalibrationProgress = 0.0;

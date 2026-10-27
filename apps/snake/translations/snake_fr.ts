@@ -122,7 +122,7 @@
     </message>
     <message>
         <source>Calibrating tilt</source>
-        <translation>Calibrage de l'inclinaison</translation>
+        <translation>Calibrage de l&apos;inclinaison</translation>
     </message>
     <message>
         <source>Hold the phone how you like to play.</source>
@@ -275,8 +275,20 @@
         <translation>Recalibrer l&apos;inclinaison</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>Tiens-le comme tu aimes jouer, puis appuie.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>Sensibilité de l'inclinaison</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>Douce</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normale</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>Rapide</translation>
     </message>
     <message>
         <source>Sound</source>

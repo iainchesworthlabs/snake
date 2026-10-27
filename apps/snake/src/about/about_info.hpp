@@ -22,6 +22,9 @@ class AboutInfo : public QObject
     Q_PROPERTY(QString licence READ licence CONSTANT FINAL)
     Q_PROPERTY(QString repositoryUrl READ repositoryUrl CONSTANT FINAL)
     Q_PROPERTY(QString sourceRevision READ sourceRevision CONSTANT FINAL)
+    /// The revision as About shows it: a commit is its first seven characters, as git shows it, and a tag stays as it
+    /// is.
+    Q_PROPERTY(QString shortRevision READ shortRevision CONSTANT FINAL)
     Q_PROPERTY(QString languageDetail READ languageDetail CONSTANT FINAL)
     Q_PROPERTY(QString licenceText READ licenceText CONSTANT FINAL)
     Q_PROPERTY(QString noticesText READ noticesText CONSTANT FINAL)
@@ -35,6 +38,10 @@ public:
     [[nodiscard]] static QString licence();
     [[nodiscard]] static QString repositoryUrl();
     [[nodiscard]] static QString sourceRevision();
+    [[nodiscard]] static QString shortRevision();
+    /// `revision` as About shows it: 12 or more hexadecimal digits (a commit) become the first 7, anything else is as
+    /// it was.
+    [[nodiscard]] static QString shortened(const QString& revision);
     /// Which language the game chose, and the languages the system offered, in its order. For finding out why a device
     /// got a language it should not have. Not translated: it is for the person who reports it.
     [[nodiscard]] static QString languageDetail();

@@ -64,7 +64,10 @@ PlayerName get_name(sim::ByteReader& reader) noexcept
 void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
 {
     const Settings& settings = data.settings;
-    writer.u8(static_cast<std::uint8_t>(settings.controls));
+    // The control scheme is the low half of the byte and the tilt sensitivity the high half (a file from before it has
+    // zero).
+    writer.u8(static_cast<std::uint8_t>(static_cast<std::uint8_t>(settings.controls) |
+                                        (static_cast<std::uint8_t>(settings.tilt_sensitivity) << 4U)));
     writer.u8(static_cast<std::uint8_t>((settings.invert_axes ? FLAG_INVERT_AXES : 0U) |
                                         (settings.sound ? FLAG_SOUND : 0U) | (settings.music ? FLAG_MUSIC : 0U) |
                                         (settings.reduced_motion ? FLAG_REDUCED_MOTION : 0U)));
@@ -96,14 +99,18 @@ std::optional<SaveData> get_payload_v1(std::span<const std::uint8_t> payload) no
     sim::ByteReader reader(payload);
     SaveData data;
 
-    const std::uint8_t controls = reader.u8();
+    const std::uint8_t controls_byte = reader.u8();
+    const std::uint8_t controls = controls_byte & 0x0FU;
+    const std::uint8_t sensitivity = controls_byte >> 4U;
     const std::uint8_t flags = reader.u8();
     const std::uint32_t unlock_bits = reader.u32();
-    if (controls >= CONTROL_SCHEME_COUNT || (flags & ~KNOWN_FLAGS) != 0 || !data.unlocks.restore(unlock_bits))
+    if (controls >= CONTROL_SCHEME_COUNT || sensitivity >= TILT_SENSITIVITY_COUNT || (flags & ~KNOWN_FLAGS) != 0 ||
+        !data.unlocks.restore(unlock_bits))
     {
         return std::nullopt;
     }
     data.settings.controls = static_cast<ControlScheme>(controls);
+    data.settings.tilt_sensitivity = static_cast<TiltSensitivity>(sensitivity);
     data.settings.invert_axes = (flags & FLAG_INVERT_AXES) != 0;
     data.settings.sound = (flags & FLAG_SOUND) != 0;
     data.settings.music = (flags & FLAG_MUSIC) != 0;

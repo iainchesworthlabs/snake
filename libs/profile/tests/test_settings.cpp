@@ -9,6 +9,7 @@ TEST_CASE("The settings of a first run", "[settings]")
 {
     const Settings settings;
     CHECK(settings.controls == ControlScheme::TILT);
+    CHECK(settings.tilt_sensitivity == TiltSensitivity::NORMAL);
     CHECK_FALSE(settings.invert_axes);
     CHECK(settings.sound);
     CHECK(settings.music);
@@ -22,6 +23,14 @@ TEST_CASE("The control schemes are numbered as they are saved", "[settings][form
     CHECK(static_cast<int>(ControlScheme::DPAD) == 2);
     CHECK(static_cast<int>(ControlScheme::JOYSTICK) == 3);
     CHECK(CONTROL_SCHEME_COUNT == 4);
+}
+
+TEST_CASE("The tilt sensitivities are numbered as they are saved", "[settings][format]")
+{
+    CHECK(static_cast<int>(TiltSensitivity::NORMAL) == 0);
+    CHECK(static_cast<int>(TiltSensitivity::QUICK) == 1);
+    CHECK(static_cast<int>(TiltSensitivity::GENTLE) == 2);
+    CHECK(TILT_SENSITIVITY_COUNT == 3);
 }
 
 TEST_CASE("Settings are equal when every setting is", "[settings]")

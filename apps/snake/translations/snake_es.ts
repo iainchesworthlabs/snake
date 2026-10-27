@@ -275,8 +275,20 @@
         <translation>Recalibrar inclinación</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>Sujétalo como te guste jugar y toca.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>Sensibilidad de la inclinación</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>Suave</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>Rápida</translation>
     </message>
     <message>
         <source>Sound</source>

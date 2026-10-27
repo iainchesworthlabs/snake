@@ -275,8 +275,20 @@
         <translation>כיול מחדש של ההטיה</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>החזיקו כך שנוח לשחק, ואז הקישו.</translation>
+        <source>Tilt sensitivity</source>
+        <translation>רגישות ההטיה</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>עדינה</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>רגילה</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>מהירה</translation>
     </message>
     <message>
         <source>Sound</source>

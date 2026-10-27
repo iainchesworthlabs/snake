@@ -19,6 +19,10 @@ Item {
     Accessible.role: Accessible.Indicator
     Accessible.name: qsTr("Tilt")
 
+    // Three taps show what the sensor says, for a bug report; three more hide it.
+    property int taps: 0
+    readonly property bool readout: taps % 6 >= 3
+
     Rectangle {
         y: 4
         width: parent.width
@@ -73,5 +77,22 @@ Item {
         color: root.input.tiltHeading !== InputController.Heading.None ? Theme.accent : Theme.ink
         border.width: 3
         border.color: Theme.ink
+    }
+
+    TapHandler {
+        onTapped: root.taps += 1
+    }
+
+    // Not translated. The sensor as it came (g; flat and face up reads z of 1), then the angles from where it was calibrated.
+    Text {
+        objectName: "tiltReadout"
+        visible: root.readout
+        anchors.top: parent.bottom
+        anchors.topMargin: 10
+        anchors.horizontalCenter: parent.horizontalCenter
+        horizontalAlignment: Text.AlignHCenter
+        color: Theme.ink
+        font.pixelSize: 12
+        text: "x " + root.input.rawX.toFixed(2) + "  y " + root.input.rawY.toFixed(2) + "  z " + root.input.rawZ.toFixed(2) + "  n " + root.input.rawCount + "\n" + "right " + root.input.tiltRight.toFixed(1) + "\u00B0  up " + root.input.tiltUp.toFixed(1) + "\u00B0"
     }
 }

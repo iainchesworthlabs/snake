@@ -9,6 +9,8 @@ FocusScope {
     id: root
 
     required property ProfileViewModel profile
+    // How many times the version has been tapped; five show the details for a bug report.
+    property int versionTaps: 0
 
     // The player left the screen: the settings show next.
     signal closed
@@ -93,6 +95,12 @@ FocusScope {
                         font.pixelSize: 17
                         font.weight: Font.DemiBold
                         text: qsTr("Version %1").arg(AboutInfo.version)
+
+                        // Five taps show the details a bug report needs (the language chosen, the save file): they are for
+                        // whoever is asked for them, and not for the page.
+                        TapHandler {
+                            onTapped: root.versionTaps += 1
+                        }
                     }
 
                     Text {
@@ -122,12 +130,13 @@ FocusScope {
                         color: Theme.ink
                         font.pixelSize: 15
                         font.weight: Font.Medium
-                        text: qsTr("Revision: %1").arg(AboutInfo.sourceRevision)
+                        text: qsTr("Revision: %1").arg(AboutInfo.shortRevision)
                     }
 
                     // Not translated: for a bug report about the language.
                     Text {
                         objectName: "aboutLanguage"
+                        visible: root.versionTaps >= 5
                         width: parent.width
                         wrapMode: Text.WrapAnywhere
                         color: Theme.ink
@@ -137,6 +146,7 @@ FocusScope {
 
                     Text {
                         objectName: "aboutSaveStatus"
+                        visible: root.versionTaps >= 5
                         width: parent.width
                         wrapMode: Text.WrapAnywhere
                         color: Theme.ink

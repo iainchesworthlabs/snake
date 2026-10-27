@@ -283,6 +283,17 @@ void ProfileViewModel::setControls(Controls controls)
                     { settings.controls = static_cast<profile::ControlScheme>(controls); });
 }
 
+ProfileViewModel::TiltSensitivity ProfileViewModel::tiltSensitivity() const noexcept
+{
+    return static_cast<TiltSensitivity>(m_Data.settings.tilt_sensitivity);
+}
+
+void ProfileViewModel::setTiltSensitivity(TiltSensitivity sensitivity)
+{
+    change_settings([sensitivity](profile::Settings& settings)
+                    { settings.tilt_sensitivity = static_cast<profile::TiltSensitivity>(sensitivity); });
+}
+
 void ProfileViewModel::setInvertAxes(bool invert)
 {
     change_settings([invert](profile::Settings& settings) { settings.invert_axes = invert; });

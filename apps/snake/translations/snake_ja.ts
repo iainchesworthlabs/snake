@@ -275,8 +275,20 @@
         <translation>かたむきを あわせなおす</translation>
     </message>
     <message>
-        <source>Hold it how you like to play, then tap.</source>
-        <translation>あそびやすい もちかたで もって、タップしてね。</translation>
+        <source>Tilt sensitivity</source>
+        <translation>かたむきの びんかんさ</translation>
+    </message>
+    <message>
+        <source>Gentle</source>
+        <translation>やさしい</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>ふつう</translation>
+    </message>
+    <message>
+        <source>Quick</source>
+        <translation>はやい</translation>
     </message>
     <message>
         <source>Sound</source>
