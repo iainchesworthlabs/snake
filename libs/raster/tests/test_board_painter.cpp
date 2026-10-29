@@ -252,6 +252,77 @@ TEST_CASE("The bomb in the body is a ball on its piece, and the piece flashes pi
     CHECK(probe(near_odd, CELL, {5, 10}, 2, 14) != rgb565(palette::TONGUE));
 }
 
+TEST_CASE("The spark of the bomb in the body is gold, and pink when the look says so", "[raster][potato]")
+{
+    const std::vector<Cell> snake{{10, 10}, {9, 10}, {8, 10}, {7, 10}, {6, 10}, {5, 10}, {4, 10}};
+    const auto game = Simulation::from_setup(
+        {.snake = snake, .food = {2, 2}, .seed = 1, .variant = Variant::HOT_POTATO, .lump = snake[2]});
+    REQUIRE(game.has_value());
+    Canvas gold(CELL);
+    paint_board(gold.surface(), CELL, *game);
+    Canvas pink(CELL);
+    paint_board(pink.surface(), CELL, *game, {.spark = true});
+    CHECK(probe(gold, CELL, {8, 10}, 16, 1) == rgb565(palette::MEDAL_GOLD));
+    CHECK(probe(pink, CELL, {8, 10}, 16, 1) == rgb565(palette::TONGUE));
+}
+
+TEST_CASE("A bomb near the tail of a snake that crashed does not flash", "[raster][potato]")
+{
+    const std::vector<Cell> snake{{10, 10}, {9, 10}, {8, 10}, {7, 10}, {6, 10}, {5, 10}, {4, 10}};
+    // Two ticks played, so a snake that was still running would flash pink on this one.
+    const auto game = Simulation::from_setup({.snake = snake,
+                                              .food = {2, 2},
+                                              .seed = 1,
+                                              .ticks = 2,
+                                              .running = false,
+                                              .variant = Variant::HOT_POTATO,
+                                              .lump = snake[5]});
+    REQUIRE(game.has_value());
+    Canvas canvas(CELL);
+    paint_board(canvas.surface(), CELL, *game);
+    CHECK(probe(canvas, CELL, {5, 10}, 2, 14) == rgb565(palette::SURFACE)); // its own stripe
+    CHECK(probe(canvas, CELL, {5, 10}, 16, 1) == rgb565(palette::MEDAL_GOLD));
+}
+
+TEST_CASE("A game that was won is drawn with its eyes open", "[raster][snake]")
+{
+    // A snake that fills the board in rows, listed from the tail and then turned round to start at the head.
+    std::vector<Cell> snake;
+    for (std::uint8_t y = 0; y < snake::sim::BOARD_ROWS; ++y)
+    {
+        for (std::uint8_t step = 0; step < snake::sim::BOARD_COLUMNS; ++step)
+        {
+            snake.push_back({static_cast<std::uint8_t>(y % 2 == 0 ? step : snake::sim::BOARD_COLUMNS - 1 - step), y});
+        }
+    }
+    std::ranges::reverse(snake);
+    const auto game = Simulation::from_setup({.heading = snake::sim::Direction::LEFT,
+                                              .snake = snake,
+                                              .food = snake.front(),
+                                              .seed = 1,
+                                              .running = false,
+                                              .won = true});
+    REQUIRE(game.has_value());
+    REQUIRE(game->won());
+    Canvas canvas(CELL);
+    paint_board(canvas.surface(), CELL, *game);
+    // Facing left, the pupil of the eye on the lower side is a block of ink, which a cross would not make.
+    CHECK(probe(canvas, CELL, game->head(), 9, 23) == rgb565(palette::INK));
+}
+
+TEST_CASE("A heading that is none of the four is drawn as facing right", "[raster][snake]")
+{
+    const std::vector<Cell> snake{{10, 10}, {9, 10}, {8, 10}};
+    const auto odd = Simulation::from_setup(
+        {.heading = static_cast<snake::sim::Direction>(4), .snake = snake, .food = {2, 2}, .seed = 1});
+    REQUIRE(odd.has_value());
+    Canvas odd_canvas(CELL);
+    paint_board(odd_canvas.surface(), CELL, *odd);
+    Canvas right_canvas(CELL);
+    paint_board(right_canvas.surface(), CELL, game_with(snake, {2, 2}));
+    CHECK(odd_canvas.pixels == right_canvas.pixels);
+}
+
 TEST_CASE("The painter writes only inside the board and leaves the rest of the surface alone", "[raster][safety]")
 {
     for (const int cell : {8, 9, 12, 16, 24, 27, 32, 40})
@@ -280,6 +351,12 @@ TEST_CASE("A surface that is too small, and a cell that is too small, are left a
     small.pixels.assign(static_cast<std::size_t>(small.width) * static_cast<std::size_t>(small.height), UNTOUCHED);
     paint_board(small.surface(), CELL, game);
     CHECK(std::ranges::all_of(small.pixels, [](std::uint16_t pixel) { return pixel == UNTOUCHED; }));
+
+    Canvas narrow(CELL);
+    narrow.width -= 1; // one column short
+    narrow.pixels.assign(static_cast<std::size_t>(narrow.width) * static_cast<std::size_t>(narrow.height), UNTOUCHED);
+    paint_board(narrow.surface(), CELL, game);
+    CHECK(std::ranges::all_of(narrow.pixels, [](std::uint16_t pixel) { return pixel == UNTOUCHED; }));
 
     Canvas tiny(7);
     paint_board(tiny.surface(), 7, game);

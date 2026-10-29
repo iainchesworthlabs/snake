@@ -138,7 +138,8 @@ public:
         const int bevel_top = bevel > 0 ? rect.bottom - bevel : rect.bottom;
         const auto add = [&](int left, int top, int right, int bottom)
         {
-            if (right <= left || bottom <= top)
+            // A band can have no height (a radius under 2); one with no width is left to fill().
+            if (bottom <= top)
             {
                 return;
             }
@@ -366,11 +367,11 @@ void paint_board(const Surface& surface, int cell, const sim::Simulation& game, 
     const auto& snake = game.snake();
     const std::optional<std::size_t> bomb = game.lump_index();
     const bool urgent = bomb && *bomb + 3 >= snake.size() && game.running();
-    const bool flash_on = urgent && (game.ticks() % 2 == 0);
+    const std::optional<std::size_t> flashing = (urgent && (game.ticks() % 2 == 0)) ? bomb : std::nullopt;
     for (std::size_t index = snake.size(); index > 1; --index)
     {
         std::uint32_t rgb = stripe_rgb(index - 1);
-        if (flash_on && bomb && *bomb == index - 1)
+        if (flashing == index - 1)
         {
             rgb = palette::TONGUE;
         }
@@ -379,7 +380,7 @@ void paint_board(const Surface& surface, int cell, const sim::Simulation& game, 
     add_head(painter, cell, game.head(), game.heading(), !game.running() && !game.won());
     if (bomb)
     {
-        add_bomb_in_body(painter, cell, snake[*bomb], flash_on || look.spark);
+        add_bomb_in_body(painter, cell, snake[*bomb], flashing.has_value() || look.spark);
     }
 }
 
