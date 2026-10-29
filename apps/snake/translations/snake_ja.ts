@@ -330,6 +330,10 @@
         <translation>おんがく</translation>
     </message>
     <message>
+        <source>Volume</source>
+        <translation>おとの おおきさ</translation>
+    </message>
+    <message>
         <source>Reduced motion</source>
         <translation>うごきを へらす</translation>
     </message>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>せってい</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>

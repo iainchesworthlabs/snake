@@ -7,6 +7,8 @@
 #include <miniaudio.h>
 
 #include <QString>
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -22,6 +24,7 @@ struct AudioOutput::Impl
     /// device's thread takes it in the callback and stopping the device waits for that thread.
     mutable std::mutex lock;
     audio::Synth synth{SAMPLE_RATE};
+    float gain = 1.0F; // the volume, applied to what the synthesiser renders
     bool running = false;
     ma_context context{};
     ma_device device{};
@@ -132,6 +135,12 @@ void AudioOutput::stop_music()
     m_Impl->synth.stop_music();
 }
 
+void AudioOutput::set_volume(float gain)
+{
+    const std::lock_guard guard(m_Impl->lock);
+    m_Impl->gain = std::clamp(gain, 0.0F, 1.0F);
+}
+
 bool AudioOutput::effects_idle() const
 {
     const std::lock_guard guard(m_Impl->lock);
@@ -148,6 +157,13 @@ void AudioOutput::render(std::span<std::int16_t> out)
 {
     const std::lock_guard guard(m_Impl->lock);
     m_Impl->synth.render(out);
+    if (m_Impl->gain < 1.0F)
+    {
+        for (std::int16_t& sample : out)
+        {
+            sample = static_cast<std::int16_t>(std::lround(static_cast<float>(sample) * m_Impl->gain));
+        }
+    }
 }
 
 } // namespace snake::ui

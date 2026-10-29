@@ -7,6 +7,7 @@
 #include "viewmodel/sound_director.hpp"
 #include "viewmodel/ui_events.hpp"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <QSignalSpy>
@@ -44,6 +45,16 @@ public:
     {
         m_Log.push_back("stop");
     }
+    void set_volume(float gain) override
+    {
+        m_Volume = gain;
+    }
+
+    /// The gain it was last given, or -1 if it has not been given one. Kept out of the log of sounds.
+    [[nodiscard]] float volume() const
+    {
+        return m_Volume;
+    }
 
     /// What has been asked since the last call.
     QStringList take()
@@ -55,6 +66,7 @@ public:
 
 private:
     QStringList m_Log;
+    float m_Volume = -1.0F;
 };
 
 QString effect(Effect value)
@@ -366,4 +378,28 @@ TEST_CASE("A game that goes on while the program is away has its own tune when i
     rig.sink.take();
     rig.director.setActive(true);
     CHECK(rig.sink.take() == QStringList{music(Tune::GAME)});
+}
+
+TEST_CASE("The sink is told how loud to be when the profile is given and when the volume changes", "[sound][volume]")
+{
+    Rig rig;
+    // The first run is as loud as the synthesiser goes.
+    CHECK(rig.sink.volume() == 1.0F);
+
+    rig.profile.setVolume(5);
+    CHECK(rig.sink.volume() == Catch::Approx(0.25F)); // half of the steps, squared, so that the steps sound even
+    rig.profile.setVolume(0);
+    CHECK(rig.sink.volume() == 0.0F);
+    rig.profile.setVolume(10);
+    CHECK(rig.sink.volume() == 1.0F);
+}
+
+TEST_CASE("A volume saved before the director is made reaches the sink at once", "[sound][volume]")
+{
+    RecordingSink sink;
+    ProfileViewModel profile;
+    profile.setVolume(2);
+    SoundDirector director(&sink);
+    director.setProfile(&profile);
+    CHECK(sink.volume() == Catch::Approx(0.04F));
 }

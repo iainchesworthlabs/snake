@@ -276,7 +276,7 @@
     </message>
     <message>
         <source>Tilt sensitivity</source>
-        <translation>Sensibilité de l'inclinaison</translation>
+        <translation>Sensibilité de l&apos;inclinaison</translation>
     </message>
     <message>
         <source>Gentle</source>
@@ -328,6 +328,10 @@
     <message>
         <source>Music</source>
         <translation>Musique</translation>
+    </message>
+    <message>
+        <source>Volume</source>
+        <translation>Volume</translation>
     </message>
     <message>
         <source>Reduced motion</source>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>Réglages</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 sur %2</translation>
     </message>
 </context>
 <context>

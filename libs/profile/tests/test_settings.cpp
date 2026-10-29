@@ -13,6 +13,7 @@ TEST_CASE("The settings of a first run", "[settings]")
     CHECK_FALSE(settings.invert_axes);
     CHECK(settings.sound);
     CHECK(settings.music);
+    CHECK(settings.volume == VOLUME_MAX);
     CHECK_FALSE(settings.reduced_motion);
 }
 
@@ -31,6 +32,11 @@ TEST_CASE("The tilt sensitivities are numbered as they are saved", "[settings][f
     CHECK(static_cast<int>(TiltSensitivity::QUICK) == 1);
     CHECK(static_cast<int>(TiltSensitivity::GENTLE) == 2);
     CHECK(TILT_SENSITIVITY_COUNT == 3);
+}
+
+TEST_CASE("The volume has ten steps above silence", "[settings]")
+{
+    CHECK(VOLUME_MAX == 10);
 }
 
 TEST_CASE("Settings are equal when every setting is", "[settings]")
@@ -52,6 +58,10 @@ TEST_CASE("Settings are equal when every setting is", "[settings]")
 
     changed = base;
     changed.music = false;
+    CHECK_FALSE(base == changed);
+
+    changed = base;
+    changed.volume = 3;
     CHECK_FALSE(base == changed);
 
     changed = base;

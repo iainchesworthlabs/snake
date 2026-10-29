@@ -61,7 +61,7 @@ unlocks and the versioned bytes they are saved as. It never reads or writes a fi
 bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each stores them its own
 way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
 
-The save file holds the settings, unlocks, recent names and leaderboards, at most 564 bytes. It starts with the marker
+The save file holds the settings, unlocks, recent names and leaderboards, at most 565 bytes. It starts with the marker
 `SNKS` and a version number, which stay in those places in every version, then the size of the rest, the data, and an
 FNV-1a checksum. `decode_save()` reads every version up to the current one and fills fields that a newer version added
 with their defaults, so an update never loses a player's scores. It returns an error value, never a partly filled
@@ -133,7 +133,7 @@ A game that makes the top 10 (`Leaderboard::rank_for()`) does not go on the boar
 clock the tests can replace), and remembers the name. A game that is not saved is lost when the next one ends or the
 program closes, and does not count as the best to beat.
 
-The settings are properties of `ProfileViewModel` (`controls`, `invertAxes`, `sound`, `music`, `reducedMotion`); a change
+The settings are properties of `ProfileViewModel` (`controls`, `invertAxes`, `sound`, `music`, `volume`, `reducedMotion`); a change
 is written to the save file and announced once through `settingsChanged`. On a first run the reduced-motion setting
 starts on when the system asks for less motion (`system_prefers_reduced_motion()` in `src/platform/`, which reads Qt's
 accessibility hints); a choice made later is kept. `resetLeaderboard(mode)` empties one board and leaves the unlocks
@@ -158,7 +158,9 @@ The director plays an effect for each, a jingle when a game starts from the titl
 resumes from a pause), a jingle when `ProfileViewModel` reports a new best, and a button sound when `UiEvents` says a
 button was pressed. It plays the title tune on the title and the game tune while a game runs, and stops the music while
 the game is paused or over. It follows the sound and music settings as they change: with sound off no effect plays, with
-music off no tune does, and turning music back on brings back the tune for the moment. `UiEvents` is the one QML
+music off no tune does, and turning music back on brings back the tune for the moment. The volume (0 to 10, saved from
+version 2 of the save file; a version 1 file reads as 10) goes to the sink as a gain, the step over the top step squared,
+and `AudioOutput` applies it to what the synthesiser renders; the sound and music switches are on top of it. `UiEvents` is the one QML
 singleton that every `ToyButton`, `ToggleSwitch` and mode card tells when it is pressed. `restart()` is one change of
 state, from wherever the game was to running, so the title tune never starts between games. The program gives the
 director its sink through `set_default_sound_sink()` before the user interface is created.
@@ -175,7 +177,8 @@ writing, so an older program never destroys what a newer one saved. The profile 
 The leaderboard is a `LeaderboardModel` (place, name, score as six digits, and whether the line is the one saved last) of
 the mode in `boardMode`; saving a score sets the mode and marks its line, and loading a save file clears the mark.
 
-`SettingsScreen` shows the sound, music and reduced-motion switches (`ToggleSwitch`), the inverted-axes switch on a device
+`SettingsScreen` shows the sound and music switches (`ToggleSwitch`), the volume (`VolumeControl`: minus and plus buttons
+and a row of pips, which the left and right arrow keys also turn), the reduced-motion switch, the inverted-axes switch on a device
 with a touch screen (`has_touch_screen()`, passed to `Main.qml` as `touchDevice`), and one reset button for each
 leaderboard. A reset asks first through `ConfirmDialog`, whose keyboard starts on the answer that keeps the scores. The
 pause dialog has the same sound and music switches and, on a touch device, the choice of controls (Tilt, Swipe, D-pad)

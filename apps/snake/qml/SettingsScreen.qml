@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
-// What the player can change: sound, music, reduced motion and, on a touch device, inverted axes; and the reset of a
+// What the player can change: sound, music, the volume, reduced motion and, on a touch device, inverted axes; and the reset of a
 // leaderboard, which asks first. The keyboard moves between the rows with the up and down arrows.
 FocusScope {
     id: root
@@ -128,6 +128,15 @@ FocusScope {
                             text: qsTr("Music")
                             checked: root.profile.music
                             onClicked: root.profile.music = !root.profile.music
+                        }
+
+                        VolumeControl {
+                            objectName: "volumeControl"
+                            width: parent.width
+                            text: qsTr("Volume")
+                            value: root.profile.volume
+                            maximum: root.profile.volumeMax
+                            onStepped: level => root.profile.volume = level
                         }
 
                         ToggleSwitch {

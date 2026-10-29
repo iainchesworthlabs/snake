@@ -141,7 +141,7 @@
     <name>JoystickPad</name>
     <message>
         <source>Joystick</source>
-        <translation>ג'ויסטיק</translation>
+        <translation>ג&apos;ויסטיק</translation>
     </message>
 </context>
 <context>
@@ -268,7 +268,7 @@
     </message>
     <message>
         <source>Joystick</source>
-        <translation>ג'ויסטיק</translation>
+        <translation>ג&apos;ויסטיק</translation>
     </message>
     <message>
         <source>Recalibrate tilt</source>
@@ -330,6 +330,10 @@
         <translation>מוזיקה</translation>
     </message>
     <message>
+        <source>Volume</source>
+        <translation>עוצמת קול</translation>
+    </message>
+    <message>
         <source>Reduced motion</source>
         <translation>פחות תנועה</translation>
     </message>
@@ -347,7 +351,7 @@
     </message>
     <message>
         <source>Reset the %1 leaderboard?</source>
-        <translation>לאפס את לוח התוצאות "%1"?</translation>
+        <translation>לאפס את לוח התוצאות &quot;%1&quot;?</translation>
     </message>
     <message>
         <source>Every score on it will be deleted. This cannot be undone.</source>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>הגדרות</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 מתוך %2</translation>
     </message>
 </context>
 <context>
