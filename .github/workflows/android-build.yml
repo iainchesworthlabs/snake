@@ -72,10 +72,10 @@ jobs:
       # The vcpkg toolchain is the toolchain file of every preset, Android's included (it chains to Qt's): the manifest has
       # one dependency for a device, miniaudio, which is a header.
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       # Gradle (androiddeployqt runs it) needs a JDK 17 or later; the runner image carries one and says where, so no
       # action is added to the supply chain for it.
