@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
-// The top 10 of a mode on this device, with a tab for each mode that can be played. The line saved last is coral.
+// The top 10 of a mode on this device, with a tab for each mode. The line saved last is coral.
 FocusScope {
     id: root
 
@@ -46,42 +46,65 @@ FocusScope {
 
         ShadowText {
             x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
-            maxWidth: page.landscape ? page.pageWidth - 66 - 15 - 256 - 10 : 300
+            maxWidth: page.landscape ? page.pageWidth - 66 - 15 : 300
             y: page.landscape ? 8 : 26
             offset: 3
             pixelSize: page.landscape ? 30 : 34
             text: qsTr("Leaderboard")
         }
 
-        // The tabs: under the title, or lying down on the other side of the title.
-        Row {
-            x: page.landscape ? Theme.mirrored(page.pageWidth - 15 - width, width, page.pageWidth) : 15
-            y: page.landscape ? 10 : 92
+        // The tabs, one for each mode: two rows of two under the title, or one row of four under it lying down.
+        Grid {
+            id: tabs
+
+            x: 15
+            y: page.landscape ? 54 : 92
+            columns: page.landscape ? 4 : 2
             spacing: 8
 
-            ToyButton {
-                objectName: "easyTab"
-                width: page.landscape ? 124 : 176
-                height: page.landscape ? 42 : 46
-                kind: root.profile.boardMode === GameViewModel.Mode.Easy ? "primary" : "secondary"
-                text: qsTr("Easy")
-                onClicked: root.profile.boardMode = GameViewModel.Mode.Easy
-            }
+            Repeater {
+                model: [
+                    {
+                        "id": "easy",
+                        "mode": GameViewModel.Mode.Easy,
+                        "name": qsTr("Easy")
+                    },
+                    {
+                        "id": "classic",
+                        "mode": GameViewModel.Mode.Classic,
+                        "name": qsTr("Classic")
+                    },
+                    {
+                        "id": "portals",
+                        "mode": GameViewModel.Mode.Portals,
+                        "name": qsTr("Portals")
+                    },
+                    {
+                        "id": "hotPotato",
+                        "mode": GameViewModel.Mode.HotPotato,
+                        "name": qsTr("Hot potato")
+                    }
+                ]
 
-            ToyButton {
-                objectName: "classicTab"
-                width: page.landscape ? 124 : 176
-                height: page.landscape ? 42 : 46
-                kind: root.profile.boardMode === GameViewModel.Mode.Classic ? "primary" : "secondary"
-                text: qsTr("Classic")
-                onClicked: root.profile.boardMode = GameViewModel.Mode.Classic
+                ToyButton {
+                    id: tab
+
+                    required property var modelData
+
+                    objectName: tab.modelData.id + "Tab"
+                    width: page.landscape ? (page.pageWidth - 30 - 3 * tabs.spacing) / 4 : 176
+                    height: page.landscape ? 38 : 46
+                    kind: root.profile.boardMode === tab.modelData.mode ? "primary" : "secondary"
+                    text: tab.modelData.name
+                    onClicked: root.profile.boardMode = tab.modelData.mode
+                }
             }
         }
 
         Text {
             visible: !page.landscape
             x: Theme.mirrored(15, width, 390)
-            y: 152
+            y: 204
             color: Theme.ink
             font.pixelSize: 15
             font.weight: Font.Medium
@@ -90,7 +113,7 @@ FocusScope {
 
         Item {
             x: 15
-            y: page.landscape ? 62 : 186
+            y: page.landscape ? 100 : 236
             width: page.landscape ? page.pageWidth - 30 : 360
             height: board.height + 6
 
@@ -107,7 +130,7 @@ FocusScope {
 
                 width: parent.width
                 // Upright the ten lines are one column; lying down they are two of five, the first five on the leading side.
-                readonly property int lineHeight: page.landscape ? 42 : 48
+                readonly property int lineHeight: page.landscape ? 33 : 48
                 height: (page.landscape ? 5 : 10) * lineHeight + 20
                 radius: 18
                 color: Theme.surface

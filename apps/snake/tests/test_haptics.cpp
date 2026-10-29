@@ -135,3 +135,20 @@ TEST_CASE("A reading of the accelerometer is turned into g and into the microsec
     const auto late = accel_sample_from(0, 0, 0, (std::uint64_t{7} << 32U) + 42U);
     CHECK(late.time_us == 42);
 }
+
+TEST_CASE("Swallowing a bomb and shedding tap, and a bomb going off knocks", "[haptics][modes]")
+{
+    RecordingHaptics haptics;
+    GameViewModel game(counting_seeds());
+    HapticsDirector director(&haptics);
+    director.setGame(&game);
+
+    emit game.tickEvent(Event::AtePotato);
+    emit game.tickEvent(Event::Shed);
+    CHECK(haptics.taps == 2);
+    emit game.tickEvent(Event::Teleported); // a portal is not felt
+    CHECK(haptics.taps == 2);
+    CHECK(haptics.thuds == 0);
+    emit game.tickEvent(Event::Exploded);
+    CHECK(haptics.thuds == 1);
+}

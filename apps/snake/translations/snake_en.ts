@@ -121,6 +121,14 @@
         <translation>Pause</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>Shed</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>Shed the tail from the bomb</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>Calibrating tilt</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>Classic</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>Portals</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Hot potato</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>Classic</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>Portals</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Hot potato</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>Faster snake. Walls end the game.</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>Coming in a later version.</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>Paired portals. Step in, pop out.</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>Bombs! Shed your tail in time.</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

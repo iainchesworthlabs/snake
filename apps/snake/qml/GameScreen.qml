@@ -112,6 +112,56 @@ FocusScope {
         }
     }
 
+    // Hot potato: drops the tail from the bomb. The bar over it is the fuse, which shortens as the bomb goes down the body to
+    // the tail. Lying down it is beside the pause button; upright it is at the other end of the bottom row, which the d-pad,
+    // the joystick and the tilt indicator leave free. On a computer the Enter key does the same.
+    Item {
+        id: shedControl
+
+        objectName: "shedControl"
+        visible: root.game.mode === GameViewModel.Mode.HotPotato
+        // Placed by x and y, mirrored for a language read from right to left.
+        x: Theme.mirrored(root.landscape ? 16 + root.safeLeft + (root.touchControls ? 56 + 12 : 0) : root.width - 16 - root.safeRight - width, width, root.width)
+        y: root.height - height - (root.landscape ? 12 : 24) - root.safeBottom
+        width: 72
+        height: 56 + 14
+
+        Rectangle {
+            objectName: "fuseTrack"
+            width: parent.width
+            height: 8
+            radius: 3
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.ink
+            opacity: root.game.hasBomb ? 1 : 0.4
+
+            Rectangle {
+                objectName: "fuseBar"
+                x: 2
+                y: 2
+                height: parent.height - 4
+                width: (parent.width - 4) * root.game.fuse
+                radius: 1
+                color: root.game.fuse < 0.35 ? Theme.accent : Theme.ink
+            }
+        }
+
+        ToyButton {
+            objectName: "shedButton"
+            y: 14
+            width: parent.width
+            height: 56
+            radius: 14
+            kind: root.game.canShed ? "primary" : "secondary"
+            enabled: root.game.canShed
+            activeFocusOnTab: false
+            text: qsTr("Shed")
+            Accessible.name: qsTr("Shed the tail from the bomb")
+            onClicked: root.game.shed()
+        }
+    }
+
     // The wait while tilt is calibrated: the game is held, the phone is held how the player likes to play, and the bar fills. A tap
     // is felt when it is done.
     Rectangle {

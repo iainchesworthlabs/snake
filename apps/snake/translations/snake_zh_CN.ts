@@ -121,6 +121,14 @@
         <translation>暂停</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>丢掉</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>从炸弹处丢掉尾巴</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>正在校准倾斜</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>经典</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>传送门</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>烫手山芋</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>经典</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>传送门</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>烫手山芋</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>蛇较快。撞墙游戏结束。</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>将在以后的版本中推出。</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>成对传送门。进去，出来。</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>炸弹！及时丢掉尾巴。</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

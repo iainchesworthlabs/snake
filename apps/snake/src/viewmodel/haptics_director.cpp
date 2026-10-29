@@ -39,11 +39,16 @@ void HapticsDirector::on_tick_event(GameViewModel::Event event)
     {
     case GameViewModel::Event::Ate:
     case GameViewModel::Event::AteBonus:
+    case GameViewModel::Event::AtePotato:
+    case GameViewModel::Event::Shed:
     case GameViewModel::Event::Won:
         m_Haptics->tap();
         break;
     case GameViewModel::Event::Crashed:
+    case GameViewModel::Event::Exploded:
         m_Haptics->thud();
+        break;
+    case GameViewModel::Event::Teleported:
         break;
     }
 }

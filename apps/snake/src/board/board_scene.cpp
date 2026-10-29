@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -189,6 +190,49 @@ void add_leaf(std::vector<Shape>& out, const Layout& layout, QPoint at, int rise
     add_rounded(out, leaf, leaf.height() / 2, opaque(tokens::LEAF));
 }
 
+/// A portal: a ring in the colour of its pair round a dark hole, which breathes with the bob of the food. The first
+/// pair has a dot in the middle of the hole and the second has none, so that the pairs differ by more than their
+/// colour.
+void add_portal(std::vector<Shape>& out, const Layout& layout, QPoint at, QRgb colour, bool dot, int breath)
+{
+    const int cell = layout.cell;
+    const QRect ring = to_pixels(at, cell, 2, 2, 28, 28);
+    add_disc(out, ring, layout.pixel(), 0, colour, colour);
+    const int hole_inset = 10 + breath;
+    const QRect hole = to_pixels(at, cell, hole_inset, hole_inset, 32 - (2 * hole_inset), 32 - (2 * hole_inset));
+    add_disc(out, hole, layout.pixel(), 0, opaque(tokens::INK), opaque(tokens::INK));
+    if (dot)
+    {
+        out.push_back({to_pixels(at, cell, 14, 14, 4, 4), colour});
+    }
+}
+
+/// A bomb on the board: a cream rim round an ink ball with a highlight, a fuse and a spark that is pink or gold.
+void add_bomb_food(std::vector<Shape>& out, const Layout& layout, QPoint at, int rise, bool spark_pink)
+{
+    const int cell = layout.cell;
+    const QPoint top_left(at.x(), at.y() - rise);
+    add_disc(out, to_pixels(top_left, cell, FOOD_INSET - 1, FOOD_INSET + 1, FOOD_SIZE + 2, FOOD_SIZE + 2),
+             layout.pixel(), 0, opaque(tokens::SURFACE), opaque(tokens::SURFACE));
+    add_disc(out, to_pixels(top_left, cell, FOOD_INSET + 1, FOOD_INSET + 3, FOOD_SIZE - 2, FOOD_SIZE - 2),
+             layout.pixel(), scaled(3, cell), opaque(tokens::INK), opaque(tokens::SHADOW));
+    out.push_back({to_pixels(top_left, cell, FOOD_INSET + 6, FOOD_INSET + 8, 5, 5), opaque(tokens::FOOD_HIGHLIGHT)});
+    // The fuse, going up and to the right, and the spark at its end.
+    out.push_back({to_pixels(top_left, cell, 19, 2, 3, 8), opaque(tokens::SURFACE)});
+    out.push_back({to_pixels(top_left, cell, 20, -3, 7, 5), opaque(spark_pink ? tokens::TONGUE : tokens::MEDAL_GOLD)});
+}
+
+/// The bomb in the body, on the piece `at`: a small ink ball with a cream rim and a spark.
+void add_bomb_in_body(std::vector<Shape>& out, const Layout& layout, QPoint at, bool spark_pink)
+{
+    const int cell = layout.cell;
+    add_disc(out, to_pixels(at, cell, 7, 8, 18, 18), layout.pixel(), 0, opaque(tokens::SURFACE),
+             opaque(tokens::SURFACE));
+    add_disc(out, to_pixels(at, cell, 9, 10, 14, 14), layout.pixel(), 0, opaque(tokens::INK), opaque(tokens::INK));
+    out.push_back({to_pixels(at, cell, 14, 2, 4, 5), opaque(tokens::SURFACE)});
+    out.push_back({to_pixels(at, cell, 12, 0, 8, 3), opaque(spark_pink ? tokens::TONGUE : tokens::MEDAL_GOLD)});
+}
+
 /// The stripes alternate along the snake from the head, and a segment keeps its place in the snake as it moves.
 QRgb stripe_colour(std::size_t index)
 {
@@ -308,8 +352,14 @@ Motion motion_of(const sim::Simulation& game)
         return motion;
     }
     motion.next = sim::Cell{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
+    // A portal takes the head somewhere else, which is not drawn as a glide, as the edge of a wrapping board is not.
+    if (game.portals() && game.portals()->contains(motion.next))
+    {
+        return motion;
+    }
     const bool bonus = game.bonus() && game.bonus()->cell == motion.next;
-    motion.eating = motion.next == game.food() || bonus;
+    const bool potato = game.potato() && game.potato()->cell == motion.next;
+    motion.eating = motion.next == game.food() || bonus || potato;
 
     // The body stops the snake, except for the tail when it moves away.
     const auto& snake = game.snake();
@@ -432,6 +482,28 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
     {
         add_food(shapes, layout, cell_corner(layout, game.bonus()->cell), rise, tokens::MEDAL_GOLD);
     }
+    // The portals are under the snake, which can lie on one where it came out.
+    if (game.portals())
+    {
+        const int breath = static_cast<int>(std::lround(std::clamp(lift, 0.0, 1.0) * 2.0));
+        const auto& portals = game.portals()->cells;
+        for (std::size_t index = 0; index < portals.size(); ++index)
+        {
+            const bool first_pair = index < 2;
+            add_portal(shapes, layout, cell_corner(layout, portals[index]),
+                       opaque(first_pair ? tokens::TONGUE : tokens::MEDAL_SILVER), first_pair, breath);
+        }
+    }
+    if (game.potato())
+    {
+        // A bomb food that is about to go away blinks.
+        const std::uint8_t left = game.potato()->ticks_left;
+        const bool shown = left > 10 || (left / 2) % 2 == 0;
+        if (shown)
+        {
+            add_bomb_food(shapes, layout, cell_corner(layout, game.potato()->cell), rise, lift > 0.5);
+        }
+    }
 
     const Motion motion = motion_of(game);
     const double along = motion.moving ? std::clamp(progress, 0.0, 1.0) : 0.0;
@@ -449,6 +521,11 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
         return adjacent ? glide(from, cell_corner(layout, ahead), along) : from;
     };
 
+    // The bomb in the body is on one piece. The nearer the tail, the more urgent: the piece flashes pink.
+    const std::optional<std::size_t> bomb = game.lump_index();
+    const bool urgent = bomb && *bomb + 3 >= snake.size() && game.running();
+    const bool flash_on = urgent && (game.ticks() % 2 == 0);
+
     // The tail first, so the head is on top. A snake that eats grows a piece behind its tail, which the tail uncovers
     // as it moves on.
     if (motion.moving && motion.eating && along > 0.0)
@@ -459,12 +536,20 @@ std::vector<Shape> game_shapes(const Layout& layout, const sim::Simulation& game
     const std::size_t shown = snake.size() > death.popped ? snake.size() - death.popped : 1;
     for (std::size_t index = shown; index > 1; --index)
     {
-        const QRgb colour = death.flash ? opaque(tokens::EYE) : stripe_colour(index - 1);
+        QRgb colour = death.flash ? opaque(tokens::EYE) : stripe_colour(index - 1);
+        if (flash_on && bomb && *bomb == index - 1)
+        {
+            colour = opaque(tokens::TONGUE);
+        }
         add_segment(shapes, layout, position_of(index - 1), colour, SEGMENT_RADIUS);
     }
     // A snake that crashed has dizzy eyes. One that won has not.
     add_head(shapes, layout, position_of(0), motion.facing, layout.cells(), !game.running() && !game.won(),
              game.running() && food_ahead(game, motion.facing));
+    if (bomb && *bomb < shown)
+    {
+        add_bomb_in_body(shapes, layout, position_of(*bomb), flash_on || lift > 0.5);
+    }
     return shapes;
 }
 

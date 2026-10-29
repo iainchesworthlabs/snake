@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/sim/autoplayer.hpp"
 #include "snake/sim/direction.hpp"
+#include "snake/sim/mode.hpp"
 #include "snake/sim/snapshot.hpp"
 #include "viewmodel/game_view_model.hpp"
 
@@ -548,4 +549,179 @@ TEST_CASE("The row of the head is told, for the preview to follow", "[viewmodel]
     GameViewModel model(counting_seeds(1));
     CHECK(model.headRow() == model.session().simulation().head().y);
     CHECK(model.headRow() == 10);
+}
+
+namespace
+{
+
+/// Plays a game of Hot potato, steered by the computer player, until the snake has swallowed a bomb. False if it
+/// did not within `limit` ticks. The game takes one tick for each call, because the frame is a little over the
+/// interval.
+bool play_until_bomb(GameViewModel& game, int limit = 6000)
+{
+    game.setMode(Mode::HotPotato);
+    game.start();
+    for (int tick = 0; tick < limit && game.state() == State::Running; ++tick)
+    {
+        static_cast<void>(game.turn(snake::sim::autoplay(game.session().simulation())));
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        if (game.hasBomb())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
+TEST_CASE("The four modes are the sim's four and back", "[viewmodel][modes]")
+{
+    using snake::sim::Mode;
+    CHECK(snake::ui::to_sim(GameViewModel::Mode::Easy) == Mode::EASY);
+    CHECK(snake::ui::to_sim(GameViewModel::Mode::Classic) == Mode::CLASSIC);
+    CHECK(snake::ui::to_sim(GameViewModel::Mode::Portals) == Mode::PORTALS);
+    CHECK(snake::ui::to_sim(GameViewModel::Mode::HotPotato) == Mode::HOT_POTATO);
+    for (const Mode mode : {Mode::EASY, Mode::CLASSIC, Mode::PORTALS, Mode::HOT_POTATO})
+    {
+        CHECK(snake::ui::to_sim(snake::ui::from_sim(mode)) == mode);
+    }
+}
+
+TEST_CASE("Setting the mode starts a game of that mode with its own rules", "[viewmodel][modes]")
+{
+    GameViewModel game(counting_seeds());
+    game.setMode(Mode::Portals);
+    CHECK(game.mode() == Mode::Portals);
+    CHECK(game.session().simulation().variant() == snake::sim::Variant::PORTALS);
+    CHECK(game.session().simulation().portals().has_value());
+    game.setMode(Mode::HotPotato);
+    CHECK(game.mode() == Mode::HotPotato);
+    CHECK(game.session().simulation().variant() == snake::sim::Variant::HOT_POTATO);
+    game.setMode(Mode::Classic);
+    CHECK(game.session().simulation().variant() == snake::sim::Variant::PLAIN);
+}
+
+TEST_CASE("Each tick outcome is the event that the sound and the effects know it by", "[viewmodel][events]")
+{
+    using snake::sim::TickOutcome;
+    using Event = GameViewModel::Event;
+    CHECK(GameViewModel::event_of(TickOutcome::ATE_POTATO) == Event::AtePotato);
+    CHECK(GameViewModel::event_of(TickOutcome::TELEPORTED) == Event::Teleported);
+    CHECK(GameViewModel::event_of(TickOutcome::EXPLODED) == Event::Exploded);
+    CHECK(GameViewModel::event_of(TickOutcome::ATE) == Event::Ate);
+}
+
+TEST_CASE("A game with no bomb has nothing to shed", "[viewmodel][shed]")
+{
+    GameViewModel game(counting_seeds());
+    game.setMode(Mode::HotPotato);
+    CHECK_FALSE(game.hasBomb());
+    CHECK_FALSE(game.canShed());
+    CHECK(game.fuse() == Catch::Approx(1.0));
+    CHECK_FALSE(game.shed()); // not running
+    game.start();
+    QSignalSpy events(&game, &GameViewModel::tickEvent);
+    CHECK_FALSE(game.shed()); // no bomb
+    CHECK(events.count() == 0);
+}
+
+TEST_CASE("A bomb in the snake can be shed once it has left the head, and the fuse burns down", "[viewmodel][shed]")
+{
+    bool tried = false;
+    for (std::uint64_t first = 1; first <= 20 && !tried; ++first)
+    {
+        GameViewModel game(counting_seeds(first));
+        QSignalSpy events(&game, &GameViewModel::tickEvent);
+        if (!play_until_bomb(game))
+        {
+            continue;
+        }
+        tried = true;
+        // It has just been swallowed: it is in the head, and the fuse is full.
+        CHECK(game.hasBomb());
+        CHECK_FALSE(game.canShed());
+        CHECK(game.fuse() == Catch::Approx(1.0));
+        CHECK_FALSE(game.shed());
+        CHECK(events.back().at(0).value<GameViewModel::Event>() == GameViewModel::Event::AtePotato);
+
+        // A tick later it is in the second part and can be shed; the fuse is shorter.
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        REQUIRE(game.state() == State::Running);
+        CHECK(game.canShed());
+        CHECK(game.fuse() < 1.0);
+        const double fuse = game.fuse();
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        if (game.state() == State::Running)
+        {
+            CHECK(game.fuse() < fuse);
+        }
+
+        const std::size_t length = game.session().simulation().length();
+        const std::size_t index = *game.session().simulation().lump_index();
+        QSignalSpy boards(&game, &GameViewModel::boardChanged);
+        REQUIRE(game.shed());
+        CHECK(events.back().at(0).value<GameViewModel::Event>() == GameViewModel::Event::Shed);
+        CHECK(boards.count() == 1);
+        CHECK_FALSE(game.hasBomb());
+        CHECK_FALSE(game.canShed());
+        CHECK(game.session().simulation().length() == index);
+        CHECK(game.lastShed().size() == length - index);
+        CHECK(game.state() == State::Running);
+        CHECK_FALSE(game.shed()); // nothing left to shed
+    }
+    CHECK(tried);
+}
+
+TEST_CASE("A bomb that is not shed goes off and ends the game", "[viewmodel][shed]")
+{
+    bool tried = false;
+    for (std::uint64_t first = 1; first <= 20 && !tried; ++first)
+    {
+        GameViewModel game(counting_seeds(first));
+        QSignalSpy events(&game, &GameViewModel::tickEvent);
+        if (!play_until_bomb(game))
+        {
+            continue;
+        }
+        tried = true;
+        for (int tick = 0; tick < 400 && game.state() == State::Running; ++tick)
+        {
+            static_cast<void>(game.turn(snake::sim::autoplay(game.session().simulation())));
+            game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        }
+        CHECK(game.state() == State::GameOver);
+        bool bang = false;
+        for (const QList<QVariant>& event : events)
+        {
+            bang |= event.at(0).value<GameViewModel::Event>() == GameViewModel::Event::Exploded;
+        }
+        CHECK(bang);
+    }
+    CHECK(tried);
+}
+
+TEST_CASE("Enter sheds in Hot potato, and does nothing to a running game of another mode", "[viewmodel][shed][keys]")
+{
+    bool tried = false;
+    for (std::uint64_t first = 1; first <= 20 && !tried; ++first)
+    {
+        GameViewModel game(counting_seeds(first));
+        if (!play_until_bomb(game))
+        {
+            continue;
+        }
+        tried = true;
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        REQUIRE(game.canShed());
+        CHECK(game.handleKey(Qt::Key_Return, false));
+        CHECK_FALSE(game.hasBomb());
+        CHECK(game.state() == State::Running);
+    }
+    CHECK(tried);
+
+    GameViewModel classic(counting_seeds());
+    classic.start();
+    CHECK(classic.handleKey(Qt::Key_Return, false));
+    CHECK(classic.state() == State::Running);
 }

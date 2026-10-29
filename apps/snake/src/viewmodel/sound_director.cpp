@@ -141,8 +141,20 @@ void SoundDirector::on_tick_event(GameViewModel::Event event)
     case GameViewModel::Event::AteBonus:
         play(audio::Effect::BONUS);
         break;
+    case GameViewModel::Event::AtePotato:
+        play(audio::Effect::POTATO);
+        break;
+    case GameViewModel::Event::Teleported:
+        play(audio::Effect::PORTAL);
+        break;
+    case GameViewModel::Event::Shed:
+        play(audio::Effect::SHED);
+        break;
     case GameViewModel::Event::Crashed:
         play(audio::Effect::CRASH);
+        break;
+    case GameViewModel::Event::Exploded:
+        play(audio::Effect::EXPLODE);
         break;
     case GameViewModel::Event::Won:
         play(audio::Effect::NEW_BEST);

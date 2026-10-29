@@ -8,6 +8,7 @@
 #include "scripted_gamepad.hpp"
 #include "snake/audio/tunes.hpp"
 #include "snake/input/sample_source.hpp"
+#include "snake/sim/autoplayer.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
@@ -45,6 +46,8 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
 #include <vector>
 
 using snake::sim::Mode;
@@ -215,7 +218,14 @@ public:
     /// Chooses Classic and starts the game (through the calibration wait of a tilt game).
     void start_classic()
     {
-        click("modeCard1");
+        start_mode(1);
+    }
+
+    /// Starts a game of the mode on the title's card `card` (0 Easy, 1 Classic, 2 Portals, 3 Hot potato), which is
+    /// open.
+    void start_mode(int card)
+    {
+        click(("modeCard" + std::to_string(card)).c_str());
         click("playButton");
         finish_calibration();
     }
@@ -815,11 +825,13 @@ TEST_CASE("A mode that opened no longer shows as locked on the title screen", "[
     App app;
     app.profile().record_game(Mode::CLASSIC, 2000);
     CHECK_FALSE(app.item("modeCard2")->property("locked").toBool());
-    CHECK(app.item("modeCard2")->property("detail").toString() == "Coming in a later version.");
+    CHECK(app.item("modeCard2")->property("detail").toString() == "Paired portals. Step in, pop out.");
     CHECK(app.item("modeCard3")->property("locked").toBool());
-    // Open on paper only: it still cannot be started.
+    // It can be chosen now; the one that is still locked cannot.
     app.click("modeCard2");
-    CHECK(app.game().mode() == GameViewModel::Mode::Easy);
+    CHECK(app.game().mode() == GameViewModel::Mode::Portals);
+    app.click("modeCard3");
+    CHECK(app.game().mode() == GameViewModel::Mode::Portals);
 }
 
 TEST_CASE("The game over screen draws the board as it was left", "[screens][gameover]")
@@ -1903,6 +1915,13 @@ void fill_the_profile(App& app)
         app.profile().record_game(Mode::CLASSIC, score);
         app.save_score_as(name);
     }
+    // The two modes that are earned are open, and have a score of their own.
+    app.profile().record_game(Mode::CLASSIC, 3100);
+    app.save_score_as("OLLIE");
+    app.profile().record_game(Mode::PORTALS, 700);
+    app.save_score_as("PIA");
+    app.profile().record_game(Mode::HOT_POTATO, 600);
+    app.save_score_as("HAL");
 }
 
 } // namespace
@@ -1919,7 +1938,7 @@ TEST_CASE("The title, the settings and the leaderboard fit in every language", "
 
         app.click("settingsButton");
         check_fit(app, "settings");
-        app.click("resetClassicButton");
+        app.click("resetHotPotatoButton");
         check_fit(app, "confirm");
         app.press(Qt::Key_Escape);
         app.click("aboutButton");
@@ -1929,6 +1948,10 @@ TEST_CASE("The title, the settings and the leaderboard fit in every language", "
 
         app.click("leaderboardButton");
         check_fit(app, "leaderboard");
+        app.click("hotPotatoTab");
+        check_fit(app, "leaderboard of Hot potato");
+        app.click("portalsTab");
+        check_fit(app, "leaderboard of Portals");
     }
 }
 
@@ -1952,6 +1975,26 @@ TEST_CASE("The game screens fit in every language", "[screens][languages]")
         app.click("saveScoreButton");
         app.type("maya");
         check_fit(app, "name entry");
+    }
+}
+
+TEST_CASE("The games of Portals and Hot potato fit in every language", "[screens][languages][modes]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true);
+        fill_the_profile(app);
+        app.start_mode(2);
+        check_fit(app, "portals game");
+        app.game().pause();
+        check_fit(app, "portals pause");
+        app.click("quitButton");
+        app.start_mode(3);
+        check_fit(app, "hot potato game");
+        app.game().pause();
+        check_fit(app, "hot potato pause");
     }
 }
 
@@ -2324,6 +2367,9 @@ TEST_CASE("The title, the game and the pause dialog fit in every language lying 
         check_fit(app, "game");
         app.game().pause();
         check_fit(app, "pause");
+        app.click("quitButton");
+        app.start_mode(3);
+        check_fit(app, "hot potato game");
     }
 }
 
@@ -2582,4 +2628,131 @@ TEST_CASE("Start pauses and resumes a game, and the menu button opens the pause 
     CHECK(app.game().state() == State::Paused);
     app.pad({pad_down(GamepadButton::EAST), pad_up(GamepadButton::EAST)});
     CHECK(app.game().state() == State::Running);
+}
+
+TEST_CASE("The leaderboard has a tab for each of the four modes, and each shows its own scores",
+          "[screens][leaderboard][modes]")
+{
+    App app;
+    app.profile().record_game(Mode::EASY, 100);
+    app.save_score_as("EVE");
+    app.profile().record_game(Mode::CLASSIC, 2100);
+    app.save_score_as("CAL");
+    app.profile().record_game(Mode::PORTALS, 700);
+    app.save_score_as("POL");
+    app.profile().record_game(Mode::HOT_POTATO, 500);
+    app.save_score_as("HOT");
+    app.click("leaderboardButton");
+
+    for (const auto& [tab, name, mode] : {std::tuple{"easyTab", "EVE", GameViewModel::Mode::Easy},
+                                          std::tuple{"classicTab", "CAL", GameViewModel::Mode::Classic},
+                                          std::tuple{"portalsTab", "POL", GameViewModel::Mode::Portals},
+                                          std::tuple{"hotPotatoTab", "HOT", GameViewModel::Mode::HotPotato}})
+    {
+        INFO(tab);
+        app.click(tab);
+        CHECK(app.profile().boardMode() == mode);
+        CHECK(app.item("line1")->property("name").toString() == name);
+        CHECK(app.item(tab)->property("kind").toString() == "primary");
+    }
+    // Only the tab of the mode shown is the dark one.
+    CHECK(app.item("easyTab")->property("kind").toString() == "secondary");
+}
+
+TEST_CASE("Every mode has a reset button that asks about its own leaderboard", "[screens][settings][modes]")
+{
+    App app;
+    app.profile().record_game(Mode::PORTALS, 700);
+    app.save_score_as("POL");
+    app.profile().record_game(Mode::HOT_POTATO, 500);
+    app.save_score_as("HOT");
+    app.click("settingsButton");
+
+    app.click("resetPortalsButton");
+    REQUIRE(app.shows("resetConfirm"));
+    CHECK(app.text_of("confirmTitle") == "Reset the Portals leaderboard?");
+    app.press(Qt::Key_Escape);
+
+    app.click("resetHotPotatoButton");
+    CHECK(app.text_of("confirmTitle") == "Reset the Hot potato leaderboard?");
+    // Cancel is the answer it starts on; the other button says yes.
+    app.click("confirmButton");
+    CHECK(app.profile().data().leaderboards.of(Mode::HOT_POTATO).size() == 0);
+    CHECK(app.profile().data().leaderboards.of(Mode::PORTALS).size() == 1);
+}
+
+TEST_CASE("An open mode can be chosen on the title and played", "[screens][modes]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 3500);
+    app.click("modeCard2");
+    CHECK(app.game().mode() == GameViewModel::Mode::Portals);
+    app.click("modeCard3");
+    CHECK(app.game().mode() == GameViewModel::Mode::HotPotato);
+    app.click("playButton");
+    app.finish_calibration();
+    CHECK(app.game().state() == State::Running);
+    CHECK(app.game().session().mode() == snake::sim::Mode::HOT_POTATO);
+    // The game over screen and the best score are those of the mode.
+    CHECK(app.text_of("bestScore") == "000000");
+}
+
+TEST_CASE("The Shed button is there only in Hot potato, and wakes when there is a bomb to shed", "[screens][shed]")
+{
+    {
+        App app;
+        app.start_classic();
+        CHECK_FALSE(app.shows("shedControl"));
+    }
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 3500);
+    app.start_mode(3);
+    REQUIRE(app.shows("shedControl"));
+    CHECK(app.text_of("shedButton") == "Shed");
+    // No bomb: the button is asleep and the fuse track is faint.
+    CHECK_FALSE(app.item("shedButton")->isEnabled());
+    CHECK(app.item("fuseTrack")->opacity() < 1.0);
+
+    // The computer player plays until a bomb is swallowed, one tick for each step, and begins again when a game ends.
+    bool found = false;
+    for (int tick = 0; tick < 20000 && !found; ++tick)
+    {
+        if (app.game().state() != State::Running)
+        {
+            app.game().restart();
+        }
+        static_cast<void>(app.game().turn(snake::sim::autoplay(app.game().session().simulation())));
+        app.game().advance((app.game().session().tick_interval_ms() + 1) / 1000.0);
+        found = app.game().hasBomb();
+    }
+    REQUIRE(found);
+    app.game().advance((app.game().session().tick_interval_ms() + 1) / 1000.0);
+    REQUIRE(app.game().canShed());
+    QTest::qWait(20);
+    CHECK(app.item("shedButton")->isEnabled());
+    CHECK(app.item("fuseTrack")->opacity() == Catch::Approx(1.0));
+    CHECK(app.item("fuseBar")->width() < app.item("fuseTrack")->width());
+
+    app.click("shedButton");
+    CHECK_FALSE(app.game().hasBomb());
+    QTest::qWait(20);
+    CHECK_FALSE(app.item("shedButton")->isEnabled());
+}
+
+TEST_CASE("The Shed button is at the other end of the bottom row from the pause button, and out of the d-pad's way",
+          "[screens][shed]")
+{
+    App app(true);
+    app.profile().record_game(Mode::CLASSIC, 3500);
+    app.profile().setControls(ProfileViewModel::Controls::Dpad);
+    app.start_mode(3);
+    static_cast<void>(app.render());
+    const QRectF shed = scene_rect(app, "shedButton");
+    const QRectF pause = scene_rect(app, "pauseButton");
+    const QRectF dpad = scene_rect(app, "dpad");
+    const QRectF window(0, 0, 390, 844);
+    CHECK(window.contains(shed));
+    CHECK(shed.left() > pause.right());
+    CHECK(shed.left() >= dpad.right());
+    CHECK(shed.center().y() == Catch::Approx(pause.center().y()).margin(2.0));
 }

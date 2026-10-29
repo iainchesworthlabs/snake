@@ -245,8 +245,8 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     combo window without raising the combo, steps the speed, grows the snake and does not count towards the fifth. The
     bomb then sits in the part of the body that ate it and does not move: the body moves past it, so it is one part
     nearer the tail with every tick. When it is on the tail and the tail is about to move away the bomb goes off and the
-    game ends. A tick that eats keeps the tail where it is, so it delays the bomb by one tick. Shedding (Space, a face
-    button or a button on the screen) drops the bomb and every part behind it at once and frees their cells; it does
+    game ends. A tick that eats keeps the tail where it is, so it delays the bomb by one tick. Shedding (Enter, the south
+    button of a gamepad or the Shed button on the screen) drops the bomb and every part behind it at once and frees their cells; it does
     nothing while the bomb is still in the head, because that would drop the whole snake. Shedding late keeps more of
     the snake. The speed starts at 160 ms and gets 3 ms shorter for each food, down to 80 ms.
 24. The save file has a leaderboard for each of the four modes (version 3; a version 1 or 2 file reads with the two new

@@ -121,6 +121,14 @@
         <translation>Pause</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>Abwerfen</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>Den Schwanz ab der Bombe abwerfen</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>Neigung wird eingestellt</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>Klassisch</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>Portale</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Heiße Kartoffel</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>Klassisch</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>Portale</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Heiße Kartoffel</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>Schnellere Schlange. Wände beenden das Spiel.</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>Kommt in einer späteren Version.</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>Portalpaare. Rein, raus.</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>Bomben! Wirf den Schwanz rechtzeitig ab.</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

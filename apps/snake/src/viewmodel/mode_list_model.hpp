@@ -15,8 +15,8 @@
 namespace snake::ui
 {
 
-/// The modes of the title screen, in the order they are listed: the two that can be played and the two that are
-/// shown with what it takes to open them. Whether a mode is open comes from the unlocks the model is given.
+/// The modes of the title screen, in the order they are listed: the two that are always open and the two that are shown
+/// with what it takes to open them until they are. Whether a mode is open comes from the unlocks the model is given.
 class ModeListModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -40,8 +40,7 @@ public:
         DescriptionRole,
         /// True for a mode that is not open yet. Its unlock hint says what it takes.
         LockedRole,
-        /// True for a mode the game can start. An open mode that is not in the game yet is neither locked nor
-        /// selectable.
+        /// True for a mode the player can choose: one that is open.
         SelectableRole,
         /// The text under the name: what the mode is, or what it takes to open it.
         DetailRole,
@@ -65,7 +64,7 @@ public:
 
 private:
     [[nodiscard]] bool locked(Entry entry) const;
-    [[nodiscard]] static bool selectable(Entry entry);
+    [[nodiscard]] bool selectable(Entry entry) const;
 
     const profile::Unlocks& m_Unlocks;
 };

@@ -1,1 +1,1 @@
-**Snake, with two modes and a place for more.** Easy is slower and its walls wrap around; Classic is faster and a wall ends the game. Eat the food to grow and to score, and take the bonus item when it appears. Portals and Hot potato open at 2,000 and 3,000 points in Classic and come in a later version.
+**Snake, with four modes.** Easy is slower and its walls wrap around; Classic is faster and a wall ends the game. Eat the food to grow and to score, and take the bonus item when it appears. Portals and Hot potato open at 2,000 and 3,000 points in Classic.

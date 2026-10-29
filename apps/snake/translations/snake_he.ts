@@ -121,6 +121,14 @@
         <translation>השהיה</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>השלך</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>השלך את הזנב מהפצצה</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>מכיילים את ההטיה</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>קלאסי</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>שערים</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>תפוח אדמה לוהט</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>קלאסי</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>שערים</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>תפוח אדמה לוהט</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>הגדרות</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>נחש מהיר יותר. קיר מסיים את המשחק.</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>יגיע בגרסה עתידית.</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>פורטלים זוגיים. נכנסים, יוצאים.</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>פצצות! השליכו את הזנב בזמן.</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

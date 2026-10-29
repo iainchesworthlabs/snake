@@ -20,8 +20,9 @@ namespace
 
 constexpr std::uint32_t RATE = 22050;
 
-constexpr std::array<Effect, EFFECT_COUNT> EFFECTS = {Effect::EAT,    Effect::BONUS, Effect::CRASH,
-                                                      Effect::SELECT, Effect::START, Effect::NEW_BEST};
+constexpr std::array<Effect, EFFECT_COUNT> EFFECTS = {Effect::EAT,   Effect::BONUS,    Effect::CRASH,  Effect::SELECT,
+                                                      Effect::START, Effect::NEW_BEST, Effect::PORTAL, Effect::POTATO,
+                                                      Effect::SHED,  Effect::EXPLODE};
 
 std::vector<std::int16_t> render(Synth& synth, std::size_t count)
 {
@@ -342,9 +343,10 @@ TEST_CASE("The samples are the same on every platform", "[synth][golden]")
 {
     // Whole-number arithmetic throughout, so these hashes are the proof. They were produced by this library, at 22,050
     // hertz: the sound of each effect and a hundred samples of silence after it, and three seconds of each tune.
-    constexpr std::array<std::uint64_t, EFFECT_COUNT> EFFECT_HASHES = {10534880715216641500ULL, 8304761399733524545ULL,
-                                                                       17633963871920230050ULL, 18040924955535476851ULL,
-                                                                       1429221139020810590ULL,  9459974721539768454ULL};
+    constexpr std::array<std::uint64_t, EFFECT_COUNT> EFFECT_HASHES = {
+        10534880715216641500ULL, 8304761399733524545ULL, 17633963871920230050ULL, 18040924955535476851ULL,
+        1429221139020810590ULL,  9459974721539768454ULL, 17489992650220147519ULL, 6460977384834216183ULL,
+        14120708273857243573ULL, 2144403250430088201ULL};
     for (std::size_t i = 0; i < EFFECTS.size(); ++i)
     {
         INFO("effect " << i);

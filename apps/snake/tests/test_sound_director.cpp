@@ -403,3 +403,17 @@ TEST_CASE("A volume saved before the director is made reaches the sink at once",
     director.setProfile(&profile);
     CHECK(sink.volume() == Catch::Approx(0.04F));
 }
+
+TEST_CASE("The bomb, the portal, the shed and the explosion each have a sound", "[sound][modes]")
+{
+    Rig rig;
+    rig.sink.take();
+    emit rig.game.tickEvent(Event::AtePotato);
+    CHECK(rig.sink.take() == QStringList{effect(Effect::POTATO)});
+    emit rig.game.tickEvent(Event::Teleported);
+    CHECK(rig.sink.take() == QStringList{effect(Effect::PORTAL)});
+    emit rig.game.tickEvent(Event::Shed);
+    CHECK(rig.sink.take() == QStringList{effect(Effect::SHED)});
+    emit rig.game.tickEvent(Event::Exploded);
+    CHECK(rig.sink.take() == QStringList{effect(Effect::EXPLODE)});
+}
