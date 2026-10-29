@@ -10,5 +10,12 @@
     "platform": "android-36",
     "build_tools": "36.0.0",
     "jdk": "17"
+  },
+  "esp32p4": {
+    "idf": "v6.1",
+    "gate_toolchain": "esp-15.2.0_20251204",
+    "gate_toolchain_sha256": "ace5aae6afe98f754947be043d40173e2e22ace57754b11a394b7238eefa01cf",
+    "floor_toolchain": "esp-16.1.0_20260609",
+    "floor_toolchain_sha256": "0b029ab31ebc7f74e2c4779077251b21a22cd620669dc4c82e7adc478d403a8d"
   }
 }

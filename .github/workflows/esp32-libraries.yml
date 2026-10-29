@@ -1,0 +1,77 @@
+name: ESP32-P4 libraries
+
+# The portable libraries (libs/sim, libs/input, libs/audio, libs/profile) built with Espressif's RISC-V toolchain for the ESP32-P4,
+# under the project's warnings as errors and with exceptions and RTTI off (standard 3.1, rules 5 and 7c). Two toolchains, both
+# pinned with their SHA-256 in the "esp32p4" entry of .github/toolchain-versions.json: the one of the ESP-IDF release the firmware
+# is built with (GCC 15.2 for ESP-IDF v6.1), and the compiler floor of the standard (GCC 16.1, which is the toolchain of
+# ESP-IDF's next release). Nothing is linked and nothing runs: there is no board in CI.
+#
+# Not a required check and not on the merge queue: it runs only when something it reads changes (a required check that a path
+# filter keeps from running never reports, which would hold every unrelated pull request). Dispatch it by hand to run it
+# anywhere:
+#   gh workflow run esp32-libraries.yml --ref <branch>
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "libs/sim/**"
+      - "libs/input/**"
+      - "libs/audio/**"
+      - "libs/profile/**"
+      - "tools/esp32/**"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/esp32-libraries.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "libs/sim/**"
+      - "libs/input/**"
+      - "libs/audio/**"
+      - "libs/profile/**"
+      - "tools/esp32/**"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/esp32-libraries.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: esp32-libraries-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/main' }}
+
+# No job gets more than it names below.
+permissions: {}
+
+jobs:
+  libraries:
+    name: ESP32-P4 libraries (${{ matrix.which }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        which: [gate_toolchain, floor_toolchain]
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The toolchain and the hash of its archive are read from the file that pins them, so that a bump is one change.
+      - name: Read the pinned toolchain
+        id: pin
+        shell: bash
+        env:
+          WHICH: ${{ matrix.which }}
+        run: |
+          set -euo pipefail
+          echo "toolchain=$(jq -r ".esp32p4.${WHICH}" .github/toolchain-versions.json)" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(jq -r ".esp32p4.${WHICH}_sha256" .github/toolchain-versions.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Compile the portable libraries
+        shell: bash
+        env:
+          TOOLCHAIN: ${{ steps.pin.outputs.toolchain }}
+          SHA256: ${{ steps.pin.outputs.sha256 }}
+        run: tools/esp32/compile_libraries.sh "$TOOLCHAIN" "$SHA256" "$RUNNER_TEMP/esp32"

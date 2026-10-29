@@ -17,6 +17,18 @@ commit SHA. Dependabot proposes the SHA bump; the pull request also needs
 The Plan job reads `.github/ci/plan.json`. A change to documentation only builds nothing. A path
 the plan does not recognise builds everything.
 
+## The ESP32-P4 libraries
+
+`esp32-libraries.yml` builds the portable libraries (`libs/sim`, `libs/input`, `libs/audio`, `libs/profile`) with Espressif's
+RISC-V toolchain for the ESP32-P4, under the project's warnings as errors and with exceptions and RTTI off, on two compilers:
+the one of the ESP-IDF release the firmware is built with (`gate_toolchain`, GCC 15.2 for ESP-IDF v6.1) and the compiler floor
+(`floor_toolchain`, GCC 16.1). Both, with the SHA-256 of their archives, are in the `esp32p4` entry of
+`.github/toolchain-versions.json`; `tools/esp32/compile_libraries.sh` downloads one, checks the hash before it unpacks it,
+and compiles the 21 sources, one object each. Nothing is linked or run: there is no board in CI. Like the phone builds it is
+not a required check and runs only when a library, the script or the pins change; run it by hand anywhere with
+`gh workflow run esp32-libraries.yml --ref <branch>`. To try it on a computer: `tools/esp32/compile_libraries.sh
+<toolchain> <sha256> [directory]`.
+
 ## Phones and tablets
 
 Two workflows, `android-build.yml` and `ios-build.yml`, build the game for a device and look inside what they made. They

@@ -176,6 +176,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     Done: [esp32-spike.md](esp32-spike.md). GCC 16.1 works on ESP-IDF `master`, not on v6.1; the libraries need no
     narrowing. Steps 21 to 23 follow its recommendations.
 21. Amend the standard if needed. ESP-IDF project builds in CI from Espressif's container, with no hardware in CI. (M)
+    Begun: the toolchains are pinned (`esp32p4` in `.github/toolchain-versions.json`) and `esp32-libraries.yml` builds the
+    four portable libraries with GCC 15.2 and 16.1 ([ci.md](ci.md)). The standard's amendment is a pull request to
+    icl-common-infra that the owner decides; the firmware build in Espressif's container comes with step 22's project.
 22. Drivers (panel, touch, MPU-6050 once fitted), LVGL renderer (flat fills, hard shadows, capped particles), bitmap
     fonts, tilt navigation in menus. (L)
 23. On-device frame-rate and tilt-feel checks, recorded here. (M)
