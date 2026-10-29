@@ -118,6 +118,8 @@ set(SNAKE_UI_SOURCES
     src/device/accelerometer.cpp
     src/device/accelerometer.hpp
     src/device/device.hpp
+    src/device/gamepad.cpp
+    src/device/gamepad.hpp
     src/device/haptics.cpp
     src/device/haptics.hpp
     src/platform/audio_output.cpp
@@ -149,6 +151,8 @@ set(SNAKE_UI_SOURCES
     src/viewmodel/effects_model.hpp
     src/viewmodel/game_view_model.cpp
     src/viewmodel/game_view_model.hpp
+    src/viewmodel/gamepad_controller.cpp
+    src/viewmodel/gamepad_controller.hpp
     src/viewmodel/haptics_director.cpp
     src/viewmodel/haptics_director.hpp
     src/viewmodel/input_controller.cpp
@@ -193,6 +197,13 @@ function(snake_add_ui_module target)
         target_sources(${target} PRIVATE src/device/qt_accelerometer.cpp src/device/qt_accelerometer.hpp)
         target_link_libraries(${target} PRIVATE Qt6::Sensors)
     endif()
+    if(NOT (ANDROID OR IOS))
+        # A computer's gamepads are read with SDL's gamepad subsystem and nothing else of it. vcpkg builds it with no video
+        # or audio support, and with the triplets of this project it is a static library.
+        find_package(SDL3 CONFIG REQUIRED)
+        target_sources(${target} PRIVATE src/device/sdl_gamepad.cpp src/device/sdl_gamepad.hpp)
+        target_link_libraries(${target} PRIVATE SDL3::SDL3)
+    endif()
     if(IOS)
         # The haptics are Objective-C++, with automatic reference counting.
         set_source_files_properties(src/device/ios/device.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
@@ -229,7 +240,7 @@ if(ANDROID OR IOS)
         OUTPUT "${SNAKE_NOTICES_FILE}"
         NAME "${SNAKE_DISPLAY_NAME}"
         QT_VERSION "${Qt6_VERSION}"
-        EXCLUDE catch2)
+        EXCLUDE catch2 sdl3)
     snake_configure_mobile_app(snake_app)
 else()
     # Installs the program, copies the Qt libraries, plugins and QML modules next to it so the installed tree runs on a

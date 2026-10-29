@@ -43,6 +43,15 @@ Window {
         touchDevice: root.touchDevice
     }
 
+    // A gamepad plays the game by sending this window the keys the keyboard has: the d-pad and the left stick for the arrows,
+    // Start for Space, Select and B for Escape, A for Enter.
+    GamepadController {
+        id: gamepad
+
+        objectName: "gamepad"
+        target: root
+    }
+
     // The title starts on Easy, as the design does. The mode played last will come back with the settings.
     Component.onCompleted: gameModel.mode = GameViewModel.Mode.Easy
 

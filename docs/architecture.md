@@ -232,6 +232,18 @@ normal one, granted at install and never asked of the person, and the only permi
 `UIImpactFeedbackGenerator` (`device.mm`, Objective-C++ with automatic reference counting). Anywhere else it does nothing.
 `HapticsDirector` listens to `GameViewModel::tickEvent`: a tap for eating, a thud for a crash. Neither has run on a device.
 
+**Steering by gamepad.** A computer's gamepads are read through SDL3's gamepad subsystem and nothing else of SDL (the vcpkg port is
+built with no video, so no display library is needed; it is a static library, which on Windows is why the preset uses the
+`x64-windows-static-md` triplet). `device::GamepadSource` is the interface (`poll()` gives the events since the last call: a
+button of libs/input's `GamepadButton` list down or up, the left stick, a pad connected or gone); `SdlGamepads` in
+`src/device/sdl_gamepad.cpp` is the SDL one, and each desktop system's `make_gamepad_source()` returns it, while Android and iOS
+return nothing (a pad on a tablet is not read yet). `GamepadController` (`viewmodel/`, in `Main.qml`) polls the source every 8 ms
+and sends the window the keys the keyboard has for each button, so that the game and every menu answer a pad exactly as they
+answer the keyboard: the d-pad and a push of the left stick (`STICK_SELECTOR`, once for each push) are the arrow keys, Start is
+Space, Select and the east button are Escape, and the south button is Enter. It sends nothing while its window is not the active
+one, because SDL is told to deliver events to a program that has no SDL window. The tests drive it with a scripted source, and a
+test of the SDL reader attaches one of SDL's virtual gamepads, so no hardware is needed. Nothing here has been tried on a real pad.
+
 **Steering by touch.** `InputController` (`viewmodel/`) is the one place where a phone's input becomes a turn. It reads three
 things: the profile's choice (`controls`: tilt, swipe or d-pad, and `invertAxes`), whether the device has a touch screen
 (`touchDevice`) and `device::accelerometer()`. `controls` is the choice made good: no touch screen is the keyboard, and
