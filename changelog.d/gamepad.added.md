@@ -1,0 +1,1 @@
+**Gamepads work on a computer.** Plug in or pair a gamepad and it plays the game and moves through the menus: the d-pad or the left stick steers (and moves between buttons), Start pauses and resumes, Select or B opens the menu, and A presses the button that has the focus. (Not tried on a real pad yet; phones and tablets do not read pads yet.)

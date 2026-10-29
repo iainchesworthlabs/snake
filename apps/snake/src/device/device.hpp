@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "device/gamepad.hpp"
 #include "device/haptics.hpp"
 #include "snake/input/sample_source.hpp"
 

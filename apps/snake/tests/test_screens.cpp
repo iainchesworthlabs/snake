@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "about/about_info.hpp"
 #include "device/device.hpp"
+#include "device/gamepad.hpp"
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
+#include "scripted_gamepad.hpp"
 #include "snake/audio/tunes.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/sim/mode.hpp"
@@ -12,6 +14,7 @@
 #include "theme/tokens.hpp"
 #include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
+#include "viewmodel/gamepad_controller.hpp"
 #include "viewmodel/input_controller.hpp"
 #include "viewmodel/profile_view_model.hpp"
 
@@ -78,9 +81,12 @@ public:
         REQUIRE(component.isReady());
         // The computer these run on has no accelerometer; a phone does.
         snake::ui::device::set_accelerometer_factory([] { return std::make_unique<SilentAccelerometer>(); });
+        snake::ui::device::set_gamepad_factory([this]
+                                               { return std::make_unique<snake::test::ScriptedGamepad>(&m_Pad); });
         m_Root.reset(component.createWithInitialProperties(
             {{"windowWidth", width}, {"windowHeight", height}, {"touchDevice", touch_device}}));
         snake::ui::device::set_accelerometer_factory({});
+        snake::ui::device::set_gamepad_factory({});
         m_Window = qobject_cast<QQuickWindow*>(m_Root.get());
         REQUIRE(m_Window != nullptr);
         m_Window->show();
@@ -165,6 +171,15 @@ public:
     void press(Qt::Key key)
     {
         QTest::keyClick(m_Window, key);
+    }
+
+    /// Plays `events` on the gamepad the game was given, as if the pad had done them.
+    void pad(std::vector<snake::ui::device::GamepadEvent> events)
+    {
+        auto* controller = m_Window->findChild<snake::ui::GamepadController*>("gamepad");
+        REQUIRE(controller != nullptr);
+        m_Pad = std::move(events);
+        controller->poll();
     }
 
     GameViewModel& demo()
@@ -256,6 +271,8 @@ private:
 
     QQmlEngine m_Engine;
     std::unique_ptr<QObject> m_Root;
+    // What the gamepad has done and the game has not read yet.
+    std::vector<snake::ui::device::GamepadEvent> m_Pad;
     QQuickWindow* m_Window = nullptr;
     GameViewModel* m_Game = nullptr;
     snake::ui::InputController* m_Input = nullptr;
@@ -2429,4 +2446,84 @@ TEST_CASE("A phone that turns during a game waits for the player, and a computer
         QTest::qWait(20);
         CHECK(app.game().state() == State::Running);
     }
+}
+
+namespace
+{
+
+using snake::input::GamepadButton;
+using snake::ui::device::GamepadEvent;
+
+GamepadEvent pad_down(GamepadButton button)
+{
+    return {.kind = GamepadEvent::Kind::BUTTON_DOWN, .button = button};
+}
+
+GamepadEvent pad_up(GamepadButton button)
+{
+    return {.kind = GamepadEvent::Kind::BUTTON_UP, .button = button};
+}
+
+GamepadEvent pad_stick(float right, float up)
+{
+    return {.kind = GamepadEvent::Kind::STICK, .right = right, .up = up};
+}
+
+} // namespace
+
+TEST_CASE("A gamepad moves between the buttons of the title and presses one, as the keyboard does",
+          "[screens][gamepad]")
+{
+    App app;
+    REQUIRE(app.focus_name() == "playButton");
+    app.pad({pad_down(GamepadButton::DPAD_UP), pad_up(GamepadButton::DPAD_UP)});
+    CHECK(app.focus_name() == "modeCard1");
+    app.pad({pad_down(GamepadButton::DPAD_DOWN), pad_up(GamepadButton::DPAD_DOWN)});
+    CHECK(app.focus_name() == "playButton");
+
+    // The south button is Enter: it presses Play.
+    app.pad({pad_down(GamepadButton::SOUTH), pad_up(GamepadButton::SOUTH)});
+    CHECK(app.game().state() == State::Running);
+    CHECK_FALSE(app.shows("titleScreen"));
+}
+
+TEST_CASE("A gamepad steers the snake with the d-pad and the left stick", "[screens][gamepad]")
+{
+    App app;
+    app.click("playButton");
+    REQUIRE(app.game().state() == State::Running);
+    const int row = app.game().headRow();
+
+    app.pad({pad_down(GamepadButton::DPAD_UP), pad_up(GamepadButton::DPAD_UP)});
+    app.game().advance(0.5);
+    const int up_row = app.game().headRow();
+    CHECK(up_row < row);
+
+    // The stick: pushed to the left it turns the snake left, and pushed down it turns it down.
+    app.pad({pad_stick(-0.9F, 0.0F)});
+    app.game().advance(0.5);
+    CHECK(app.game().headRow() == up_row);
+    app.pad({pad_stick(0.0F, 0.0F), pad_stick(0.0F, -0.9F)});
+    app.game().advance(0.5);
+    CHECK(app.game().headRow() > up_row);
+}
+
+TEST_CASE("Start pauses and resumes a game, and the menu button opens the pause dialog", "[screens][gamepad]")
+{
+    App app;
+    app.click("playButton");
+    REQUIRE(app.game().state() == State::Running);
+
+    app.pad({pad_down(GamepadButton::START), pad_up(GamepadButton::START)});
+    CHECK(app.game().state() == State::Paused);
+    CHECK(app.shows("pauseScreen"));
+
+    // The south button presses the button the pause dialog starts on, which is Resume.
+    app.pad({pad_down(GamepadButton::SOUTH), pad_up(GamepadButton::SOUTH)});
+    CHECK(app.game().state() == State::Running);
+
+    app.pad({pad_down(GamepadButton::SELECT), pad_up(GamepadButton::SELECT)});
+    CHECK(app.game().state() == State::Paused);
+    app.pad({pad_down(GamepadButton::EAST), pad_up(GamepadButton::EAST)});
+    CHECK(app.game().state() == State::Running);
 }

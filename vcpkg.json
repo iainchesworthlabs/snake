@@ -5,7 +5,8 @@
   "builtin-baseline": "9eec002df1cd109f8f104cd966a763daf9751489",
   "dependencies": [
     { "name": "catch2", "platform": "!(android | ios)" },
-    "miniaudio"
+    "miniaudio",
+    { "name": "sdl3", "default-features": false, "platform": "!(android | ios)" }
   ],
   "features": {
     "profiling": {

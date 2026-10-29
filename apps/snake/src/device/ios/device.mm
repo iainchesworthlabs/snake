@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/device.hpp"
 
+#include "device/gamepad.hpp"
 #include "device/haptics.hpp"
 #include "device/qt_accelerometer.hpp"
 #include "snake/input/sample_source.hpp"
@@ -84,6 +85,12 @@ UIInterfaceOrientationMask current_mask()
 std::unique_ptr<input::SampleSource> make_accelerometer()
 {
     return make_qt_accelerometer();
+}
+
+// A phone is steered by touch and tilt. Gamepads on a phone or tablet are not read yet.
+std::unique_ptr<GamepadSource> make_gamepad_source()
+{
+    return nullptr;
 }
 
 std::unique_ptr<Haptics> make_haptics()
