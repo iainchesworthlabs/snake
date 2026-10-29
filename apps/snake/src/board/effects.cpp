@@ -33,6 +33,10 @@ constexpr std::array<QRgb, 3> FOOD_COLOURS = {opaque(tokens::FOOD), opaque(token
                                               opaque(tokens::LEAF)};
 constexpr std::array<QRgb, 3> BONUS_COLOURS = {opaque(tokens::MEDAL_GOLD), opaque(tokens::SURFACE),
                                                opaque(tokens::ACCENT)};
+constexpr std::array<QRgb, 3> BOMB_COLOURS = {opaque(tokens::TONGUE), opaque(tokens::INK), opaque(tokens::MEDAL_GOLD)};
+constexpr std::array<QRgb, 2> PORTAL_COLOURS = {opaque(tokens::TONGUE), opaque(tokens::MEDAL_SILVER)};
+constexpr std::size_t BOMB_SPECKS = 12;
+constexpr std::size_t BANG_SPECKS = 24;
 
 } // namespace
 
@@ -52,8 +56,49 @@ double Effects::next_unit() noexcept
 
 void Effects::eaten(sim::Cell cell, std::uint32_t points, bool bonus)
 {
-    const std::size_t count = bonus ? BONUS_SPECKS : FOOD_SPECKS;
-    const auto& colours = bonus ? BONUS_COLOURS : FOOD_COLOURS;
+    throw_specks(cell, bonus ? BONUS_SPECKS : FOOD_SPECKS,
+                 bonus ? std::span<const QRgb>(BONUS_COLOURS) : std::span<const QRgb>(FOOD_COLOURS));
+    if (points > 0)
+    {
+        m_Scores.push_back({.cell = cell, .points = points, .age = 0.0});
+    }
+}
+
+void Effects::potato_eaten(sim::Cell cell, std::uint32_t points)
+{
+    throw_specks(cell, BOMB_SPECKS, BOMB_COLOURS);
+    if (points > 0)
+    {
+        m_Scores.push_back({.cell = cell, .points = points, .age = 0.0});
+    }
+}
+
+void Effects::teleported(sim::Cell from, sim::Cell to)
+{
+    throw_specks(from, 5, PORTAL_COLOURS);
+    throw_specks(to, 5, PORTAL_COLOURS);
+}
+
+void Effects::shed(std::span<const sim::Cell> cells)
+{
+    for (std::size_t piece = 0; piece < cells.size(); ++piece)
+    {
+        burst_at(cells[piece], opaque(piece % 2 == 0 ? tokens::ACCENT : tokens::SURFACE));
+    }
+    if (!cells.empty())
+    {
+        throw_specks(cells.front(), 6, BOMB_COLOURS);
+    }
+}
+
+void Effects::exploded(sim::Cell bomb, std::span<const sim::Cell> snake)
+{
+    throw_specks(bomb, BANG_SPECKS, BOMB_COLOURS);
+    crashed(snake);
+}
+
+void Effects::throw_specks(sim::Cell cell, std::size_t count, std::span<const QRgb> colours)
+{
     for (std::size_t i = 0; i < count && m_Particles.size() < MAX_PARTICLES; ++i)
     {
         // Spread round the circle, a little off even, and thrown a little upwards.
@@ -66,10 +111,6 @@ void Effects::eaten(sim::Cell cell, std::uint32_t points, bool bonus)
         speck.velocity_y = (std::sin(angle) * speed) - 2.0;
         speck.colour = colours[i % colours.size()];
         m_Particles.push_back(speck);
-    }
-    if (points > 0)
-    {
-        m_Scores.push_back({.cell = cell, .points = points, .age = 0.0});
     }
 }
 

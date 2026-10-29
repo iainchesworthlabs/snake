@@ -34,7 +34,18 @@ constexpr std::optional<profile::Unlockable> unlockable_of(ModeListModel::Entry 
 
 constexpr ModeListModel::Entry entry_of(sim::Mode mode)
 {
-    return mode == sim::Mode::EASY ? ModeListModel::Entry::Easy : ModeListModel::Entry::Classic;
+    switch (mode)
+    {
+    case sim::Mode::EASY:
+        return ModeListModel::Entry::Easy;
+    case sim::Mode::CLASSIC:
+        break;
+    case sim::Mode::PORTALS:
+        return ModeListModel::Entry::Portals;
+    case sim::Mode::HOT_POTATO:
+        return ModeListModel::Entry::HotPotato;
+    }
+    return ModeListModel::Entry::Classic;
 }
 
 constexpr int game_mode_of(ModeListModel::Entry entry)
@@ -46,8 +57,9 @@ constexpr int game_mode_of(ModeListModel::Entry entry)
     case ModeListModel::Entry::Classic:
         return static_cast<int>(GameViewModel::Mode::Classic);
     case ModeListModel::Entry::Portals:
+        return static_cast<int>(GameViewModel::Mode::Portals);
     case ModeListModel::Entry::HotPotato:
-        break;
+        return static_cast<int>(GameViewModel::Mode::HotPotato);
     }
     return -1;
 }
@@ -85,10 +97,11 @@ QVariant ModeListModel::data(const QModelIndex& index, int role) const
         case Entry::Classic:
             return tr("Faster snake. Walls end the game.");
         case Entry::Portals:
+            return tr("Paired portals. Step in, pop out.");
         case Entry::HotPotato:
             break;
         }
-        return tr("Coming in a later version.");
+        return tr("Bombs! Shed your tail in time.");
     case LockedRole:
         return locked(entry);
     case SelectableRole:
@@ -148,9 +161,9 @@ bool ModeListModel::locked(Entry entry) const
     return unlockable && !m_Unlocks.has(*unlockable);
 }
 
-bool ModeListModel::selectable(Entry entry)
+bool ModeListModel::selectable(Entry entry) const
 {
-    return game_mode_of(entry) >= 0;
+    return !locked(entry) && game_mode_of(entry) >= 0;
 }
 
 } // namespace snake::ui

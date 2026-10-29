@@ -100,6 +100,7 @@ All angles are starting defaults to tune in playtesting with the target age grou
 | Pause and resume | Space | Start |
 | Menu | Esc | Select or B |
 | Confirm | Enter | A |
+| Shed (Hot potato) | Enter | A |
 
 ### ESP32-P4
 

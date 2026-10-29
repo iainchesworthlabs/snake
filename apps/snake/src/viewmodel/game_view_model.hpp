@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace snake::ui
 {
@@ -36,6 +37,13 @@ class GameViewModel : public QObject
     Q_PROPERTY(bool autoplay READ autoplay WRITE setAutoplay NOTIFY autoplayChanged FINAL)
     /// The row of the board the head is in, from 0 at the top. The title's preview scrolls to keep it in view.
     Q_PROPERTY(int headRow READ headRow NOTIFY boardChanged FINAL)
+    /// Hot potato: a bomb has been swallowed and is in the snake.
+    Q_PROPERTY(bool hasBomb READ hasBomb NOTIFY boardChanged FINAL)
+    /// Hot potato: a bomb is in the snake and can be shed now (it has left the head).
+    Q_PROPERTY(bool canShed READ canShed NOTIFY boardChanged FINAL)
+    /// Hot potato: how far the bomb is from going off, from 1 (it has just been swallowed) to 0 (it is on the tail and
+    /// the next tick that does not eat sets it off), and 1 when there is no bomb in the snake.
+    Q_PROPERTY(double fuse READ fuse NOTIFY boardChanged FINAL)
     /// The mode of the current game. Setting it starts a new game in that mode.
     Q_PROPERTY(Mode mode READ mode WRITE setMode NOTIFY modeChanged FINAL)
 
@@ -53,16 +61,22 @@ public:
     {
         Easy,
         Classic,
+        Portals,
+        HotPotato,
     };
     Q_ENUM(Mode)
 
     /// What a tick did besides move the snake. The sound and the effects react to these.
     enum class Event : std::uint8_t
     {
-        Ate,      // the snake ate the food
-        AteBonus, // the snake ate the bonus item
-        Crashed,  // the snake hit the wall or itself and the game ended
-        Won,      // the snake ate the last food and filled the board
+        Ate,        // the snake ate the food
+        AteBonus,   // the snake ate the bonus item
+        AtePotato,  // the snake ate the bomb food and the bomb is in its body now
+        Teleported, // the head went into a portal and came out of the other one
+        Shed,       // the player shed the tail from the bomb
+        Crashed,    // the snake hit the wall or itself and the game ended
+        Exploded,   // the bomb went off and the game ended
+        Won,        // the snake ate the last food and filled the board
     };
     Q_ENUM(Event)
 
@@ -90,6 +104,9 @@ public:
     void setAutoplay(bool on);
 
     [[nodiscard]] int headRow() const;
+    [[nodiscard]] bool hasBomb() const;
+    [[nodiscard]] bool canShed() const;
+    [[nodiscard]] double fuse() const;
 
     /// The seed of the first game the demo plays. Each game after it takes the next number.
     static constexpr std::uint64_t DEMO_SEED = 0x5EED5EED;
@@ -97,6 +114,13 @@ public:
     [[nodiscard]] const sim::Session& session() const noexcept
     {
         return m_Session;
+    }
+
+    /// The cells of the body that the last shed dropped, for the effects to show: the bomb's first, then the rest
+    /// towards the tail.
+    [[nodiscard]] const std::vector<sim::Cell>& lastShed() const noexcept
+    {
+        return m_LastShed;
     }
 
     /// How far the game is from the last tick to the next, from 0 to 1. The board uses it to draw the snake between
@@ -109,6 +133,9 @@ public:
     Q_INVOKABLE void restart();
     /// NOT_STARTED to running.
     Q_INVOKABLE void start();
+    /// Hot potato: sheds the tail from the bomb on. Returns false when there is nothing to shed (no bomb, the bomb is
+    /// in the head, or the game is not running).
+    Q_INVOKABLE bool shed();
     Q_INVOKABLE void pause();
     Q_INVOKABLE void resume();
 
@@ -153,6 +180,40 @@ private:
     std::uint64_t m_DemoSeed = DEMO_SEED;
     sim::Session m_Session;
     sim::TickPacer m_Pacer;
+    std::vector<sim::Cell> m_LastShed;
 };
+
+/// The sim's mode for the view-model's, and the other way round.
+[[nodiscard]] constexpr sim::Mode to_sim(GameViewModel::Mode mode) noexcept
+{
+    switch (mode)
+    {
+    case GameViewModel::Mode::Easy:
+        return sim::Mode::EASY;
+    case GameViewModel::Mode::Classic:
+        break;
+    case GameViewModel::Mode::Portals:
+        return sim::Mode::PORTALS;
+    case GameViewModel::Mode::HotPotato:
+        return sim::Mode::HOT_POTATO;
+    }
+    return sim::Mode::CLASSIC;
+}
+
+[[nodiscard]] constexpr GameViewModel::Mode from_sim(sim::Mode mode) noexcept
+{
+    switch (mode)
+    {
+    case sim::Mode::EASY:
+        return GameViewModel::Mode::Easy;
+    case sim::Mode::CLASSIC:
+        break;
+    case sim::Mode::PORTALS:
+        return GameViewModel::Mode::Portals;
+    case sim::Mode::HOT_POTATO:
+        return GameViewModel::Mode::HotPotato;
+    }
+    return GameViewModel::Mode::Classic;
+}
 
 } // namespace snake::ui

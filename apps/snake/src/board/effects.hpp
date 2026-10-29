@@ -74,6 +74,20 @@ public:
     /// The snake ate at `cell` and scored `points`. A bonus item gives a bigger burst in gold.
     void eaten(sim::Cell cell, std::uint32_t points, bool bonus);
 
+    /// The snake ate the bomb food at `cell` and scored `points`: a burst in the colours of the bomb.
+    void potato_eaten(sim::Cell cell, std::uint32_t points);
+
+    /// The head went into a portal at `from` and came out of the one at `to`: a few specks at each.
+    void teleported(sim::Cell from, sim::Cell to);
+
+    /// The player shed the parts of the body on `cells`: they pop in the colours of the snake, the bomb's cell (the
+    /// first) in the colours of the bomb as well.
+    void shed(std::span<const sim::Cell> cells);
+
+    /// The bomb went off on `bomb`, with the snake lying on `snake` (head first): a big burst there, and the snake dies
+    /// as it does in a crash.
+    void exploded(sim::Cell bomb, std::span<const sim::Cell> snake);
+
     /// The snake crashed, lying on `snake` (head first): the board shakes and the snake dies, unless motion is reduced,
     /// which leaves out the shake and the flashing. The pieces still pop.
     void crashed(std::span<const sim::Cell> snake);
@@ -129,6 +143,8 @@ private:
     /// How many pieces have popped at `age` seconds into the death.
     [[nodiscard]] std::size_t popped_at(double age) const noexcept;
     void burst_at(sim::Cell cell, QRgb colour);
+    /// Throws `count` specks round the circle from `cell`, in `colours` in turn.
+    void throw_specks(sim::Cell cell, std::size_t count, std::span<const QRgb> colours);
     /// A number from 0 up to but not including 1.
     [[nodiscard]] double next_unit() noexcept;
 

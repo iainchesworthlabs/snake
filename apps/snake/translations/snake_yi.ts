@@ -121,6 +121,14 @@
         <translation>אָפּשטעלן</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>וואַרף</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>וואַרף אַוועק דעם עק פֿון דער באָמבע</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>מען שטעלט איין דעם נייג</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>קלאַסיש</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>טויערן</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>הייסער קאַרטאָפֿל</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>קלאַסיש</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>טויערן</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>הייסער קאַרטאָפֿל</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>אײַנשטעלונגען</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>שנעלער שלאַנג. אַ וואַנט ענדיקט דעם שפּיל.</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>קומט אין אַ שפּעטערדיקער ווערסיע.</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>פּאָרטאַל־פּאָרן. אַרײַן, אַרויס.</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>באָמבעס! וואַרף אַוועק דעם עק צײַטלעך.</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

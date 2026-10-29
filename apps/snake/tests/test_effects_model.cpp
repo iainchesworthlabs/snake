@@ -225,3 +225,45 @@ TEST_CASE("A crash starts the death of the snake, which can be waited out or ski
     }
     CHECK_FALSE(model.dying());
 }
+
+TEST_CASE("The bomb food, a portal, a shed and an explosion each have a show of their own", "[effects-model][modes]")
+{
+    {
+        GameViewModel game(counting_seeds());
+        EffectsModel model;
+        model.setGame(&game);
+        game.start();
+        emit game.tickEvent(Event::AtePotato);
+        CHECK(model.active());
+        CHECK(model.effects().particles().size() == 12);
+    }
+    {
+        GameViewModel game(counting_seeds());
+        game.setMode(GameViewModel::Mode::Portals);
+        EffectsModel model;
+        model.setGame(&game);
+        game.start();
+        emit game.tickEvent(Event::Teleported);
+        CHECK(model.active());
+        CHECK(model.effects().particles().size() == 10); // five at each end
+    }
+    {
+        GameViewModel game(counting_seeds());
+        game.setMode(GameViewModel::Mode::HotPotato);
+        EffectsModel model;
+        model.setGame(&game);
+        game.start();
+        emit game.tickEvent(Event::Shed); // nothing was shed, so there is nothing to show
+        CHECK_FALSE(model.active());
+    }
+    {
+        GameViewModel game(counting_seeds());
+        game.setMode(GameViewModel::Mode::HotPotato);
+        EffectsModel model;
+        model.setGame(&game);
+        game.start();
+        emit game.tickEvent(Event::Exploded);
+        CHECK(model.effects().dying());
+        CHECK(model.effects().particles().size() == 24);
+    }
+}

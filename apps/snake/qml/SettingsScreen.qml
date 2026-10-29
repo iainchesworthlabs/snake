@@ -19,7 +19,7 @@ FocusScope {
     // The mode whose leaderboard the dialog asks about, and the button that asked, which gets the keyboard back.
     property int resetMode: GameViewModel.Mode.Easy
     property Item resetOpener
-    readonly property string resetModeName: resetMode === GameViewModel.Mode.Easy ? qsTr("Easy") : qsTr("Classic")
+    readonly property string resetModeName: resetMode === GameViewModel.Mode.Easy ? qsTr("Easy") : resetMode === GameViewModel.Mode.Classic ? qsTr("Classic") : resetMode === GameViewModel.Mode.Portals ? qsTr("Portals") : qsTr("Hot potato")
 
     onVisibleChanged: {
         if (visible) {
@@ -169,32 +169,53 @@ FocusScope {
                 text: qsTr("Reset a leaderboard")
             }
 
-            Row {
+            // One button for each mode: two rows of two.
+            Grid {
+                id: resets
+
                 x: page.landscape ? page.trailingX : 15
                 y: page.landscape ? 98 : 100 + switches.height + 56
+                columns: 2
                 spacing: 8
 
-                ToyButton {
-                    objectName: "resetEasyButton"
-                    width: page.landscape ? (page.columnWidth - 8) / 2 : 176
-                    height: page.landscape ? 42 : 46
-                    text: qsTr("Easy")
-                    onClicked: {
-                        root.resetMode = GameViewModel.Mode.Easy;
-                        root.resetOpener = this;
-                        confirm.visible = true;
-                    }
-                }
+                Repeater {
+                    model: [
+                        {
+                            "id": "Easy",
+                            "mode": GameViewModel.Mode.Easy,
+                            "name": qsTr("Easy")
+                        },
+                        {
+                            "id": "Classic",
+                            "mode": GameViewModel.Mode.Classic,
+                            "name": qsTr("Classic")
+                        },
+                        {
+                            "id": "Portals",
+                            "mode": GameViewModel.Mode.Portals,
+                            "name": qsTr("Portals")
+                        },
+                        {
+                            "id": "HotPotato",
+                            "mode": GameViewModel.Mode.HotPotato,
+                            "name": qsTr("Hot potato")
+                        }
+                    ]
 
-                ToyButton {
-                    objectName: "resetClassicButton"
-                    width: page.landscape ? (page.columnWidth - 8) / 2 : 176
-                    height: page.landscape ? 42 : 46
-                    text: qsTr("Classic")
-                    onClicked: {
-                        root.resetMode = GameViewModel.Mode.Classic;
-                        root.resetOpener = this;
-                        confirm.visible = true;
+                    ToyButton {
+                        id: resetButton
+
+                        required property var modelData
+
+                        objectName: "reset" + resetButton.modelData.id + "Button"
+                        width: page.landscape ? (page.columnWidth - 8) / 2 : 176
+                        height: page.landscape ? 42 : 46
+                        text: resetButton.modelData.name
+                        onClicked: {
+                            root.resetMode = resetButton.modelData.mode;
+                            root.resetOpener = this;
+                            confirm.visible = true;
+                        }
                     }
                 }
             }
@@ -202,7 +223,7 @@ FocusScope {
             ToyButton {
                 objectName: "aboutButton"
                 x: page.landscape ? page.trailingX : 15
-                y: page.landscape ? 168 : 100 + switches.height + 56 + 46 + 40
+                y: page.landscape ? 98 + 42 + 8 + 42 + 14 : 100 + switches.height + 56 + 46 + 8 + 46 + 24
                 width: page.landscape ? page.columnWidth : 360
                 height: page.landscape ? 46 : 50
                 text: qsTr("About")

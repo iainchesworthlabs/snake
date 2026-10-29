@@ -121,6 +121,14 @@
         <translation>Pausa</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>Soltar</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>Soltar la cola desde la bomba</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>Calibrando la inclinación</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>Clásico</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>Portales</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Patata caliente</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>Clásico</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>Portales</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>Patata caliente</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>Serpiente más rápida. Las paredes acaban el juego.</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>Llegará en una versión futura.</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>Portales gemelos. Entra y sal.</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>¡Bombas! Suelta la cola a tiempo.</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

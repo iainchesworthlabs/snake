@@ -62,6 +62,32 @@ constexpr std::array<Segment, 6> NEW_BEST = {{
     {Waveform::SQUARE, 88, 88, 260, 190, 64},
 }};
 
+// A whoosh up and down for a portal.
+constexpr std::array<Segment, 2> PORTAL = {{
+    {Waveform::SQUARE, 55, 88, 70, 170, 64},
+    {Waveform::SQUARE, 88, 62, 90, 170, 64},
+}};
+
+// The bomb goes in: a low double knock and a short rising fuse.
+constexpr std::array<Segment, 3> POTATO = {{
+    {Waveform::TRIANGLE, 43, 38, 80, 230, 128},
+    {Waveform::TRIANGLE, 43, 38, 80, 230, 128},
+    {Waveform::SQUARE, 70, 94, 110, 150, 32},
+}};
+
+// The tail drops off: a hiss and a fall.
+constexpr std::array<Segment, 2> SHED = {{
+    {Waveform::NOISE, 84, 60, 80, 190, 128},
+    {Waveform::TRIANGLE, 62, 38, 120, 210, 128},
+}};
+
+// The bomb: a crack, a thud and a rumble.
+constexpr std::array<Segment, 3> EXPLODE = {{
+    {Waveform::NOISE, 100, 72, 110, 255, 128},
+    {Waveform::TRIANGLE, 52, 24, 200, 255, 128},
+    {Waveform::NOISE, 80, 40, 420, 230, 128},
+}};
+
 // The title tune: 16 steps, a bouncing melody over a walking bass.
 constexpr std::array<TuneNote, 8> TITLE_LEAD = {
     {{C5, 2}, {E5, 2}, {G5, 2}, {E5, 2}, {A5, 2}, {G5, 2}, {E5, 2}, {D5, 2}}};
@@ -105,6 +131,14 @@ std::span<const Segment> effect_segments(Effect effect) noexcept
         return START;
     case Effect::NEW_BEST:
         return NEW_BEST;
+    case Effect::PORTAL:
+        return PORTAL;
+    case Effect::POTATO:
+        return POTATO;
+    case Effect::SHED:
+        return SHED;
+    case Effect::EXPLODE:
+        return EXPLODE;
     }
     return {};
 }

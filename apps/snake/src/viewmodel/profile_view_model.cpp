@@ -29,11 +29,6 @@ namespace snake::ui
 namespace
 {
 
-constexpr sim::Mode to_sim(GameViewModel::Mode mode) noexcept
-{
-    return mode == GameViewModel::Mode::Easy ? sim::Mode::EASY : sim::Mode::CLASSIC;
-}
-
 constexpr ModeListModel::Entry entry_of(profile::Unlockable unlockable) noexcept
 {
     return unlockable == profile::Unlockable::PORTALS ? ModeListModel::Entry::Portals : ModeListModel::Entry::HotPotato;
@@ -194,7 +189,9 @@ void ProfileViewModel::setSaveFile(const QString& path)
             m_Writing = true;
             m_LoadStatus = QStringLiteral("loaded, %1 + %2 scores")
                                .arg(m_Data.leaderboards.of(sim::Mode::EASY).size())
-                               .arg(m_Data.leaderboards.of(sim::Mode::CLASSIC).size());
+                               .arg(m_Data.leaderboards.of(sim::Mode::CLASSIC).size() +
+                                    m_Data.leaderboards.of(sim::Mode::PORTALS).size() +
+                                    m_Data.leaderboards.of(sim::Mode::HOT_POTATO).size());
         }
         else
         {
@@ -437,7 +434,7 @@ bool ProfileViewModel::saveScore()
     Q_ASSERT(place.has_value());
     m_Data.recent_names.remember(saved);
     // The leaderboard opens on the mode just played, with the new line marked.
-    m_BoardMode = pending.mode == sim::Mode::EASY ? GameViewModel::Mode::Easy : GameViewModel::Mode::Classic;
+    m_BoardMode = from_sim(pending.mode);
     m_Board.show(pending.mode);
     m_Board.mark_latest(pending.mode, place.value_or(0));
     emit boardModeChanged();

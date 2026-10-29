@@ -129,8 +129,17 @@ function the tests give. The state, score and mode are properties, and `boardCha
 the score against the best of the game's mode and against the unlock rules of `libs/profile`, which gives the game-over
 screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `profile::SaveData` in memory and a
 `ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
-is locked, open or only open on paper: Portals and Hot potato can be unlocked but are not in the game yet, so they are
-never startable. The best score of a mode is the top of its leaderboard.
+is locked or open: Easy and Classic always are, and Portals and Hot potato open at 2,000 and 3,000 points in Classic, and
+can be chosen and played from then on. The best score of a mode is the top of its leaderboard.
+
+The new modes reach the screens through the events of `GameViewModel`: `AtePotato`, `Teleported`, `Shed` and `Exploded`
+join `Ate`, `AteBonus`, `Crashed` and `Won`, each with a sound (`Effect::POTATO`, `PORTAL`, `SHED`, `EXPLODE`), a show of
+specks in `Effects`, and for the haptics a tap (the bomb, a shed) or a knock (an explosion). `canShed`, `hasBomb` and `fuse`
+(1 when the bomb has just been swallowed, 0 when it is on the tail) are what the Shed control of `GameScreen` reads, and
+`shed()` is what it calls; Enter sheds too, because a running game has nothing else for it to confirm (and so does the south
+button of a gamepad). The board draws the portals as rings in the colours of their pair (the first pair has a dot in the hole),
+a bomb food as an ink ball with a lit fuse that blinks in its last ten ticks, and the bomb in the body as a small ball on its
+piece, which flashes pink in the last three pieces before the tail. A head that is about to go through a portal does not glide.
 
 A game that makes the top 10 (`Leaderboard::rank_for()`) does not go on the board at once: it waits as the pending score
 (`qualifies`, `pendingScore`, `pendingRank`) while the player types a name. `typeCharacter()`, `eraseCharacter()` and

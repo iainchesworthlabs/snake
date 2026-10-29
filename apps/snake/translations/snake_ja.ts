@@ -121,6 +121,14 @@
         <translation>一時停止</translation>
     </message>
     <message>
+        <source>Shed</source>
+        <translation>すてる</translation>
+    </message>
+    <message>
+        <source>Shed the tail from the bomb</source>
+        <translation>ばくだんから しっぽを すてる</translation>
+    </message>
+    <message>
         <source>Calibrating tilt</source>
         <translation>かたむきを あわせています</translation>
     </message>
@@ -161,6 +169,14 @@
     <message>
         <source>Classic</source>
         <translation>クラシック</translation>
+    </message>
+    <message>
+        <source>Portals</source>
+        <translation>ポータル</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>ホットポテト</translation>
     </message>
     <message>
         <source>Top 10 on this device</source>
@@ -314,6 +330,14 @@
         <translation>クラシック</translation>
     </message>
     <message>
+        <source>Portals</source>
+        <translation>ポータル</translation>
+    </message>
+    <message>
+        <source>Hot potato</source>
+        <translation>ホットポテト</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>せってい</translation>
     </message>
@@ -414,8 +438,12 @@
         <translation>はやい へび。かべに ぶつかると おわり。</translation>
     </message>
     <message>
-        <source>Coming in a later version.</source>
-        <translation>こんごの バージョンで あそべるよ。</translation>
+        <source>Paired portals. Step in, pop out.</source>
+        <translation>ふたごの ポータル。はいって でる。</translation>
+    </message>
+    <message>
+        <source>Bombs! Shed your tail in time.</source>
+        <translation>ばくだん！ しっぽを すてよう。</translation>
     </message>
     <message>
         <source>Unlocks at %L1 in %2</source>

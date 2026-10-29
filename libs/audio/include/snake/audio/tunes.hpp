@@ -40,9 +40,13 @@ enum class Effect : std::uint8_t
     SELECT,   // a button is pressed
     START,    // a game starts
     NEW_BEST, // a score makes the leaderboard
+    PORTAL,   // the head goes through a portal
+    POTATO,   // the snake swallows the bomb
+    SHED,     // the tail is dropped from the bomb
+    EXPLODE,  // the bomb goes off and the game ends
 };
 
-inline constexpr std::size_t EFFECT_COUNT = 6;
+inline constexpr std::size_t EFFECT_COUNT = 10;
 
 /// The segments of `effect`, in the order they play.
 [[nodiscard]] std::span<const Segment> effect_segments(Effect effect) noexcept;

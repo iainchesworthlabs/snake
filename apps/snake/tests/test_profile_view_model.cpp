@@ -117,7 +117,7 @@ TEST_CASE("Easy and Classic are open and can be started, with their rules in wor
     CHECK(value(modes, Entry::Classic, ModeListModel::DetailRole).toString() == "Faster snake. Walls end the game.");
 }
 
-TEST_CASE("Portals and Hot potato are locked, with what it takes to open them, and cannot be started", "[modes]")
+TEST_CASE("Portals and Hot potato are locked, with what it takes to open them, and cannot be chosen", "[modes]")
 {
     const UsLocale locale;
     ProfileViewModel profile;
@@ -126,8 +126,11 @@ TEST_CASE("Portals and Hot potato are locked, with what it takes to open them, a
     {
         CHECK(value(modes, entry, ModeListModel::LockedRole).toBool());
         CHECK_FALSE(value(modes, entry, ModeListModel::SelectableRole).toBool());
-        CHECK(value(modes, entry, ModeListModel::GameModeRole).toInt() == -1);
     }
+    CHECK(value(modes, Entry::Portals, ModeListModel::GameModeRole).toInt() ==
+          static_cast<int>(GameViewModel::Mode::Portals));
+    CHECK(value(modes, Entry::HotPotato, ModeListModel::GameModeRole).toInt() ==
+          static_cast<int>(GameViewModel::Mode::HotPotato));
     CHECK(value(modes, Entry::Portals, ModeListModel::DetailRole).toString() == "Unlocks at 2,000 in Classic");
     CHECK(value(modes, Entry::HotPotato, ModeListModel::DetailRole).toString() == "Unlocks at 3,000 in Classic");
 }
@@ -154,11 +157,12 @@ TEST_CASE("A score that opens a mode unlocks it for good and says so", "[profile
     CHECK_FALSE(profile.data().unlocks.has(snake::profile::Unlockable::HOT_POTATO));
     CHECK(changed.count() == 1);
     CHECK(result.count() == 1);
-    // Open, but not in the game yet: neither locked nor startable.
+    // Open: not locked, and it can be chosen. The other is still locked.
     CHECK_FALSE(value(modes, Entry::Portals, ModeListModel::LockedRole).toBool());
-    CHECK_FALSE(value(modes, Entry::Portals, ModeListModel::SelectableRole).toBool());
-    CHECK(value(modes, Entry::Portals, ModeListModel::DetailRole).toString() == "Coming in a later version.");
+    CHECK(value(modes, Entry::Portals, ModeListModel::SelectableRole).toBool());
+    CHECK(value(modes, Entry::Portals, ModeListModel::DetailRole).toString() == "Paired portals. Step in, pop out.");
     CHECK(value(modes, Entry::HotPotato, ModeListModel::LockedRole).toBool());
+    CHECK_FALSE(value(modes, Entry::HotPotato, ModeListModel::SelectableRole).toBool());
 
     // A worse game later does not close it, and does not announce it again.
     profile.record_game(Mode::CLASSIC, 10);

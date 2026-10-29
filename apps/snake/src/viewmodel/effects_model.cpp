@@ -62,6 +62,35 @@ void EffectsModel::on_tick_event(GameViewModel::Event event)
     case GameViewModel::Event::AteBonus:
         m_Effects.eaten(m_Game->session().simulation().head(), worth, true);
         break;
+    case GameViewModel::Event::AtePotato:
+        m_Effects.potato_eaten(m_Game->session().simulation().head(), worth);
+        break;
+    case GameViewModel::Event::Teleported:
+    {
+        // The head is on the exit; the portal it went into is the other of the pair.
+        const sim::Simulation& game = m_Game->session().simulation();
+        if (game.portals())
+        {
+            m_Effects.teleported(game.portals()->exit_from(game.head()).value_or(game.head()), game.head());
+        }
+        break;
+    }
+    case GameViewModel::Event::Shed:
+        m_Effects.shed(m_Game->lastShed());
+        break;
+    case GameViewModel::Event::Exploded:
+    {
+        const sim::Simulation& game = m_Game->session().simulation();
+        const auto& snake = game.snake();
+        std::vector<sim::Cell> cells;
+        cells.reserve(snake.size());
+        for (std::size_t i = 0; i < snake.size(); ++i)
+        {
+            cells.push_back(snake[i]);
+        }
+        m_Effects.exploded(game.lump().value_or(game.head()), cells);
+        break;
+    }
     case GameViewModel::Event::Crashed:
     {
         const auto& snake = m_Game->session().simulation().snake();

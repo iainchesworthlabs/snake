@@ -23,16 +23,6 @@ namespace snake::ui
 namespace
 {
 
-constexpr sim::Mode to_sim(GameViewModel::Mode mode) noexcept
-{
-    return mode == GameViewModel::Mode::Easy ? sim::Mode::EASY : sim::Mode::CLASSIC;
-}
-
-constexpr GameViewModel::Mode from_sim(sim::Mode mode) noexcept
-{
-    return mode == sim::Mode::EASY ? GameViewModel::Mode::Easy : GameViewModel::Mode::Classic;
-}
-
 constexpr GameViewModel::State from_sim(sim::GameState state) noexcept
 {
     switch (state)
@@ -186,23 +176,77 @@ int GameViewModel::headRow() const
     return m_Session.simulation().head().y;
 }
 
+bool GameViewModel::hasBomb() const
+{
+    return m_Session.simulation().lump().has_value();
+}
+
+bool GameViewModel::canShed() const
+{
+    const auto index = m_Session.simulation().lump_index();
+    return m_Session.state() == sim::GameState::RUNNING && index && *index >= 1;
+}
+
+double GameViewModel::fuse() const
+{
+    const sim::Simulation& game = m_Session.simulation();
+    const auto index = game.lump_index();
+    if (!index || game.length() < 2)
+    {
+        return 1.0;
+    }
+    // The bomb is on the tail when its index is length - 1.
+    return static_cast<double>(game.length() - 1 - *index) / static_cast<double>(game.length() - 1);
+}
+
+bool GameViewModel::shed()
+{
+    if (m_Session.state() != sim::GameState::RUNNING)
+    {
+        return false;
+    }
+    const sim::GameState state_before = m_Session.state();
+    const std::uint32_t score_before = m_Session.simulation().score();
+    // The parts that are dropped, written down before they are gone.
+    const sim::Simulation& game = m_Session.simulation();
+    std::vector<sim::Cell> dropped;
+    if (const auto index = game.lump_index())
+    {
+        for (std::size_t part = *index; part < game.length(); ++part)
+        {
+            dropped.push_back(game.snake()[part]);
+        }
+    }
+    if (!m_Session.shed())
+    {
+        return false;
+    }
+    m_LastShed = std::move(dropped);
+    emit tickEvent(Event::Shed);
+    publish(state_before, score_before, true);
+    return true;
+}
+
 std::optional<GameViewModel::Event> GameViewModel::event_of(sim::TickOutcome outcome) noexcept
 {
     switch (outcome)
     {
     case sim::TickOutcome::ATE:
-    case sim::TickOutcome::ATE_POTATO:
         return Event::Ate;
     case sim::TickOutcome::ATE_BONUS:
         return Event::AteBonus;
+    case sim::TickOutcome::ATE_POTATO:
+        return Event::AtePotato;
+    case sim::TickOutcome::TELEPORTED:
+        return Event::Teleported;
     case sim::TickOutcome::HIT_WALL:
     case sim::TickOutcome::HIT_SELF:
-    case sim::TickOutcome::EXPLODED:
         return Event::Crashed;
+    case sim::TickOutcome::EXPLODED:
+        return Event::Exploded;
     case sim::TickOutcome::WON:
         return Event::Won;
     case sim::TickOutcome::MOVED:
-    case sim::TickOutcome::TELEPORTED:
     case sim::TickOutcome::NOT_RUNNING:
         break;
     }
@@ -302,8 +346,11 @@ void GameViewModel::perform(input::Action action)
             resume();
             break;
         case sim::GameState::NOT_STARTED:
-        case sim::GameState::RUNNING:
             start();
+            break;
+        case sim::GameState::RUNNING:
+            // Enter is a face button of the keyboard: in Hot potato it sheds.
+            static_cast<void>(shed());
             break;
         }
         break;

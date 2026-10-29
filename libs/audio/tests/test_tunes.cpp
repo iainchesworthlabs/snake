@@ -12,8 +12,9 @@ using namespace snake::audio;
 namespace
 {
 
-constexpr std::array<Effect, EFFECT_COUNT> EFFECTS = {Effect::EAT,    Effect::BONUS, Effect::CRASH,
-                                                      Effect::SELECT, Effect::START, Effect::NEW_BEST};
+constexpr std::array<Effect, EFFECT_COUNT> EFFECTS = {Effect::EAT,   Effect::BONUS,    Effect::CRASH,  Effect::SELECT,
+                                                      Effect::START, Effect::NEW_BEST, Effect::PORTAL, Effect::POTATO,
+                                                      Effect::SHED,  Effect::EXPLODE};
 constexpr std::array<Tune, TUNE_COUNT> TUNES = {Tune::TITLE, Tune::GAME};
 
 std::uint32_t steps_of(const Channel& channel)
