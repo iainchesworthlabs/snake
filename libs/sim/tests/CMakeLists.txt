@@ -18,6 +18,7 @@ add_executable(snake_sim_tests
     test_simulation_portals.cpp
     test_simulation_potato.cpp
     test_simulation_properties.cpp
+    test_simulation_variants.cpp
     test_simulation_scoring.cpp
     test_simulation_setup.cpp
     test_snapshot.cpp
