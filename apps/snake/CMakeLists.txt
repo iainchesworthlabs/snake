@@ -70,6 +70,7 @@ set(SNAKE_QML_FILES
     qml/DashedFrame.qml
     qml/DPad.qml
     qml/JoystickPad.qml
+    qml/KeyHints.qml
     qml/GameOverScreen.qml
     qml/GameScreen.qml
     qml/LeaderboardScreen.qml

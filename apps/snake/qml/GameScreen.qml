@@ -13,6 +13,8 @@ FocusScope {
 
     // On a phone there are controls to show: a pause button, and under the board the d-pad, the joystick or the tilt indicator.
     readonly property bool touchControls: input.controls !== InputController.Scheme.Keys
+    // A gamepad is plugged in (the key hints show its buttons).
+    property bool gamepad: false
 
     // The parts of the screen that a phone covers: the status bar and the camera at the top, the home indicator at the bottom,
     // and the rounded corners. The score, the best and the controls stay inside them. Zero on a computer.
@@ -218,6 +220,17 @@ FocusScope {
                 }
             }
         }
+    }
+
+    // On a computer with a keyboard, lying down, the column that holds the controls of a phone shows what the keys do.
+    KeyHints {
+        objectName: "keyHints"
+        visible: root.landscape && !root.touchControls
+        shed: root.game.mode === GameViewModel.Mode.HotPotato
+        gamepad: root.gamepad
+        x: root.controlsCentre - width / 2
+        y: (root.height - height) / 2
+        width: Math.min(280, root.columnWidth - 24)
     }
 
     DPad {

@@ -2756,3 +2756,57 @@ TEST_CASE("The Shed button is at the other end of the bottom row from the pause 
     CHECK(shed.left() >= dpad.right());
     CHECK(shed.center().y() == Catch::Approx(pause.center().y()).margin(2.0));
 }
+
+TEST_CASE("A computer lying down shows what the keys do beside the board, and a phone does not", "[screens][hints]")
+{
+    {
+        App app(false, 1000, 700);
+        app.start_classic();
+        REQUIRE(app.shows("keyHints"));
+        const QRectF hints = scene_rect(app, "keyHints");
+        const QRectF board = scene_rect(app, "board");
+        const QRectF window(0, 0, 1000, 700);
+        CHECK(window.contains(hints));
+        CHECK(hints.left() >= board.right() - 1.0);
+        CHECK(app.item("keyHints")->property("lines").toList().size() == 3);
+    }
+    {
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        app.start_classic();
+        CHECK_FALSE(app.shows("keyHints"));
+    }
+    {
+        // Upright there is no column for it.
+        App app(false, 390, 844);
+        app.start_classic();
+        CHECK_FALSE(app.shows("keyHints"));
+    }
+}
+
+TEST_CASE("Hot potato adds the key that sheds, and a gamepad adds its buttons", "[screens][hints][shed]")
+{
+    App app(false, 1000, 700);
+    app.profile().record_game(Mode::CLASSIC, 3500);
+    app.start_mode(3);
+    REQUIRE(app.shows("keyHints"));
+    CHECK(app.item("keyHints")->property("lines").toList().size() == 4);
+    CHECK_FALSE(app.item("keyHints")->property("gamepad").toBool());
+    app.pad({GamepadEvent{GamepadEvent::Kind::CONNECTED}});
+    CHECK(app.item("keyHints")->property("gamepad").toBool());
+    app.pad({GamepadEvent{GamepadEvent::Kind::DISCONNECTED}});
+    CHECK_FALSE(app.item("keyHints")->property("gamepad").toBool());
+}
+
+TEST_CASE("The key hints fit in every language", "[screens][hints][languages]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(false, 1000, 700);
+        fill_the_profile(app);
+        app.start_mode(3);
+        app.pad({GamepadEvent{GamepadEvent::Kind::CONNECTED}});
+        check_fit(app, "hot potato with hints");
+    }
+}

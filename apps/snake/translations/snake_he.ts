@@ -153,6 +153,41 @@
     </message>
 </context>
 <context>
+    <name>KeyHints</name>
+    <message>
+        <source>Steer (or the arrow keys)</source>
+        <translation>כיוון (או מקשי החצים)</translation>
+    </message>
+    <message>
+        <source>Space</source>
+        <translation>Space</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>השהיה</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>תפריט</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Enter</translation>
+    </message>
+    <message>
+        <source>Shed the tail</source>
+        <translation>השלך את הזנב</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>שליטה</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>

@@ -153,6 +153,41 @@
     </message>
 </context>
 <context>
+    <name>KeyHints</name>
+    <message>
+        <source>Steer (or the arrow keys)</source>
+        <translation>控制方向（或方向键）</translation>
+    </message>
+    <message>
+        <source>Space</source>
+        <translation>空格</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>暂停</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>菜单</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>回车</translation>
+    </message>
+    <message>
+        <source>Shed the tail</source>
+        <translation>丢掉尾巴</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>操控方式</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>
