@@ -48,7 +48,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if [[ "$version" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
       - name: Check the release has notes
-        uses: iainchesworthlabs/icl-common-infra/actions/release-notes@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/release-notes@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           version: ${{ steps.tag.outputs.version }}
           prerelease: ${{ steps.tag.outputs.prerelease }}
@@ -76,18 +76,18 @@ jobs:
           persist-credentials: false
       - name: Install GCC
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
       - name: Load the MSVC environment
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
       - name: Set up Qt
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
       - name: Set up ccache
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           key: release-${{ matrix.name }}
       - name: Configure, build and install
@@ -121,13 +121,13 @@ jobs:
           grep -q '^snake [0-9]' version.txt
       - name: Check the glibc the package needs
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/check-glibc-floor@0b66ebe4f1ac93b75323b3065777b4dd3f287cdf # v0.1.17
+        uses: iainchesworthlabs/icl-common-infra/actions/check-glibc-floor@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           folder: stage
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           mode: ${{ vars.SIGN_WINDOWS || 'false' }}
           files: stage/bin/snake.exe
@@ -187,7 +187,7 @@ jobs:
       # The shared action names the secret that is missing, before a Qt download of several gigabytes.
       - name: Import the certificate and the provisioning profile
         id: signing
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@0b66ebe4f1ac93b75323b3065777b4dd3f287cdf # v0.1.17
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           certificate-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
           certificate-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
@@ -196,10 +196,10 @@ jobs:
           method: ${{ env.METHOD }}
 
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       # Qt's iOS kit, and the macOS kit that aqtinstall's --autodesktop installs beside it for the host tools (as ios-build.yml).
       - name: Install Qt (iOS kit and macOS host kit)
@@ -257,7 +257,7 @@ jobs:
 
       - name: Archive and export the IPA
         id: export
-        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@0b66ebe4f1ac93b75323b3065777b4dd3f287cdf # v0.1.17
+        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           project: ${{ steps.name.outputs.project }}
           scheme: snake_app
@@ -289,7 +289,7 @@ jobs:
       # manual run that asks, the upload to TestFlight.
       - name: Validate with Apple, and upload to TestFlight
         if: env.METHOD == 'app-store'
-        uses: iainchesworthlabs/icl-common-infra/actions/upload-testflight@0b66ebe4f1ac93b75323b3065777b4dd3f287cdf # v0.1.17
+        uses: iainchesworthlabs/icl-common-infra/actions/upload-testflight@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           ipa: ${{ steps.export.outputs.ipa }}
           key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
@@ -299,7 +299,7 @@ jobs:
 
       - name: Remove the signing keychain and profile
         if: always()
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@0b66ebe4f1ac93b75323b3065777b4dd3f287cdf # v0.1.17
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
         with:
           remove: "true"
 

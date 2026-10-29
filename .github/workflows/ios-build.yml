@@ -60,10 +60,10 @@ jobs:
       # The vcpkg toolchain is the toolchain file of every preset, iOS's included (it chains to Qt's): the manifest has one
       # dependency for a device, miniaudio, which is a header.
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
       # Two kits: Qt's iOS kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the macOS
       # kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease). The game uses Qt Quick and Qt
