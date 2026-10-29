@@ -571,6 +571,7 @@ TEST_CASE("Bytes of version 2 with something wrong in the variant part are refus
     const auto refused_with = [&](std::size_t position, std::uint8_t value)
     {
         std::vector<std::uint8_t> bytes = good;
+        REQUIRE(position < bytes.size());
         bytes[position] = value;
         return !decode(bytes).has_value();
     };
