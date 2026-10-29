@@ -20,10 +20,17 @@ libs/profile/         portable library: player names, leaderboards, recent names
   include/snake/profile/
   src/
   tests/
+libs/raster/          portable library: paints the board into 16-bit pixels (the ESP32-P4's panel); public headers,
+                      sources, tests
+  include/snake/raster/
+  src/
+  tests/
 libs/core/            Qt-free library: logging, version, window settings; public headers, sources, tests
   include/snake/
   src/
   tests/
+apps/snake-esp/       ESP-IDF project, not built with the rest: the ESP32-P4 front end (LVGL on the board support package's
+                      panel and touch) over the portable libraries as one component; see its README.md
 apps/snake/           Qt Quick application
   src/                main.cpp
   src/input/          Qt key codes to the keys of libs/input
@@ -54,7 +61,12 @@ of its partner), and HOT_POTATO adds bomb food that, once eaten, stays in the bo
 until the tail reaches it, and a `shed()` that drops the body behind it (rules 22 and 23 of the roadmap). A snapshot of a
 plain game is still written as version 1, byte for byte as before there were variants, so the hash of every old game and
 every golden replay is unchanged; a game of another variant is written as version 2, which adds the variant and its
-pieces. A replay's input is a turn or a shed. The title screen's attract mode plays an ordinary game with a seed of its own, steered by `autoplay()`: a shortest path
+pieces. A replay's input is a turn or a shed. `libs/raster` is the picture of the board for a front end that has no Qt Quick: `paint_board()` draws the frame, the
+checkerboard, the portals, the food, the bonus item, the bomb food, the snake (with its eyes) and the bomb in its body into a
+rectangle of 16-bit RGB565 pixels that the caller owns, in flat fills on whole pixels, with the design's measures in 32nds of a
+cell (the Qt scene uses the same numbers). It allocates nothing, never writes outside the surface, and is tested on the desktop with probes of
+single pixels. The ESP32-P4 firmware (`apps/snake-esp`) paints into a canvas of LVGL with it; its colours are tested against
+the Qt application's tokens. The title screen's attract mode plays an ordinary game with a seed of its own, steered by `autoplay()`: a shortest path
 to the food (a cell the tail is about to leave counts as free), refused when it would leave the snake less room than its
 length, and otherwise the safe step with the most room. It keeps no state and draws no random numbers, so it never
 touches the generator of a real game. Two autoplayed games are among the golden tests.

@@ -17,8 +17,10 @@ of a 2017 Visual Studio prototype (see [docs/migration.md](docs/migration.md)); 
 | `libs/audio` | Sound effects and music made from square, triangle and noise voices, with no sample files: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/input` | Tilt, swipe, key and gamepad input turned into directions: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/profile` | Names, leaderboards, settings and unlocks: a portable library with no Qt. Unit tested with Catch2. |
+| `libs/raster` | The board drawn into 16-bit pixels, for the ESP32-P4's panel: a portable library with no Qt. Unit tested with Catch2. |
 | `libs/core` | Qt-free logic: logging, version and window settings. Unit tested with Catch2. |
 | `apps/snake` | The Qt Quick application, its view-model, translations (English and Simplified Chinese) and tests. |
+| `apps/snake-esp` | The ESP32-P4 front end: an ESP-IDF project (see its README), built in CI and not yet run on a board. |
 | `docs/` | Developer documentation, built with MkDocs. |
 
 ## Build

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "snake/raster/palette.hpp"
 #include "theme/theme.hpp"
 #include "theme/tokens.hpp"
 
@@ -234,4 +235,22 @@ TEST_CASE("the bundled fonts cover every character of every translation", "[them
                                       [character](const QRawFont& font) { return font.supportsCharacter(character); }));
         }
     }
+}
+
+TEST_CASE("The colours of the ESP32-P4's board are the colours of this one", "[theme][raster]")
+{
+    namespace palette = snake::raster::palette;
+    CHECK(palette::INK == tokens::INK);
+    CHECK(palette::SHADOW == tokens::SHADOW);
+    CHECK(palette::SURFACE == tokens::SURFACE);
+    CHECK(palette::ACCENT == tokens::ACCENT);
+    CHECK(palette::BOARD_LIGHT == tokens::BOARD_LIGHT);
+    CHECK(palette::BOARD_DARK == tokens::BOARD_DARK);
+    CHECK(palette::FOOD == tokens::FOOD);
+    CHECK(palette::FOOD_HIGHLIGHT == tokens::FOOD_HIGHLIGHT);
+    CHECK(palette::LEAF == tokens::LEAF);
+    CHECK(palette::TONGUE == tokens::TONGUE);
+    CHECK(palette::EYE == tokens::EYE);
+    CHECK(palette::MEDAL_GOLD == tokens::MEDAL_GOLD);
+    CHECK(palette::MEDAL_SILVER == tokens::MEDAL_SILVER);
 }

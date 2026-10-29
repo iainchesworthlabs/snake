@@ -27,6 +27,10 @@
     "libs/audio": {
       "line": 98,
       "branch": 95
+    },
+    "libs/raster": {
+      "line": 98,
+      "branch": 95
     }
   }
 }

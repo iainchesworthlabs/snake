@@ -1,0 +1,89 @@
+name: ESP32-P4 firmware
+
+# The ESP32-P4 front end (apps/snake-esp) built with ESP-IDF v6.1 in Espressif's container, which has the toolchain that the
+# release is built for (GCC 15.2). The container is pinned by digest in the "esp32p4" entry of .github/toolchain-versions.json.
+# Nothing is flashed or run: there is no board in CI.
+#
+# Not a required check and not on the merge queue, like the phone builds: it runs only when something the firmware reads
+# changes (a required check that a path filter keeps from running never reports, which would hold every unrelated pull
+# request). The image is 4 GB to pull, so it is not run for anything else. Dispatch it by hand to run it anywhere:
+#   gh workflow run esp32-firmware.yml --ref <branch>
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/snake-esp/**"
+      - "libs/sim/**"
+      - "libs/input/**"
+      - "libs/audio/**"
+      - "libs/profile/**"
+      - "libs/raster/**"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/esp32-firmware.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "apps/snake-esp/**"
+      - "libs/sim/**"
+      - "libs/input/**"
+      - "libs/audio/**"
+      - "libs/profile/**"
+      - "libs/raster/**"
+      - ".github/toolchain-versions.json"
+      - ".github/workflows/esp32-firmware.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: esp32-firmware-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/main' }}
+
+# No job gets more than it names below.
+permissions: {}
+
+jobs:
+  firmware:
+    name: ESP32-P4 firmware (ESP-IDF v6.1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The image is 13 GB when it is unpacked, and the runner has about 14 GB free: take away what this job does not use.
+      - name: Make room for the image
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h / | tail -n 1
+
+      - name: Read the pinned container
+        id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "image=$(jq -r '.esp32p4.idf_container' .github/toolchain-versions.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Pull the container
+        shell: bash
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+        run: docker pull "$IMAGE"
+
+      # As the runner's own user, so that the files of the build belong to it and the job can clean up after itself (run as root
+      # in the container, the build directory would be root's). HOME is somewhere it can write, for the component manager.
+      - name: Build the firmware
+        shell: bash
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+        run: |
+          set -euo pipefail
+          docker run --rm --user "$(id -u):$(id -g)" \
+              --env HOME=/tmp/idf-home \
+              --volume "$GITHUB_WORKSPACE:/project" --workdir /project/apps/snake-esp \
+              "$IMAGE" bash -c 'set -euo pipefail; idf.py set-target esp32p4; idf.py build; idf.py size'

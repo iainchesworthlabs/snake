@@ -119,7 +119,7 @@ target_compile_definitions(snake_theme_tests PRIVATE
     SNAKE_TOKENS_JSON="${PROJECT_SOURCE_DIR}/docs/design/tokens.json"
     SNAKE_TRANSLATIONS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../translations")
 target_link_libraries(snake_theme_tests
-    PRIVATE Qt6::Quick Catch2::Catch2 icl::warnings icl::coverage)
+    PRIVATE snake::raster Qt6::Quick Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_theme_tests)
 catch_discover_tests(snake_theme_tests
     PROPERTIES
