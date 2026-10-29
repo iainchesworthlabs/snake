@@ -86,6 +86,7 @@ set(SNAKE_QML_FILES
     qml/TitleScreen.qml
     qml/TiltIndicator.qml
     qml/ToggleSwitch.qml
+    qml/VolumeControl.qml
     qml/ToyButton.qml)
 # The QML files sit at the root of the module (SnakeApp/Main.qml), as the tools expect: qmllint finds the types of the
 # other files in the directory only then.

@@ -63,6 +63,8 @@ private:
     void on_result_changed();
     void on_settings_changed();
     void on_button_pressed();
+    /// Tells the sink how loud the profile says to be.
+    void send_volume();
 
     [[nodiscard]] bool sound_on() const;
     [[nodiscard]] bool music_on() const;

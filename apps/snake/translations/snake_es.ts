@@ -330,6 +330,10 @@
         <translation>Música</translation>
     </message>
     <message>
+        <source>Volume</source>
+        <translation>Volumen</translation>
+    </message>
+    <message>
         <source>Reduced motion</source>
         <translation>Menos movimiento</translation>
     </message>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 de %2</translation>
     </message>
 </context>
 <context>

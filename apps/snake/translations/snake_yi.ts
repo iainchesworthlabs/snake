@@ -248,7 +248,7 @@
     </message>
     <message>
         <source>Restart</source>
-        <translation>אָנהייבן פֿון ס'נײַ</translation>
+        <translation>אָנהייבן פֿון ס&apos;נײַ</translation>
     </message>
     <message>
         <source>Controls</source>
@@ -330,6 +330,10 @@
         <translation>מוזיק</translation>
     </message>
     <message>
+        <source>Volume</source>
+        <translation>הילך</translation>
+    </message>
+    <message>
         <source>Reduced motion</source>
         <translation>ווייניקער באַוועגונג</translation>
     </message>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>אײַנשטעלונגען</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 פֿון %2</translation>
     </message>
 </context>
 <context>

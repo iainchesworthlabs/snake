@@ -71,6 +71,7 @@ void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
     writer.u8(static_cast<std::uint8_t>((settings.invert_axes ? FLAG_INVERT_AXES : 0U) |
                                         (settings.sound ? FLAG_SOUND : 0U) | (settings.music ? FLAG_MUSIC : 0U) |
                                         (settings.reduced_motion ? FLAG_REDUCED_MOTION : 0U)));
+    writer.u8(settings.volume);
     writer.u32(data.unlocks.bits());
 
     writer.u8(static_cast<std::uint8_t>(data.recent_names.size()));
@@ -92,9 +93,9 @@ void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
     }
 }
 
-/// Reads the payload of a version 1 file. Returns nothing when a value is not allowed or the payload does not end
-/// where it should.
-std::optional<SaveData> get_payload_v1(std::span<const std::uint8_t> payload) noexcept
+/// Reads the payload of a file of version 1 or 2, which differ by the volume byte that 2 has after the flags. Returns
+/// nothing when a value is not allowed or the payload does not end where it should.
+std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::uint16_t version) noexcept
 {
     sim::ByteReader reader(payload);
     SaveData data;
@@ -103,9 +104,10 @@ std::optional<SaveData> get_payload_v1(std::span<const std::uint8_t> payload) no
     const std::uint8_t controls = controls_byte & 0x0FU;
     const std::uint8_t sensitivity = controls_byte >> 4U;
     const std::uint8_t flags = reader.u8();
+    const std::uint8_t volume = version >= 2 ? reader.u8() : VOLUME_MAX;
     const std::uint32_t unlock_bits = reader.u32();
     if (controls >= CONTROL_SCHEME_COUNT || sensitivity >= TILT_SENSITIVITY_COUNT || (flags & ~KNOWN_FLAGS) != 0 ||
-        !data.unlocks.restore(unlock_bits))
+        volume > VOLUME_MAX || !data.unlocks.restore(unlock_bits))
     {
         return std::nullopt;
     }
@@ -115,6 +117,7 @@ std::optional<SaveData> get_payload_v1(std::span<const std::uint8_t> payload) no
     data.settings.sound = (flags & FLAG_SOUND) != 0;
     data.settings.music = (flags & FLAG_MUSIC) != 0;
     data.settings.reduced_motion = (flags & FLAG_REDUCED_MOTION) != 0;
+    data.settings.volume = volume;
 
     const std::uint8_t recent_count = reader.u8();
     if (recent_count > RecentNames::CAPACITY)
@@ -162,8 +165,8 @@ std::optional<SaveData> get_payload_v1(std::span<const std::uint8_t> payload) no
     return data;
 }
 
-/// Reads a whole version 1 file, the marker and the version having been checked.
-std::expected<SaveData, SaveError> decode_v1(std::span<const std::uint8_t> bytes) noexcept
+/// Reads a whole file of version 1 or 2, the marker and the version having been checked.
+std::expected<SaveData, SaveError> decode_file(std::span<const std::uint8_t> bytes, std::uint16_t version) noexcept
 {
     if (bytes.size() < HEADER_SIZE)
     {
@@ -186,7 +189,7 @@ std::expected<SaveData, SaveError> decode_v1(std::span<const std::uint8_t> bytes
     {
         return std::unexpected(SaveError::BAD_CHECKSUM);
     }
-    const std::optional<SaveData> data = get_payload_v1(bytes.subspan(HEADER_SIZE, payload_size));
+    const std::optional<SaveData> data = get_payload(bytes.subspan(HEADER_SIZE, payload_size), version);
     if (!data)
     {
         return std::unexpected(SaveError::INVALID_DATA);
@@ -245,7 +248,8 @@ std::expected<SaveData, SaveError> decode_save(std::span<const std::uint8_t> byt
     switch (version)
     {
     case 1:
-        return decode_v1(bytes);
+    case 2:
+        return decode_file(bytes, version);
     default:
         return std::unexpected(SaveError::INVALID_DATA);
     }

@@ -67,6 +67,9 @@ class ProfileViewModel : public QObject
     Q_PROPERTY(bool invertAxes READ invertAxes WRITE setInvertAxes NOTIFY settingsChanged FINAL)
     Q_PROPERTY(bool sound READ sound WRITE setSound NOTIFY settingsChanged FINAL)
     Q_PROPERTY(bool music READ music WRITE setMusic NOTIFY settingsChanged FINAL)
+    /// How loud the game is, 0 (silent) to volumeMax. The sound and music switches are on top of it.
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY settingsChanged FINAL)
+    Q_PROPERTY(int volumeMax READ volumeMax CONSTANT FINAL)
     /// Turns off the motion that is not needed to play: shake, flashing and the bobbing of the food.
     Q_PROPERTY(bool reducedMotion READ reducedMotion WRITE setReducedMotion NOTIFY settingsChanged FINAL)
 
@@ -203,6 +206,16 @@ public:
         return m_Data.settings.music;
     }
     void setMusic(bool on);
+    [[nodiscard]] int volume() const noexcept
+    {
+        return m_Data.settings.volume;
+    }
+    /// Sets the volume; a level outside 0 to volumeMax is brought to the nearest one.
+    void setVolume(int level);
+    [[nodiscard]] static constexpr int volumeMax() noexcept
+    {
+        return profile::VOLUME_MAX;
+    }
     [[nodiscard]] bool reducedMotion() const noexcept
     {
         return m_Data.settings.reduced_motion;

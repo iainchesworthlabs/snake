@@ -309,6 +309,12 @@ void ProfileViewModel::setMusic(bool on)
     change_settings([on](profile::Settings& settings) { settings.music = on; });
 }
 
+void ProfileViewModel::setVolume(int level)
+{
+    const auto clamped = static_cast<std::uint8_t>(std::clamp(level, 0, volumeMax()));
+    change_settings([clamped](profile::Settings& settings) { settings.volume = clamped; });
+}
+
 void ProfileViewModel::setReducedMotion(bool reduced)
 {
     change_settings([reduced](profile::Settings& settings) { settings.reduced_motion = reduced; });

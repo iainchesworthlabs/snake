@@ -330,6 +330,10 @@
         <translation>音乐</translation>
     </message>
     <message>
+        <source>Volume</source>
+        <translation>音量</translation>
+    </message>
+    <message>
         <source>Reduced motion</source>
         <translation>减少动态效果</translation>
     </message>
@@ -390,6 +394,13 @@
     <message>
         <source>Settings</source>
         <translation>设置</translation>
+    </message>
+</context>
+<context>
+    <name>VolumeControl</name>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 / %2</translation>
     </message>
 </context>
 <context>

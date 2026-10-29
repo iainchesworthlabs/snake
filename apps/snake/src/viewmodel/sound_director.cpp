@@ -56,6 +56,7 @@ void SoundDirector::setProfile(ProfileViewModel* profile)
         connect(m_Profile, &ProfileViewModel::resultChanged, this, &SoundDirector::on_result_changed);
         connect(m_Profile, &ProfileViewModel::settingsChanged, this, &SoundDirector::on_settings_changed);
     }
+    send_volume();
     update_music();
     emit profileChanged();
 }
@@ -172,7 +173,19 @@ void SoundDirector::on_result_changed()
 
 void SoundDirector::on_settings_changed()
 {
+    send_volume();
     update_music();
+}
+
+void SoundDirector::send_volume()
+{
+    if (m_Sink == nullptr || m_Profile == nullptr)
+    {
+        return;
+    }
+    // The ear hears loudness on a curve, so the steps of the setting are squared to sound even.
+    const float step = static_cast<float>(m_Profile->volume()) / static_cast<float>(ProfileViewModel::volumeMax());
+    m_Sink->set_volume(step * step);
 }
 
 void SoundDirector::on_button_pressed()

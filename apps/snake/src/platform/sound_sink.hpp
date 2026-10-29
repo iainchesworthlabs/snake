@@ -23,6 +23,9 @@ public:
     /// Starts a tune from its beginning in place of the one playing.
     virtual void play_music(audio::Tune tune) = 0;
     virtual void stop_music() = 0;
+    /// How loud everything is, as a gain on the samples: 0 for silence, 1 for the full level of the synthesiser. A sink
+    /// that cannot change its loudness ignores it.
+    virtual void set_volume(float /*gain*/) {}
 };
 
 /// The sink the game plays its sounds on: the one the program set, or none, in which case the game is silent. Set it

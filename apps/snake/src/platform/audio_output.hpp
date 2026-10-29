@@ -43,6 +43,7 @@ public:
     void play(audio::Effect effect) override;
     void play_music(audio::Tune tune) override;
     void stop_music() override;
+    void set_volume(float gain) override;
 
     /// True when no effect is sounding.
     [[nodiscard]] bool effects_idle() const;

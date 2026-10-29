@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <thread>
 #include <vector>
 
@@ -161,4 +162,40 @@ TEST_CASE("The default device either opens or is reported as missing", "[audio-o
     {
         CHECK_FALSE(output.running());
     }
+}
+
+TEST_CASE("The volume is a gain on what is heard, and silence is silent", "[audio-output][volume]")
+{
+    const auto loudest = [](const std::vector<std::int16_t>& samples)
+    {
+        int peak = 0;
+        for (const std::int16_t sample : samples)
+        {
+            peak = std::max(peak, std::abs(static_cast<int>(sample)));
+        }
+        return peak;
+    };
+
+    AudioOutput full;
+    full.play(Effect::EAT);
+    const int full_peak = loudest(listen(full, 500));
+    REQUIRE(full_peak > 100);
+
+    AudioOutput half;
+    half.set_volume(0.5F);
+    half.play(Effect::EAT);
+    const int half_peak = loudest(listen(half, 500));
+    CHECK(half_peak >= full_peak / 2 - 1);
+    CHECK(half_peak <= full_peak / 2 + 1);
+
+    AudioOutput none;
+    none.set_volume(0.0F);
+    none.play(Effect::EAT);
+    CHECK(silent(listen(none, 500)));
+
+    // A gain outside 0 to 1 is brought to the nearest.
+    AudioOutput loud;
+    loud.set_volume(7.0F);
+    loud.play(Effect::EAT);
+    CHECK(loudest(listen(loud, 500)) == full_peak);
 }

@@ -783,6 +783,7 @@ TEST_CASE("The settings start as a first run has them", "[profile][settings]")
     CHECK_FALSE(profile.invertAxes());
     CHECK(profile.sound());
     CHECK(profile.music());
+    CHECK(profile.volume() == profile.volumeMax());
     CHECK_FALSE(profile.reducedMotion());
 }
 
@@ -795,8 +796,10 @@ TEST_CASE("A setting that changes says so once, and one that does not says nothi
     profile.setSound(false);
     profile.setMusic(false);
     profile.setReducedMotion(true);
+    profile.setVolume(4);
     profile.setControls(ProfileViewModel::Controls::Dpad);
-    CHECK(changed.count() == 5);
+    CHECK(changed.count() == 6);
+    CHECK(profile.volume() == 4);
     CHECK(profile.invertAxes());
     CHECK_FALSE(profile.sound());
     CHECK_FALSE(profile.music());
@@ -808,8 +811,19 @@ TEST_CASE("A setting that changes says so once, and one that does not says nothi
     profile.setSound(false);
     profile.setMusic(false);
     profile.setReducedMotion(true);
+    profile.setVolume(4);
     profile.setControls(ProfileViewModel::Controls::Dpad);
-    CHECK(changed.count() == 5);
+    CHECK(changed.count() == 6);
+}
+
+TEST_CASE("A volume outside 0 to the loudest is brought to the nearest level", "[profile][settings][volume]")
+{
+    ProfileViewModel profile;
+    profile.setVolume(-3);
+    CHECK(profile.volume() == 0);
+    profile.setVolume(99);
+    CHECK(profile.volume() == profile.volumeMax());
+    CHECK(profile.volumeMax() == 10);
 }
 
 TEST_CASE("The settings come back from the save file", "[profile][settings]")
@@ -824,6 +838,7 @@ TEST_CASE("The settings come back from the save file", "[profile][settings]")
         profile.setSound(false);
         profile.setMusic(false);
         profile.setReducedMotion(true);
+        profile.setVolume(3);
     }
 
     ProfileViewModel again;
@@ -835,6 +850,7 @@ TEST_CASE("The settings come back from the save file", "[profile][settings]")
     CHECK_FALSE(again.sound());
     CHECK_FALSE(again.music());
     CHECK(again.reducedMotion());
+    CHECK(again.volume() == 3);
 }
 
 TEST_CASE("A first run starts with reduced motion when the system asks for it", "[profile][settings]")

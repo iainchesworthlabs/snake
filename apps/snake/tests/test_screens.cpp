@@ -1140,11 +1140,67 @@ TEST_CASE("The settings show the switches and a touch tap or a key flips each on
     app.press(Qt::Key_Space);
     CHECK_FALSE(app.profile().music());
     app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "volumeControl");
+    app.press(Qt::Key_Down);
     CHECK(app.focus_name() == "reducedMotionToggle");
     app.press(Qt::Key_Return);
     CHECK(app.profile().reducedMotion());
     app.press(Qt::Key_Up);
+    CHECK(app.focus_name() == "volumeControl");
+    app.press(Qt::Key_Up);
     CHECK(app.focus_name() == "musicToggle");
+}
+
+TEST_CASE("The volume starts at its loudest, and the buttons and the arrow keys turn it down and up",
+          "[screens][settings][volume]")
+{
+    App app;
+    app.click("settingsButton");
+    CHECK(app.item("volumeControl")->property("value").toInt() == 10);
+    CHECK(app.profile().volume() == 10);
+
+    app.click("volumeUp"); // already the loudest: nothing changes
+    CHECK(app.profile().volume() == 10);
+
+    app.click("volumeDown");
+    CHECK(app.profile().volume() == 9);
+    CHECK(app.item("volumeControl")->property("value").toInt() == 9);
+
+    app.press(Qt::Key_Down); // Sound to Music
+    app.press(Qt::Key_Down); // Music to Volume
+    REQUIRE(app.focus_name() == "volumeControl");
+    app.press(Qt::Key_Left);
+    app.press(Qt::Key_Left);
+    CHECK(app.profile().volume() == 7);
+    app.press(Qt::Key_Right);
+    CHECK(app.profile().volume() == 8);
+
+    for (int press = 0; press < 12; ++press)
+    {
+        app.press(Qt::Key_Left);
+    }
+    CHECK(app.profile().volume() == 0);
+    app.click("volumeUp");
+    CHECK(app.profile().volume() == 1);
+}
+
+TEST_CASE("The pips are filled up to the volume", "[screens][settings][volume]")
+{
+    App app;
+    app.profile().setVolume(4);
+    app.click("settingsButton");
+    QImage image = app.render();
+    QQuickItem* pips = app.item("volumePips");
+    REQUIRE(pips != nullptr);
+    const auto pip_colour = [&](int index)
+    {
+        const QPointF centre(index * 11 + 4, pips->height() / 2);
+        return image.pixel(pips->mapToScene(centre).toPoint());
+    };
+    CHECK(pip_colour(0) == rgb_of(tokens::ACCENT));
+    CHECK(pip_colour(3) == rgb_of(tokens::ACCENT));
+    CHECK(pip_colour(4) == rgb_of(tokens::SURFACE));
+    CHECK(pip_colour(9) == rgb_of(tokens::SURFACE));
 }
 
 TEST_CASE("A switch is coral with the knob at the right when on and cream with the knob at the left when off",
