@@ -191,15 +191,18 @@ std::optional<GameViewModel::Event> GameViewModel::event_of(sim::TickOutcome out
     switch (outcome)
     {
     case sim::TickOutcome::ATE:
+    case sim::TickOutcome::ATE_POTATO:
         return Event::Ate;
     case sim::TickOutcome::ATE_BONUS:
         return Event::AteBonus;
     case sim::TickOutcome::HIT_WALL:
     case sim::TickOutcome::HIT_SELF:
+    case sim::TickOutcome::EXPLODED:
         return Event::Crashed;
     case sim::TickOutcome::WON:
         return Event::Won;
     case sim::TickOutcome::MOVED:
+    case sim::TickOutcome::TELEPORTED:
     case sim::TickOutcome::NOT_RUNNING:
         break;
     }

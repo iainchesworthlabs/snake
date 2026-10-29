@@ -231,6 +231,23 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     skipped. These are starting values for tuning on a device.
 21. A swipe is given when the finger has moved 24 device-independent pixels along its larger axis, at once and not on
     lift, and a finger that carries on is measured from the point of the last swipe. Only the first finger is followed.
+22. Portals has walls at the edges and four portals, two pairs, put on empty cells with the game's generator when the
+    game starts: not in the row the snake starts in, and no two next to each other. A head that steps onto a portal
+    lands on the other portal of its pair in the same tick, and goes on in the direction it had. The cell it lands on
+    must be free (the tail's cell counts as free, as for any step) or the game ends. Stepping onto a portal never
+    collides, even when the body lies on it, because the head does not stay there. Food, the bonus item and the bomb
+    food are never put on a portal. The speed is Classic's.
+23. Hot potato has walls. After every third normal food, once the snake has at least 6 parts and no bomb is on the board
+    or in the snake, a bomb food appears on an empty cell and stays 50 ticks. Eating it scores 100 flat, restarts the
+    combo window without raising the combo, steps the speed, grows the snake and does not count towards the fifth. The
+    bomb then sits in the part of the body that ate it and does not move: the body moves past it, so it is one part
+    nearer the tail with every tick. When it is on the tail and the tail is about to move away the bomb goes off and the
+    game ends. A tick that eats keeps the tail where it is, so it delays the bomb by one tick. Shedding (Space, a face
+    button or a button on the screen) drops the bomb and every part behind it at once and frees their cells; it does
+    nothing while the bomb is still in the head, because that would drop the whole snake. Shedding late keeps more of
+    the snake. The speed starts at 160 ms and gets 3 ms shorter for each food, down to 80 ms.
+24. The save file has a leaderboard for each of the four modes (version 3; a version 1 or 2 file reads with the two new
+    boards empty), and a replay holds a shed as an input of its own (the byte 4 where a turn has 0 to 3).
 
 ## Risks
 

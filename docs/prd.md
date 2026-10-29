@@ -131,8 +131,8 @@ v1 only needs the Board layer (walls versus wrap-around), but all four layers mu
 | --- | --- | --- | --- | --- |
 | Easy | Slower speed curve; walls wrap around | Board | v1 | Always |
 | Classic | Rules exactly as under Core game rules | None | v1 | Always |
-| Portals | Paired portals move the head to the matching portal | Board | Next | 2,000 points in Classic |
-| Hot potato | Bomb food with a countdown; once swallowed it travels down the body and must be shed before it goes off | Food, Snake | Next | 3,000 points in Classic |
+| Portals | Paired portals move the head to the matching portal | Board | Rules in `libs/sim` (see the roadmap, rule 22) | 2,000 points in Classic |
+| Hot potato | Bomb food with a countdown; once swallowed it travels down the body and must be shed before it goes off | Food, Snake | Rules in `libs/sim` (see the roadmap, rule 23) | 3,000 points in Classic |
 | Runaway food | Food steps away from the head | Food | Next | To decide |
 | Ghost run | A ghost replays your previous run; touching it ends the game | Time | Next | To decide |
 | Rewind | Undo the last 3 seconds after a crash, with limited uses | Time | Next | To decide |

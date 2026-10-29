@@ -36,7 +36,7 @@ struct SaveData
 /// version of the program can tell what it was given. Everything after them belongs to that version. A new version
 /// adds a reader for its own layout and keeps the readers of the older ones, which fill in the new fields with their
 /// defaults, so an update never loses what the player had. The writer only ever writes the newest version.
-inline constexpr std::uint16_t SAVE_FORMAT_VERSION = 2;
+inline constexpr std::uint16_t SAVE_FORMAT_VERSION = 3;
 
 /// The most bytes encode_save() writes. A full save: the marker, version, size and checksum (8 + 8 bytes), the
 /// settings (3) and unlocks (4), three recent names, and ten entries for each mode.
@@ -47,16 +47,17 @@ inline constexpr std::size_t MAX_ENCODED_SAVE_SIZE =
 /// Writes `data` as bytes in the current version and returns how many. Returns 0, having written something
 /// useless, when `out` is too small (MAX_ENCODED_SAVE_SIZE is always enough).
 ///
-/// Layout (version 2), whole numbers least significant byte first:
+/// Layout (version 3), whole numbers least significant byte first:
 ///   "SNKS", version u16, payload size u16,
 ///   payload: control scheme u8 (low half; the tilt sensitivity is the high half),
 ///            flags u8 (bit 0 inverted axes, 1 sound, 2 music, 3 reduced motion), volume u8 (0 to VOLUME_MAX),
 ///            unlock bits u32, recent names (count u8, then each name),
-///            for each mode in order (Easy, Classic): entry count u8, then each entry: name, score u32,
-///            end time i64 (seconds since 1 January 1970 UTC),
+///            for each mode in order (Easy, Classic, Portals, Hot potato): entry count u8, then each entry: name, score
+///            u32, end time i64 (seconds since 1 January 1970 UTC),
 ///   checksum u64 (FNV-1a of every byte before it).
 /// A name is its length u8 followed by that many capital letters or spaces.
-/// Version 1 is the same without the volume byte; a file of that version is read with the volume at its loudest.
+/// Version 2 has the leaderboards of Easy and Classic only, and version 1 is that without the volume byte: a file of
+/// either is read with the other leaderboards empty, and a version 1 file with the volume at its loudest.
 [[nodiscard]] std::size_t encode_save(const SaveData& data, std::span<std::uint8_t> out) noexcept;
 
 /// Why bytes could not be read as a save.

@@ -14,6 +14,8 @@ namespace
 
 constexpr std::array<std::uint8_t, 4> MARKER{'S', 'N', 'K', 'R'};
 constexpr std::uint8_t FORMAT_VERSION = 1;
+// The byte of an input that is a shed. The directions are 0 to 3.
+constexpr std::uint8_t SHED_BYTE = 4;
 
 } // namespace
 
@@ -27,7 +29,7 @@ ReplayOutcome play(const Replay& replay) noexcept
     {
         while (next < events.size() && events[next].tick == tick)
         {
-            static_cast<void>(session.turn(events[next].direction));
+            static_cast<void>(events[next].shed ? session.shed() : session.turn(events[next].direction));
             ++next;
         }
     };
@@ -59,6 +61,19 @@ bool Recording::turn(Direction input) noexcept
         return false;
     }
     if (!m_Log.record(m_Session.simulation().ticks(), input))
+    {
+        m_Overflowed = true;
+    }
+    return true;
+}
+
+bool Recording::shed() noexcept
+{
+    if (!m_Session.shed())
+    {
+        return false;
+    }
+    if (!m_Log.record_shed(m_Session.simulation().ticks()))
     {
         m_Overflowed = true;
     }
@@ -99,7 +114,7 @@ std::size_t encode_replay(const Replay& replay, std::span<std::uint8_t> out) noe
     for (const InputEvent& event : replay.inputs.events())
     {
         writer.varint(event.tick - previous);
-        writer.u8(static_cast<std::uint8_t>(event.direction));
+        writer.u8(event.shed ? SHED_BYTE : static_cast<std::uint8_t>(event.direction));
         previous = event.tick;
     }
     return writer.size();
@@ -121,7 +136,7 @@ std::optional<Replay> decode_replay(std::span<const std::uint8_t> bytes) noexcep
     }
     Replay replay;
     const std::uint8_t mode = reader.u8();
-    if (mode > static_cast<std::uint8_t>(Mode::CLASSIC))
+    if (mode >= MODE_COUNT)
     {
         return std::nullopt;
     }
@@ -140,11 +155,13 @@ std::optional<Replay> decode_replay(std::span<const std::uint8_t> bytes) noexcep
     {
         tick += reader.varint();
         const std::uint8_t direction = reader.u8();
-        if (reader.bad() || tick > replay.ticks || direction > static_cast<std::uint8_t>(Direction::RIGHT))
+        if (reader.bad() || tick > replay.ticks || direction > SHED_BYTE)
         {
             return std::nullopt;
         }
-        static_cast<void>(replay.inputs.record(static_cast<std::uint32_t>(tick), static_cast<Direction>(direction)));
+        static_cast<void>(direction == SHED_BYTE ? replay.inputs.record_shed(static_cast<std::uint32_t>(tick))
+                                                 : replay.inputs.record(static_cast<std::uint32_t>(tick),
+                                                                        static_cast<Direction>(direction)));
     }
     if (!reader.complete())
     {

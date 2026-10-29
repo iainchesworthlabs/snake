@@ -10,12 +10,19 @@ namespace snake::sim
 namespace
 {
 
-constexpr std::uint8_t FORMAT_VERSION = 1;
+// Version 1 is a game of the plain variant, version 2 any other (see encode() in the header).
+constexpr std::uint8_t FORMAT_VERSION_PLAIN = 1;
+constexpr std::uint8_t FORMAT_VERSION_VARIANT = 2;
 
 constexpr std::uint8_t FLAG_RUNNING = 1U << 0U;
 constexpr std::uint8_t FLAG_WON = 1U << 1U;
 constexpr std::uint8_t FLAG_BONUS = 1U << 2U;
 constexpr std::uint8_t KNOWN_FLAGS = FLAG_RUNNING | FLAG_WON | FLAG_BONUS;
+
+// The flags of the variant part of version 2, for HOT_POTATO.
+constexpr std::uint8_t POTATO_ON_BOARD = 1U << 0U;
+constexpr std::uint8_t LUMP_IN_SNAKE = 1U << 1U;
+constexpr std::uint8_t POTATO_KNOWN_FLAGS = POTATO_ON_BOARD | LUMP_IN_SNAKE;
 
 void put_cell(ByteWriter& writer, Cell value) noexcept
 {
@@ -28,6 +35,45 @@ Cell get_cell(ByteReader& reader) noexcept
     const std::uint8_t x = reader.u8();
     const std::uint8_t y = reader.u8();
     return Cell{x, y};
+}
+
+/// Reads what version 2 adds after the fields of version 1. False for the plain variant, which is never written as
+/// version 2, for a variant that does not exist and for flags that do not exist.
+bool get_variant_part(ByteReader& reader, Snapshot& snapshot) noexcept
+{
+    const std::uint8_t variant = reader.u8();
+    if (variant != static_cast<std::uint8_t>(Variant::PORTALS) &&
+        variant != static_cast<std::uint8_t>(Variant::HOT_POTATO))
+    {
+        return false;
+    }
+    snapshot.variant = static_cast<Variant>(variant);
+    if (snapshot.variant == Variant::PORTALS)
+    {
+        Simulation::PortalCells portals;
+        for (Cell& cell : portals.cells)
+        {
+            cell = get_cell(reader);
+        }
+        snapshot.portals = portals;
+        return true;
+    }
+    snapshot.normal_since_potato = reader.u8();
+    const std::uint8_t flags = reader.u8();
+    if ((flags & ~POTATO_KNOWN_FLAGS) != 0)
+    {
+        return false;
+    }
+    if ((flags & POTATO_ON_BOARD) != 0)
+    {
+        const Cell cell = get_cell(reader);
+        snapshot.potato = Simulation::Potato{.cell = cell, .ticks_left = reader.u8()};
+    }
+    if ((flags & LUMP_IN_SNAKE) != 0)
+    {
+        snapshot.lump = get_cell(reader);
+    }
+    return true;
 }
 
 } // namespace
@@ -54,6 +100,11 @@ Snapshot capture(const Simulation& game) noexcept
     {
         snapshot.pending[place] = game.pending_turns().at(place);
     }
+    snapshot.variant = game.variant();
+    snapshot.portals = game.portals();
+    snapshot.potato = game.potato();
+    snapshot.lump = game.lump();
+    snapshot.normal_since_potato = game.normal_since_potato();
     return snapshot;
 }
 
@@ -75,7 +126,12 @@ std::optional<Simulation> restore(const Snapshot& snapshot) noexcept
          .random = snapshot.random,
          .pending = std::span<const Direction>(snapshot.pending.data(), snapshot.pending_count),
          .running = snapshot.running,
-         .won = snapshot.won});
+         .won = snapshot.won,
+         .variant = snapshot.variant,
+         .portals = snapshot.portals,
+         .potato = snapshot.potato,
+         .lump = snapshot.lump,
+         .normal_since_potato = snapshot.normal_since_potato});
 }
 
 std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexcept
@@ -84,8 +140,17 @@ std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexce
     {
         return 0;
     }
+    // The pieces of a variant are written for that variant only, so that a snapshot with pieces that do not belong to
+    // its variant is not written (it could not be restored either).
+    const bool plain = snapshot.variant == Variant::PLAIN;
+    if ((snapshot.variant == Variant::PORTALS) != snapshot.portals.has_value() ||
+        (snapshot.variant != Variant::HOT_POTATO &&
+         (snapshot.potato || snapshot.lump || snapshot.normal_since_potato != 0)))
+    {
+        return 0;
+    }
     ByteWriter writer(out);
-    writer.u8(FORMAT_VERSION);
+    writer.u8(plain ? FORMAT_VERSION_PLAIN : FORMAT_VERSION_VARIANT);
     writer.u8(static_cast<std::uint8_t>(snapshot.edges));
     writer.u8(static_cast<std::uint8_t>(snapshot.heading));
     writer.u8(static_cast<std::uint8_t>((snapshot.running ? FLAG_RUNNING : 0U) | (snapshot.won ? FLAG_WON : 0U) |
@@ -114,13 +179,40 @@ std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexce
     {
         writer.u8(static_cast<std::uint8_t>(snapshot.pending[place]));
     }
+    if (!plain)
+    {
+        writer.u8(static_cast<std::uint8_t>(snapshot.variant));
+        if (snapshot.portals)
+        {
+            for (const Cell cell : snapshot.portals->cells)
+            {
+                put_cell(writer, cell);
+            }
+        }
+        else
+        {
+            writer.u8(snapshot.normal_since_potato);
+            writer.u8(static_cast<std::uint8_t>((snapshot.potato ? POTATO_ON_BOARD : 0U) |
+                                                (snapshot.lump ? LUMP_IN_SNAKE : 0U)));
+            if (snapshot.potato)
+            {
+                put_cell(writer, snapshot.potato->cell);
+                writer.u8(snapshot.potato->ticks_left);
+            }
+            if (snapshot.lump)
+            {
+                put_cell(writer, *snapshot.lump);
+            }
+        }
+    }
     return writer.size();
 }
 
 std::optional<Snapshot> decode(std::span<const std::uint8_t> bytes) noexcept
 {
     ByteReader reader(bytes);
-    if (reader.u8() != FORMAT_VERSION)
+    const std::uint8_t version = reader.u8();
+    if (version != FORMAT_VERSION_PLAIN && version != FORMAT_VERSION_VARIANT)
     {
         return std::nullopt;
     }
@@ -173,6 +265,10 @@ std::optional<Snapshot> decode(std::span<const std::uint8_t> bytes) noexcept
             return std::nullopt;
         }
         snapshot.pending[place] = static_cast<Direction>(turn);
+    }
+    if (version == FORMAT_VERSION_VARIANT && !get_variant_part(reader, snapshot))
+    {
+        return std::nullopt;
     }
     if (!reader.complete())
     {

@@ -93,8 +93,9 @@ void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
     }
 }
 
-/// Reads the payload of a file of version 1 or 2, which differ by the volume byte that 2 has after the flags. Returns
-/// nothing when a value is not allowed or the payload does not end where it should.
+/// Reads the payload of a file of version 1, 2 or 3. Version 2 has the volume byte after the flags, and 3 has the
+/// leaderboards of the two modes that came after Easy and Classic. Returns nothing when a value is not allowed or the
+/// payload does not end where it should.
 std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::uint16_t version) noexcept
 {
     sim::ByteReader reader(payload);
@@ -136,7 +137,9 @@ std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::
     }
     data.recent_names = *recent_names;
 
-    for (std::size_t index = 0; index < MODE_COUNT; ++index)
+    // Every version has the boards of Easy and Classic; the others are empty in a file from before they were played.
+    const std::size_t boards = version >= 3 ? MODE_COUNT : 2;
+    for (std::size_t index = 0; index < boards; ++index)
     {
         const std::uint8_t count = reader.u8();
         if (count > Leaderboard::CAPACITY)
@@ -165,7 +168,7 @@ std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::
     return data;
 }
 
-/// Reads a whole file of version 1 or 2, the marker and the version having been checked.
+/// Reads a whole file of version 1, 2 or 3, the marker and the version having been checked.
 std::expected<SaveData, SaveError> decode_file(std::span<const std::uint8_t> bytes, std::uint16_t version) noexcept
 {
     if (bytes.size() < HEADER_SIZE)
@@ -249,6 +252,7 @@ std::expected<SaveData, SaveError> decode_save(std::span<const std::uint8_t> byt
     {
     case 1:
     case 2:
+    case 3:
         return decode_file(bytes, version);
     default:
         return std::unexpected(SaveError::INVALID_DATA);

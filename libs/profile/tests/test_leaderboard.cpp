@@ -256,6 +256,8 @@ TEST_CASE("Mode indices run from zero and refuse numbers that are not a mode", "
     CHECK(mode_index(Mode::CLASSIC) == 1);
     CHECK(mode_from_index(0) == Mode::EASY);
     CHECK(mode_from_index(1) == Mode::CLASSIC);
+    CHECK(mode_from_index(2) == Mode::PORTALS);
+    CHECK(mode_from_index(3) == Mode::HOT_POTATO);
     CHECK_FALSE(mode_from_index(MODE_COUNT).has_value());
     CHECK_FALSE(mode_from_index(255).has_value());
 }

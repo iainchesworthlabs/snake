@@ -72,3 +72,35 @@ TEST_CASE("A curve with no step stays at its start, and a huge food count does n
     CHECK(tick_interval_ms(SpeedCurve{.start_ms = 100, .step_ms = 0, .floor_ms = 50}, 1000) == 100);
     CHECK(tick_interval_ms(Mode::CLASSIC, std::size_t{1} << 40) == 70);
 }
+
+TEST_CASE("Portals and Hot potato have walls, and each has its own variant", "[mode]")
+{
+    CHECK(edge_rule_of(Mode::PORTALS) == EdgeRule::WALLS);
+    CHECK(edge_rule_of(Mode::HOT_POTATO) == EdgeRule::WALLS);
+    CHECK(variant_of(Mode::EASY) == Variant::PLAIN);
+    CHECK(variant_of(Mode::CLASSIC) == Variant::PLAIN);
+    CHECK(variant_of(Mode::PORTALS) == Variant::PORTALS);
+    CHECK(variant_of(Mode::HOT_POTATO) == Variant::HOT_POTATO);
+}
+
+TEST_CASE("The modes are numbered as they are saved", "[mode][format]")
+{
+    CHECK(static_cast<int>(Mode::EASY) == 0);
+    CHECK(static_cast<int>(Mode::CLASSIC) == 1);
+    CHECK(static_cast<int>(Mode::PORTALS) == 2);
+    CHECK(static_cast<int>(Mode::HOT_POTATO) == 3);
+    CHECK(MODE_COUNT == 4);
+}
+
+TEST_CASE("Portals runs at the speed of Classic, and Hot potato a little slower, to leave time to shed",
+          "[mode][speed]")
+{
+    CHECK(speed_curve_of(Mode::PORTALS).start_ms == 150);
+    CHECK(speed_curve_of(Mode::PORTALS).step_ms == 3);
+    CHECK(speed_curve_of(Mode::PORTALS).floor_ms == 70);
+    CHECK(tick_interval_ms(Mode::HOT_POTATO, 0) == 160);
+    CHECK(tick_interval_ms(Mode::HOT_POTATO, 10) == 130);
+    CHECK(tick_interval_ms(Mode::HOT_POTATO, 26) == 82);
+    CHECK(tick_interval_ms(Mode::HOT_POTATO, 27) == 80);
+    CHECK(tick_interval_ms(Mode::HOT_POTATO, 500) == 80);
+}
