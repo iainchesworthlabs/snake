@@ -14,8 +14,8 @@
 namespace snake::profile
 {
 
-/// How many modes there are in version 1, and so how many leaderboards.
-inline constexpr std::size_t MODE_COUNT = 2;
+/// How many modes there are, and so how many leaderboards.
+inline constexpr std::size_t MODE_COUNT = sim::MODE_COUNT;
 
 [[nodiscard]] constexpr std::size_t mode_index(sim::Mode mode) noexcept
 {

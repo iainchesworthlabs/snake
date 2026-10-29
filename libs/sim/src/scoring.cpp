@@ -48,6 +48,18 @@ std::uint32_t Scoring::eat_bonus() noexcept
     return BONUS_POINTS;
 }
 
+std::uint32_t Scoring::eat_potato() noexcept
+{
+    if (!window_open())
+    {
+        m_State.combo = 1;
+    }
+    m_State.ticks_since_food = 0;
+    ++m_State.foods_eaten;
+    m_State.score += POTATO_POINTS;
+    return POTATO_POINTS;
+}
+
 std::array<char, 6> score_digits(std::uint32_t score) noexcept
 {
     constexpr std::uint32_t LARGEST = 999'999;

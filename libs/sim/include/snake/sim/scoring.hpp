@@ -20,6 +20,7 @@ class Scoring
 public:
     static constexpr std::uint32_t FOOD_POINTS = 10;
     static constexpr std::uint32_t BONUS_POINTS = 50;
+    static constexpr std::uint32_t POTATO_POINTS = 100;
     static constexpr std::uint8_t MAX_COMBO = 5;
     /// A food eaten this many ticks after the last one still continues the combo.
     static constexpr std::uint8_t COMBO_WINDOW_TICKS = 20;
@@ -66,6 +67,10 @@ public:
 
     /// Eating the bonus item. Returns the points.
     std::uint32_t eat_bonus() noexcept;
+
+    /// Eating the bomb food of Hot potato: POTATO_POINTS flat, and the window is restarted without the combo being
+    /// raised, as the bonus item does it. Returns the points.
+    std::uint32_t eat_potato() noexcept;
 
     [[nodiscard]] std::uint32_t score() const noexcept
     {

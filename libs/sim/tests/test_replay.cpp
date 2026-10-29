@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "snake/sim/autoplayer.hpp"
 #include "snake/sim/random.hpp"
 #include "snake/sim/replay.hpp"
 #include "snake/sim/snapshot.hpp"
@@ -387,8 +388,10 @@ TEST_CASE("Bytes with a wrong marker, version, mode or direction are refused", "
     CHECK(refused_with(0, 'X'));
     CHECK(refused_with(3, 'S'));
     CHECK(refused_with(4, 2));               // a version this code does not know
-    CHECK(refused_with(5, 2));               // a mode that does not exist
-    CHECK(refused_with(good.size() - 1, 4)); // a direction above 3
+    CHECK(refused_with(5, 4));               // a mode that does not exist
+    CHECK_FALSE(refused_with(5, 3));         // Hot potato is the last mode
+    CHECK(refused_with(good.size() - 1, 5)); // an input that is neither a direction (0 to 3) nor a shed (4)
+    CHECK_FALSE(refused_with(good.size() - 1, 4));
     CHECK_FALSE(refused_with(good.size() - 1, 3));
 }
 
@@ -504,4 +507,110 @@ TEST_CASE("Two input events are equal only when the tick and the direction are",
     CHECK(event == InputEvent{.tick = 4, .direction = Direction::LEFT});
     CHECK_FALSE(event == InputEvent{.tick = 5, .direction = Direction::LEFT});
     CHECK_FALSE(event == InputEvent{.tick = 4, .direction = Direction::UP});
+}
+
+namespace
+{
+
+/// A game of `mode` played by the computer player for up to `ticks` ticks, shedding the tail as soon as it can.
+Replay recorded_by_autoplay(Mode mode, std::uint64_t seed, std::uint32_t ticks, bool shed)
+{
+    Recording recording(mode, seed);
+    REQUIRE(recording.start());
+    for (std::uint32_t tick = 0; tick < ticks && recording.session().state() == GameState::RUNNING; ++tick)
+    {
+        static_cast<void>(recording.turn(autoplay(recording.session().simulation())));
+        if (shed)
+        {
+            static_cast<void>(recording.shed());
+        }
+        static_cast<void>(recording.tick());
+    }
+    const std::optional<Replay> replay = recording.finish();
+    REQUIRE(replay.has_value());
+    return *replay;
+}
+
+} // namespace
+
+TEST_CASE("Games of Portals and Hot potato replay to the same end, and so do their saved bytes", "[replay][modes]")
+{
+    for (const Mode mode : {Mode::PORTALS, Mode::HOT_POTATO})
+    {
+        for (std::uint64_t seed = 1; seed <= 5; ++seed)
+        {
+            const Replay replay = recorded_by_autoplay(mode, seed, 1500, true);
+            REQUIRE(replay.ticks > 100);
+            CHECK(verify(replay));
+            const std::optional<Replay> back = decode_replay(encoded(replay));
+            REQUIRE(back.has_value());
+            CHECK(*back == replay);
+            CHECK(verify(*back));
+        }
+    }
+}
+
+TEST_CASE("A shed is part of a replay: left out, the game goes another way", "[replay][shed]")
+{
+    // The computer player collects bomb foods, and with sheds the game goes much further than without.
+    bool some_shed = false;
+    for (std::uint64_t seed = 1; seed <= 10 && !some_shed; ++seed)
+    {
+        const Replay replay = recorded_by_autoplay(Mode::HOT_POTATO, seed, 2500, true);
+        for (const InputEvent& event : replay.inputs.events())
+        {
+            some_shed |= event.shed;
+        }
+        if (!some_shed)
+        {
+            continue;
+        }
+        REQUIRE(verify(replay));
+        Replay without = replay;
+        InputLog log;
+        for (const InputEvent& event : replay.inputs.events())
+        {
+            if (!event.shed)
+            {
+                REQUIRE(log.record(event.tick, event.direction));
+            }
+        }
+        without.inputs = log;
+        CHECK_FALSE(verify(without));
+    }
+    CHECK(some_shed);
+}
+
+TEST_CASE("A shed is written as the byte 4 and read back", "[replay][shed][format]")
+{
+    Replay replay;
+    replay.mode = Mode::HOT_POTATO;
+    replay.ticks = 20;
+    REQUIRE(replay.inputs.record(3, Direction::UP));
+    REQUIRE(replay.inputs.record_shed(7));
+    REQUIRE(replay.inputs.record(7, Direction::LEFT));
+    const std::vector<std::uint8_t> bytes = encoded(replay);
+    // The last six bytes are the three inputs: the ticks since the one before, and the byte of each.
+    REQUIRE(bytes.size() >= 6);
+    CHECK(bytes[bytes.size() - 6] == 3); // 3 ticks after the start: up
+    CHECK(bytes[bytes.size() - 5] == 0);
+    CHECK(bytes[bytes.size() - 4] == 4); // 4 ticks later: a shed
+    CHECK(bytes[bytes.size() - 3] == 4);
+    CHECK(bytes[bytes.size() - 2] == 0); // and a turn left on the same tick
+    CHECK(bytes[bytes.size() - 1] == 2);
+    const std::optional<Replay> back = decode_replay(bytes);
+    REQUIRE(back.has_value());
+    CHECK(*back == replay);
+    CHECK(back->inputs.events()[1].shed);
+}
+
+TEST_CASE("A turn or a shed that the game does not take is not written down", "[replay][shed]")
+{
+    Recording recording(Mode::HOT_POTATO, 5);
+    CHECK_FALSE(recording.shed()); // not started
+    REQUIRE(recording.start());
+    CHECK_FALSE(recording.shed()); // no bomb
+    const std::optional<Replay> replay = recording.finish();
+    REQUIRE(replay.has_value());
+    CHECK(replay->inputs.size() == 0);
 }

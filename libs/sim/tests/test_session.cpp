@@ -221,3 +221,30 @@ TEST_CASE("A session cannot be built from a game that does not fit it", "[sessio
     CHECK_FALSE(Session::from_simulation(Mode::CLASSIC, ended.simulation(), GameState::PAUSED).has_value());
     CHECK(Session::from_simulation(Mode::CLASSIC, ended.simulation(), GameState::GAME_OVER).has_value());
 }
+
+TEST_CASE("A session in Portals or Hot potato has the variant of its mode", "[session][variant]")
+{
+    CHECK(Session(Mode::CLASSIC, 1).simulation().variant() == Variant::PLAIN);
+    CHECK(Session(Mode::PORTALS, 1).simulation().variant() == Variant::PORTALS);
+    CHECK(Session(Mode::PORTALS, 1).simulation().portals().has_value());
+    CHECK(Session(Mode::HOT_POTATO, 1).simulation().variant() == Variant::HOT_POTATO);
+    CHECK(Session(Mode::HOT_POTATO, 1).simulation().edge_rule() == EdgeRule::WALLS);
+}
+
+TEST_CASE("A simulation of another variant is not a session of the mode", "[session][variant]")
+{
+    const Simulation portals(EdgeRule::WALLS, 1, Variant::PORTALS);
+    CHECK(Session::from_simulation(Mode::PORTALS, portals, GameState::RUNNING).has_value());
+    CHECK_FALSE(Session::from_simulation(Mode::CLASSIC, portals, GameState::RUNNING).has_value());
+    CHECK_FALSE(Session::from_simulation(Mode::HOT_POTATO, portals, GameState::RUNNING).has_value());
+}
+
+TEST_CASE("A shed is taken only while the game runs", "[session][shed]")
+{
+    Session session(Mode::HOT_POTATO, 1);
+    CHECK_FALSE(session.shed()); // not started
+    REQUIRE(session.start());
+    CHECK_FALSE(session.shed()); // there is no bomb to shed from
+    REQUIRE(session.pause());
+    CHECK_FALSE(session.shed());
+}

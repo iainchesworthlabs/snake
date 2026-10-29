@@ -48,6 +48,10 @@ public:
     /// Queues a direction. Returns false when the game is not running or the input is dropped (see InputBuffer).
     bool turn(Direction input) noexcept;
 
+    /// Sheds the tail from the bomb on (see Simulation::shed). Returns false when the game is not running or the
+    /// simulation will not.
+    bool shed() noexcept;
+
     /// One tick of the game, when it is running. In any other state nothing changes and the result is
     /// NOT_RUNNING. A tick that ends the game moves the session to GAME_OVER.
     [[nodiscard]] TickOutcome tick() noexcept;

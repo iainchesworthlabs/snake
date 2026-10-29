@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 namespace snake::sim
@@ -38,6 +39,14 @@ FreeAfter free_after(const Simulation& game) noexcept
     for (std::size_t part = 0; part < length; ++part)
     {
         times[index_of(game.snake()[part])] = static_cast<std::uint16_t>(length - part);
+    }
+    // The player of the title never steps onto a portal, which would take it somewhere it did not plan to go.
+    if (game.portals())
+    {
+        for (const Cell portal : game.portals()->cells)
+        {
+            times[index_of(portal)] = std::numeric_limits<std::uint16_t>::max();
+        }
     }
     return times;
 }

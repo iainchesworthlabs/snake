@@ -34,6 +34,11 @@ struct Snapshot
     Random::State random;
     std::uint8_t pending_count = 0;                         // turns waiting in the input buffer
     std::array<Direction, InputBuffer::CAPACITY> pending{}; // next first
+    Variant variant = Variant::PLAIN;
+    std::optional<Simulation::PortalCells> portals; // exactly when the variant is PORTALS
+    std::optional<Simulation::Potato> potato;       // HOT_POTATO: the bomb food on the board
+    std::optional<Cell> lump;                       // HOT_POTATO: the bomb in the snake
+    std::uint8_t normal_since_potato = 0;           // HOT_POTATO: normal foods eaten towards the next bomb food
 
     friend bool operator==(const Snapshot& lhs, const Snapshot& rhs) noexcept = default;
 };
@@ -48,14 +53,17 @@ struct Snapshot
 inline constexpr std::size_t MAX_ENCODED_SNAPSHOT_SIZE = 1024;
 
 /// Writes the snapshot as bytes, the same on every platform: a version byte, the fields in order, integers in
-/// little-endian order, the snake as a length and that many cells. Returns the number of bytes written, or 0 when
-/// `out` is too small (MAX_ENCODED_SNAPSHOT_SIZE always is enough) or the snapshot's length or pending count is
-/// above what it can hold.
+/// little-endian order, the snake as a length and that many cells. A game of the plain variant is written as version 1
+/// always, as it was before there were variants, so that the hash of such a game never changes. A game of another
+/// variant is written as version 2: the fields of version 1, then the variant and what that variant adds (the four
+/// portals; or the count of foods towards the next bomb food, then which of the bomb food and the bomb in the snake
+/// there are, and where). Returns the number of bytes written, or 0 when `out` is too small (MAX_ENCODED_SNAPSHOT_SIZE
+/// always is enough) or the snapshot's length or pending count is above what it can hold.
 [[nodiscard]] std::size_t encode(const Snapshot& snapshot, std::span<std::uint8_t> out) noexcept;
 
-/// Reads bytes written by encode(). Returns nothing for bytes that are cut short, have bytes left over, have a
-/// version this code does not know, or hold a value that no snapshot has (a direction above 3, a snake longer
-/// than the board). Whether the game is possible is for restore() to say.
+/// Reads bytes written by encode(), of version 1 or 2. Returns nothing for bytes that are cut short, have bytes left
+/// over, have a version this code does not know, or hold a value that no snapshot has (a direction above 3, a snake
+/// longer than the board). Whether the game is possible is for restore() to say.
 [[nodiscard]] std::optional<Snapshot> decode(std::span<const std::uint8_t> bytes) noexcept;
 
 /// The hash of a game's state: FNV-1a over the encoded snapshot. Equal states give equal hashes on every platform,

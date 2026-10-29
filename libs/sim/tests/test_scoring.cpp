@@ -235,3 +235,37 @@ TEST_CASE("Two states are equal only when every field is", "[scoring][state]")
     CHECK_FALSE(base == Scoring::State{.combo = 2});
     CHECK_FALSE(base == Scoring::State{.ticks_since_food = 0});
 }
+
+TEST_CASE("Bomb food is worth 100 points flat and restarts the combo window without raising the combo",
+          "[scoring][potato]")
+{
+    Scoring scoring;
+    static_cast<void>(scoring.eat_food());
+    scoring.advance();
+    static_cast<void>(scoring.eat_food());
+    REQUIRE(scoring.combo() == 2);
+    const std::uint32_t before = scoring.score();
+
+    scoring.advance();
+    CHECK(scoring.eat_potato() == Scoring::POTATO_POINTS);
+    CHECK(scoring.score() == before + 100);
+    CHECK(scoring.combo() == 2);
+    CHECK(scoring.state().ticks_since_food == 0);
+    CHECK(scoring.foods_eaten() == 3);
+    CHECK(scoring.state().normal_since_bonus == 2); // it does not count towards the fifth
+}
+
+TEST_CASE("Bomb food eaten after the window has passed starts the combo again at 1", "[scoring][potato]")
+{
+    Scoring scoring;
+    static_cast<void>(scoring.eat_food());
+    scoring.advance();
+    static_cast<void>(scoring.eat_food());
+    for (int tick = 0; tick < 30; ++tick)
+    {
+        scoring.advance();
+    }
+    static_cast<void>(scoring.eat_potato());
+    CHECK(scoring.combo() == 1);
+    CHECK(scoring.state().combo == 1);
+}

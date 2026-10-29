@@ -74,6 +74,9 @@ public:
     /// steers the game, and the recording can no longer be turned into a replay.
     bool turn(Direction input) noexcept;
 
+    /// Like Session::shed. An accepted shed is written down in the same way as a turn.
+    bool shed() noexcept;
+
     [[nodiscard]] TickOutcome tick() noexcept
     {
         return m_Session.tick();
@@ -104,10 +107,10 @@ private:
 inline constexpr std::size_t MAX_ENCODED_REPLAY_SIZE = 64 + (InputLog::CAPACITY * 6);
 
 /// Writes `replay` as bytes, the same on every platform. The file is: the letters SNKR, a version byte, the mode,
-/// the seed (8 bytes), the tick count, the score, the final hash (8 bytes), the number of turns, then each turn as
-/// the ticks since the turn before it (in 7-bit groups, low group first, the top bit of a byte set when another
-/// follows) and a direction byte. Integers are little-endian. Returns the number of bytes written, or 0 when `out`
-/// is too small (MAX_ENCODED_REPLAY_SIZE is always enough).
+/// the seed (8 bytes), the tick count, the score, the final hash (8 bytes), the number of inputs, then each input as
+/// the ticks since the input before it (in 7-bit groups, low group first, the top bit of a byte set when another
+/// follows) and a byte: the direction of a turn (0 to 3) or 4 for a shed. Integers are little-endian. Returns the
+/// number of bytes written, or 0 when `out` is too small (MAX_ENCODED_REPLAY_SIZE is always enough).
 [[nodiscard]] std::size_t encode_replay(const Replay& replay, std::span<std::uint8_t> out) noexcept;
 
 /// Reads bytes written by encode_replay(). Returns nothing for bytes that are cut short or have bytes left over, a

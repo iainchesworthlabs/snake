@@ -416,3 +416,186 @@ TEST_CASE("A position with more waiting turns than the buffer holds is refused",
     CHECK_FALSE(Simulation::from_setup({.heading = Direction::RIGHT, .snake = snake, .food = {9, 9}, .pending = three})
                     .has_value());
 }
+
+namespace
+{
+
+/// A game of Hot potato with a bomb food on the board.
+Simulation game_with_potato()
+{
+    const std::vector<Cell> snake{{8, 8}, {7, 8}, {6, 8}, {5, 8}, {4, 8}, {3, 8}};
+    const std::optional<Simulation> game =
+        Simulation::from_setup({.snake = snake,
+                                .food = {1, 1},
+                                .seed = 3,
+                                .ticks = 40,
+                                .variant = Variant::HOT_POTATO,
+                                .potato = Simulation::Potato{.cell = {12, 12}, .ticks_left = 31},
+                                .normal_since_potato = 0});
+    REQUIRE(game.has_value());
+    return *game;
+}
+
+/// A game of Hot potato with a bomb in the snake.
+Simulation game_with_lump()
+{
+    const std::vector<Cell> snake{{8, 8}, {7, 8}, {6, 8}, {5, 8}, {4, 8}, {3, 8}};
+    const std::optional<Simulation> game = Simulation::from_setup({.snake = snake,
+                                                                   .food = {1, 1},
+                                                                   .seed = 3,
+                                                                   .ticks = 40,
+                                                                   .variant = Variant::HOT_POTATO,
+                                                                   .lump = Cell{6, 8},
+                                                                   .normal_since_potato = 2});
+    REQUIRE(game.has_value());
+    return *game;
+}
+
+} // namespace
+
+TEST_CASE("A plain game is written as version 1 and a game with a variant as version 2", "[snapshot][format][variant]")
+{
+    CHECK(encoded(capture(Simulation(EdgeRule::WALLS, 4)))[0] == 1);
+    CHECK(encoded(capture(Simulation(EdgeRule::WALLS, 4, Variant::PORTALS)))[0] == 2);
+    CHECK(encoded(capture(Simulation(EdgeRule::WALLS, 4, Variant::HOT_POTATO)))[0] == 2);
+}
+
+TEST_CASE("The snapshot of a game with a variant holds its pieces and restores them", "[snapshot][variant]")
+{
+    const Simulation portals(EdgeRule::WALLS, 9, Variant::PORTALS);
+    const Snapshot portal_snapshot = capture(portals);
+    CHECK(portal_snapshot.variant == Variant::PORTALS);
+    CHECK(portal_snapshot.portals == portals.portals());
+    const std::optional<Simulation> restored = restore(portal_snapshot);
+    REQUIRE(restored.has_value());
+    CHECK(capture(*restored) == portal_snapshot);
+
+    const Snapshot potato = capture(game_with_potato());
+    CHECK(potato.potato == Simulation::Potato{.cell = {12, 12}, .ticks_left = 31});
+    CHECK_FALSE(potato.lump.has_value());
+    const Snapshot lump = capture(game_with_lump());
+    CHECK(lump.lump == Cell{6, 8});
+    CHECK(lump.normal_since_potato == 2);
+    CHECK_FALSE(lump.potato.has_value());
+    for (const Snapshot& snapshot : {potato, lump})
+    {
+        const std::optional<Simulation> again = restore(snapshot);
+        REQUIRE(again.has_value());
+        CHECK(capture(*again) == snapshot);
+    }
+}
+
+TEST_CASE("Every game with a variant decodes to the snapshot it was encoded from", "[snapshot][format][variant]")
+{
+    for (const Snapshot& snapshot : {capture(Simulation(EdgeRule::WALLS, 2, Variant::PORTALS)),
+                                     capture(Simulation(EdgeRule::WALLS, 2, Variant::HOT_POTATO)),
+                                     capture(game_with_potato()), capture(game_with_lump())})
+    {
+        const std::optional<Snapshot> back = decode(encoded(snapshot));
+        REQUIRE(back.has_value());
+        CHECK(*back == snapshot);
+    }
+}
+
+TEST_CASE("A restored game with a variant plays on exactly as the original does", "[snapshot][restore][variant]")
+{
+    for (const Variant variant : {Variant::PORTALS, Variant::HOT_POTATO})
+    {
+        Simulation game(EdgeRule::WALLS, 21, variant);
+        for (int tick = 0; tick < 300 && game.running(); ++tick)
+        {
+            static_cast<void>(game.turn(ALL[static_cast<std::size_t>(tick / 7) % 4]));
+            static_cast<void>(game.tick());
+            if (tick % 50 == 49)
+            {
+                std::optional<Simulation> copy = restore(capture(game));
+                REQUIRE(copy.has_value());
+                REQUIRE(state_hash(*copy) == state_hash(game));
+                for (int more = 0; more < 20 && game.running(); ++more)
+                {
+                    static_cast<void>(game.turn(ALL[static_cast<std::size_t>(more) % 4]));
+                    static_cast<void>(copy->turn(ALL[static_cast<std::size_t>(more) % 4]));
+                    REQUIRE(game.tick() == copy->tick());
+                    REQUIRE(state_hash(*copy) == state_hash(game));
+                }
+                break;
+            }
+        }
+    }
+}
+
+TEST_CASE("The hash changes with the pieces of a variant", "[snapshot][hash][variant]")
+{
+    Snapshot base = capture(Simulation(EdgeRule::WALLS, 9, Variant::PORTALS));
+    Snapshot changed = base;
+    changed.portals->cells[3].x = static_cast<std::uint8_t>((changed.portals->cells[3].x + 1) % BOARD_COLUMNS);
+    CHECK(state_hash(base) != state_hash(changed));
+
+    const Snapshot potato = capture(game_with_potato());
+    Snapshot other = potato;
+    other.potato->ticks_left = 30;
+    CHECK(state_hash(potato) != state_hash(other));
+    other = potato;
+    other.normal_since_potato = 1;
+    CHECK(state_hash(potato) != state_hash(other)); // the count goes in the hash
+}
+
+TEST_CASE("A snapshot with pieces that do not belong to its variant is not encoded", "[snapshot][format][variant]")
+{
+    std::array<std::uint8_t, MAX_ENCODED_SNAPSHOT_SIZE> bytes{};
+    Snapshot snapshot = capture(Simulation(EdgeRule::WALLS, 9, Variant::PORTALS));
+    snapshot.portals.reset();
+    CHECK(encode(snapshot, bytes) == 0);
+
+    snapshot = capture(Simulation(EdgeRule::WALLS, 9));
+    snapshot.portals = Simulation::PortalCells{};
+    CHECK(encode(snapshot, bytes) == 0);
+
+    snapshot = capture(Simulation(EdgeRule::WALLS, 9, Variant::PORTALS));
+    snapshot.lump = Cell{1, 1};
+    CHECK(encode(snapshot, bytes) == 0);
+
+    snapshot = capture(Simulation(EdgeRule::WALLS, 9));
+    snapshot.normal_since_potato = 1;
+    CHECK(encode(snapshot, bytes) == 0);
+}
+
+TEST_CASE("Bytes of version 2 with something wrong in the variant part are refused", "[snapshot][format][variant]")
+{
+    const std::vector<std::uint8_t> good = encoded(capture(game_with_lump()));
+    REQUIRE(decode(good).has_value());
+    // The variant byte is 13 bytes from the end: the count, the flags and the bomb's two cells follow it.
+    const std::size_t variant_at = good.size() - 5;
+    REQUIRE(good[variant_at] == static_cast<std::uint8_t>(Variant::HOT_POTATO));
+
+    const auto refused_with = [&](std::size_t position, std::uint8_t value)
+    {
+        std::vector<std::uint8_t> bytes = good;
+        REQUIRE(position < bytes.size());
+        bytes[position] = value;
+        return !decode(bytes).has_value();
+    };
+    CHECK(refused_with(variant_at, 0));     // the plain variant is written as version 1
+    CHECK(refused_with(variant_at, 3));     // a variant that does not exist
+    CHECK(refused_with(variant_at + 2, 4)); // a flag that does not exist
+    CHECK(refused_with(0, 3));              // a version that does not exist
+
+    for (std::size_t length = 0; length < good.size(); ++length)
+    {
+        CHECK_FALSE(decode(std::span<const std::uint8_t>(good.data(), length)).has_value());
+    }
+}
+
+TEST_CASE("A game with portals is the same snapshot after it is saved and loaded", "[snapshot][variant]")
+{
+    Simulation game(EdgeRule::WALLS, 5, Variant::PORTALS);
+    for (int tick = 0; tick < 12; ++tick)
+    {
+        static_cast<void>(game.tick());
+    }
+    const std::optional<Snapshot> back = decode(encoded(capture(game)));
+    REQUIRE(back.has_value());
+    const std::optional<Simulation> restored = restore(*back);
+    REQUIRE(restored.has_value());
+    CHECK(state_hash(*restored) == state_hash(game));
+}

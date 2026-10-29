@@ -48,7 +48,13 @@ score and hash the game ended on, and it has its own byte form. The golden repla
 the result with the stored values on every platform leg, which is the check that the rules behave identically
 everywhere. The golden values come from the library itself, so a change to a rule makes them fail on purpose and they
 are updated in the same pull request.
-The title screen's attract mode plays an ordinary game with a seed of its own, steered by `autoplay()`: a shortest path
+A game has a `Variant`, which its mode chooses (`variant_of()`): PLAIN is food and a bonus item, PORTALS puts two pairs of
+portals on the board (the cells are part of the game's state, chosen from the seed, and a head that steps onto one comes out
+of its partner), and HOT_POTATO adds bomb food that, once eaten, stays in the body on the cell where it was swallowed
+until the tail reaches it, and a `shed()` that drops the body behind it (rules 22 and 23 of the roadmap). A snapshot of a
+plain game is still written as version 1, byte for byte as before there were variants, so the hash of every old game and
+every golden replay is unchanged; a game of another variant is written as version 2, which adds the variant and its
+pieces. A replay's input is a turn or a shed. The title screen's attract mode plays an ordinary game with a seed of its own, steered by `autoplay()`: a shortest path
 to the food (a cell the tail is about to leave counts as free), refused when it would leave the snake less room than its
 length, and otherwise the safe step with the most room. It keeps no state and draws no random numbers, so it never
 touches the generator of a real game. Two autoplayed games are among the golden tests.

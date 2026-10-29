@@ -74,20 +74,36 @@ constexpr std::array<std::uint8_t, 96> SAMPLE_BYTES_V1{
     0x20, 0x4E, 0xFB, 0x68, 0x00, 0x00, 0x00, 0x00, 0xEC, 0xA6, 0x9B, 0xF8, 0xCD, 0xB6, 0xE2, 0xC7,
 };
 
-// The same two saves in version 2, which has the volume byte after the flags (the sample has a volume of 6). The
+// The same two saves in version 2, which has the volume byte after the flags (the sample has a volume of 6) and the
+// boards of two modes. The
 // checksums were worked out again by the same script.
-constexpr std::array<std::uint8_t, 26> FIRST_RUN_BYTES{
+constexpr std::array<std::uint8_t, 26> FIRST_RUN_BYTES_V2{
     0x53, 0x4E, 0x4B, 0x53, 0x02, 0x00, 0x0A, 0x00, 0x00, 0x06, 0x0A, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0xFA, 0x36, 0xA6, 0x19, 0xF9, 0xEA, 0xF2, 0xB1,
 };
 
-constexpr std::array<std::uint8_t, 97> SAMPLE_BYTES{
+constexpr std::array<std::uint8_t, 97> SAMPLE_BYTES_V2{
     0x53, 0x4E, 0x4B, 0x53, 0x02, 0x00, 0x51, 0x00, 0x01, 0x0B, 0x06, 0x01, 0x00, 0x00, 0x00, 0x02, 0x04,
     0x49, 0x41, 0x49, 0x4E, 0x09, 0x4D, 0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0x02, 0x04, 0x49,
     0x41, 0x49, 0x4E, 0xCE, 0x04, 0x00, 0x00, 0x80, 0xC1, 0xFA, 0x68, 0x00, 0x00, 0x00, 0x00, 0x09, 0x4D,
     0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0xC2, 0x01, 0x00, 0x00, 0x40, 0xBA, 0xF6, 0x68, 0x00,
     0x00, 0x00, 0x00, 0x01, 0x04, 0x49, 0x41, 0x49, 0x4E, 0x92, 0x09, 0x00, 0x00, 0x20, 0x4E, 0xFB, 0x68,
     0x00, 0x00, 0x00, 0x00, 0x56, 0x42, 0x34, 0x3D, 0xEC, 0x5B, 0xC8, 0x04,
+};
+
+// Version 3 has the leaderboards of all four modes: the same two saves, with the two new boards empty.
+constexpr std::array<std::uint8_t, 28> FIRST_RUN_BYTES{
+    0x53, 0x4E, 0x4B, 0x53, 0x03, 0x00, 0x0C, 0x00, 0x00, 0x06, 0x0A, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD9, 0x6A, 0x61, 0xF9, 0x0E, 0xE3, 0x1C, 0x17,
+};
+
+constexpr std::array<std::uint8_t, 99> SAMPLE_BYTES{
+    0x53, 0x4E, 0x4B, 0x53, 0x03, 0x00, 0x53, 0x00, 0x01, 0x0B, 0x06, 0x01, 0x00, 0x00, 0x00, 0x02, 0x04,
+    0x49, 0x41, 0x49, 0x4E, 0x09, 0x4D, 0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0x02, 0x04, 0x49,
+    0x41, 0x49, 0x4E, 0xCE, 0x04, 0x00, 0x00, 0x80, 0xC1, 0xFA, 0x68, 0x00, 0x00, 0x00, 0x00, 0x09, 0x4D,
+    0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0xC2, 0x01, 0x00, 0x00, 0x40, 0xBA, 0xF6, 0x68, 0x00,
+    0x00, 0x00, 0x00, 0x01, 0x04, 0x49, 0x41, 0x49, 0x4E, 0x92, 0x09, 0x00, 0x00, 0x20, 0x4E, 0xFB, 0x68,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87, 0xFC, 0x29, 0x96, 0x44, 0x80, 0xD0, 0x5C,
 };
 
 Bytes encoded(const SaveData& data)
@@ -112,7 +128,7 @@ void append_u64(Bytes& bytes, std::uint64_t value)
     }
 }
 
-/// A file around `payload`: the marker, version 2, the size and a correct checksum. For building files that are
+/// A file around `payload`: the marker, version 3, the size and a correct checksum. For building files that are
 /// well formed except for one value.
 Bytes file_of(const Bytes& payload)
 {
@@ -120,7 +136,7 @@ Bytes file_of(const Bytes& payload)
                 'N',
                 'K',
                 'S',
-                2,
+                3,
                 0,
                 static_cast<std::uint8_t>(payload.size()),
                 static_cast<std::uint8_t>(payload.size() >> 8U)};
@@ -185,10 +201,10 @@ Bytes empty_board()
     return Bytes{0};
 }
 
-/// A payload with the given recent names and Easy board, and an empty Classic board.
+/// A payload with the given recent names and Easy board, and an empty board for each of the other three modes.
 Bytes payload_with(const Bytes& recent, const Bytes& easy)
 {
-    return joined({settings_and_unlocks(), recent, easy, empty_board()});
+    return joined({settings_and_unlocks(), recent, easy, empty_board(), empty_board(), empty_board()});
 }
 
 void check_invalid(const Bytes& file)
@@ -237,6 +253,20 @@ TEST_CASE("A version 1 file still reads, with the volume at its loudest", "[save
     const auto result = decode_save(SAMPLE_BYTES_V1);
     REQUIRE(result.has_value());
     CHECK(*result == expected);
+}
+
+TEST_CASE("A version 2 file still reads, with the boards of the later modes empty", "[save][version]")
+{
+    const auto first_run = decode_save(FIRST_RUN_BYTES_V2);
+    REQUIRE(first_run.has_value());
+    CHECK(*first_run == SaveData{});
+
+    const auto result = decode_save(SAMPLE_BYTES_V2);
+    REQUIRE(result.has_value());
+    CHECK(*result == sample());
+    CHECK(result->settings.volume == 6);
+    CHECK(result->leaderboards.of(Mode::PORTALS).size() == 0);
+    CHECK(result->leaderboards.of(Mode::HOT_POTATO).size() == 0);
 }
 
 TEST_CASE("A version 1 file with a value that is not allowed is refused as before", "[save][version][invalid]")
@@ -308,7 +338,7 @@ TEST_CASE("A full save fits in MAX_ENCODED_SAVE_SIZE and reads back", "[save][ro
     data.recent_names.remember(name_of("AAAAAAAAAAAA"));
     data.recent_names.remember(name_of("BBBBBBBBBBBB"));
     data.recent_names.remember(name_of("CCCCCCCCCCCC"));
-    for (const Mode mode : {Mode::EASY, Mode::CLASSIC})
+    for (const Mode mode : {Mode::EASY, Mode::CLASSIC, Mode::PORTALS, Mode::HOT_POTATO})
     {
         for (std::uint32_t place = 0; place < Leaderboard::CAPACITY; ++place)
         {
@@ -370,7 +400,7 @@ TEST_CASE("Bytes that are not a save file are refused", "[save][decode]")
 
 TEST_CASE("A file from a newer program is reported as newer, not as damaged", "[save][decode][version]")
 {
-    for (const std::uint8_t version : std::array<std::uint8_t, 3>{3, 4, 255})
+    for (const std::uint8_t version : std::array<std::uint8_t, 3>{4, 5, 255})
     {
         Bytes bytes{'S', 'N', 'K', 'S', version, 0};
         const auto result = decode_save(bytes);
@@ -520,9 +550,16 @@ TEST_CASE("A leaderboard that cannot be right is refused", "[save][decode][inval
     {
         check_invalid(file_of(joined({settings_and_unlocks(), no_recent_names(), Bytes{1, 3, 'A', 'N', 'N', 10}})));
     }
-    SECTION("a Classic board that is missing")
+    SECTION("the boards of the later modes that are missing")
     {
-        check_invalid(file_of(joined({settings_and_unlocks(), no_recent_names(), empty_board()})));
+        check_invalid(file_of(joined({settings_and_unlocks(), no_recent_names(), empty_board(), empty_board()})));
+        check_invalid(
+            file_of(joined({settings_and_unlocks(), no_recent_names(), empty_board(), empty_board(), empty_board()})));
+    }
+    SECTION("a fifth board")
+    {
+        check_invalid(file_of(joined({settings_and_unlocks(), no_recent_names(), empty_board(), empty_board(),
+                                      empty_board(), empty_board(), empty_board()})));
     }
 }
 
@@ -535,7 +572,7 @@ TEST_CASE("A payload with bytes left over is refused", "[save][decode][invalid]"
 
 TEST_CASE("Any one value changed behind a correct checksum is refused or reads back the same", "[save][decode][robust]")
 {
-    // The payload runs from byte 8 to byte 88. Every file that is accepted must be one that encode_save() would write.
+    // The payload runs from byte 8 to byte 90. Every file that is accepted must be one that encode_save() would write.
     for (std::size_t position = 8; position < SAMPLE_BYTES.size() - 8; ++position)
     {
         for (const std::uint8_t value : std::array<std::uint8_t, 6>{0x00, 0x01, 0x20, 0x7F, 0x80, 0xFF})
@@ -585,8 +622,8 @@ TEST_CASE("Saves are equal when every part is", "[save]")
     CHECK_FALSE(base == changed);
 }
 
-TEST_CASE("The save format version is 2", "[save][version]")
+TEST_CASE("The save format version is 3", "[save][version]")
 {
-    CHECK(SAVE_FORMAT_VERSION == 2);
-    CHECK(MAX_ENCODED_SAVE_SIZE == 8 + 8 + 3 + 4 + (1 + (3 * 13)) + (2 * (1 + (10 * 25))));
+    CHECK(SAVE_FORMAT_VERSION == 3);
+    CHECK(MAX_ENCODED_SAVE_SIZE == 8 + 8 + 3 + 4 + (1 + (3 * 13)) + (4 * (1 + (10 * 25))));
 }

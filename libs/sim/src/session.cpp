@@ -4,7 +4,10 @@
 namespace snake::sim
 {
 
-Session::Session(Mode mode, std::uint64_t seed) noexcept : m_Mode(mode), m_Simulation(edge_rule_of(mode), seed) {}
+Session::Session(Mode mode, std::uint64_t seed) noexcept
+    : m_Mode(mode), m_Simulation(edge_rule_of(mode), seed, variant_of(mode))
+{
+}
 
 Session::Session(Mode mode, const Simulation& simulation, GameState state) noexcept
     : m_Mode(mode), m_Simulation(simulation), m_State(state)
@@ -13,7 +16,8 @@ Session::Session(Mode mode, const Simulation& simulation, GameState state) noexc
 
 std::optional<Session> Session::from_simulation(Mode mode, const Simulation& simulation, GameState state) noexcept
 {
-    if (simulation.edge_rule() != edge_rule_of(mode) || (state == GameState::GAME_OVER) == simulation.running())
+    if (simulation.edge_rule() != edge_rule_of(mode) || simulation.variant() != variant_of(mode) ||
+        (state == GameState::GAME_OVER) == simulation.running())
     {
         return std::nullopt;
     }
@@ -53,6 +57,11 @@ bool Session::resume() noexcept
 bool Session::turn(Direction input) noexcept
 {
     return m_State == GameState::RUNNING && m_Simulation.turn(input);
+}
+
+bool Session::shed() noexcept
+{
+    return m_State == GameState::RUNNING && m_Simulation.shed();
 }
 
 TickOutcome Session::tick() noexcept
