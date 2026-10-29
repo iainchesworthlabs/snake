@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The settings that differ from ESP-IDF's defaults. The target is chosen with `idf.py set-target esp32p4`.
+
+# The core at its top speed, and the PSRAM the board has (the board is 32 MB of it): the board's picture lives there.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_400=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_SPEED_200M=y
+
+# A tick is 70 to 180 ms and the touch is read by LVGL every few milliseconds: a 1 ms system tick is plenty.
+CONFIG_FREERTOS_HZ=1000
+
+# Exceptions and RTTI stay off (ESP-IDF's default, and the portable libraries' rule).
+CONFIG_COMPILER_CXX_EXCEPTIONS=n
+CONFIG_COMPILER_CXX_RTTI=n
+
+# The text on the screen is in LVGL's built-in fonts until the pixel fonts come (roadmap step 22).
+CONFIG_LV_FONT_MONTSERRAT_20=y
+CONFIG_LV_FONT_MONTSERRAT_28=y
+CONFIG_LV_FONT_MONTSERRAT_48=y
+
+# The board has 16 MB of flash: room for a larger application than the default partition table gives.
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y

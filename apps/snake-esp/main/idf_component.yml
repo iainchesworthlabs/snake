@@ -1,0 +1,6 @@
+## SPDX-License-Identifier: GPL-3.0-or-later
+dependencies:
+  # The panel, the touch controller, the audio codec and LVGL (through esp_lvgl_port) of the ESP32-P4 Function EV Board.
+  espressif/esp32_p4_function_ev_board: "^5.2.3"
+  # The version of LVGL the firmware is written against and built with (the board support package accepts 8 and 9).
+  lvgl/lvgl: "9.6.0~1"

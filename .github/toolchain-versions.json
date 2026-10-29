@@ -16,6 +16,7 @@
     "gate_toolchain": "esp-15.2.0_20251204",
     "gate_toolchain_sha256": "ace5aae6afe98f754947be043d40173e2e22ace57754b11a394b7238eefa01cf",
     "floor_toolchain": "esp-16.1.0_20260609",
-    "floor_toolchain_sha256": "0b029ab31ebc7f74e2c4779077251b21a22cd620669dc4c82e7adc478d403a8d"
+    "floor_toolchain_sha256": "0b029ab31ebc7f74e2c4779077251b21a22cd620669dc4c82e7adc478d403a8d",
+    "idf_container": "espressif/idf:v6.1@sha256:81893c71bb5e570088901f21def8684c25cd2a9020281bd01b843a7655edb18c"
   }
 }

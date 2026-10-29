@@ -47,6 +47,7 @@ add_subdirectory(libs/sim)
 add_subdirectory(libs/audio)
 add_subdirectory(libs/input)
 add_subdirectory(libs/profile)
+add_subdirectory(libs/raster)
 add_subdirectory(libs/core)
 
 if(SNAKE_BUILD_GUI)

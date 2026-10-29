@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# What ESP-IDF makes: the build, the components it fetches, and the configuration it derives from sdkconfig.defaults.
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
