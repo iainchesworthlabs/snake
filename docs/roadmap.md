@@ -32,7 +32,7 @@ decisions behind it. It is kept up to date as steps land. The visual design is i
 | Gap | Resolution |
 |---|---|
 | Android and iOS are in the standard (D8, section 10) but no project runs them in CI yet. | The legs are shared infrastructure, so they land in icl-common-infra and the template first. |
-| ESP32-P4 is not in the standard's platform table, and ESP-IDF's stock toolchain is GCC 14, below the GCC 16 floor. | Section 3.1 of the standard (portable libraries) and an ESP32 row in its platform table. A spike builds for the chip with GCC 16. |
+| ESP32-P4 is not in the standard's platform table, and ESP-IDF's stable toolchain (GCC 15.2 in v6.1) is below the GCC 16 floor. | Section 3.1 of the standard (portable libraries) and an ESP32 row in its platform table. The [spike](esp32-spike.md) built for the chip with GCC 16.1, which ESP-IDF `master` carries. |
 | The requirements say no heap allocation per tick or per frame, which cannot hold for the Qt scene graph. | It applies to the simulation and input libraries. The render path is measured by frame time. |
 | The standard wants an About dialog with licences and the source location. The requirements have no such screen, and Settings is not designed. | One more screen to design: Settings with About. |
 | Pixelify Sans in the design is a Latin subset. | Fallback fonts for Hebrew, Yiddish, Japanese and Chinese (see Art, audio and fonts). |
@@ -107,11 +107,11 @@ numbers in the markup and in `tokens.json`. The art is therefore code, not image
 - Espressif's guide gives no minimum ESP-IDF version and names no touch controller for the panel. Both are looked up
   before the ESP work starts, as is the LVGL 9 status of `esp_lvgl_port` at an ESP-IDF version that supports chip
   revision v3.1.
-- The stock ESP-IDF toolchain is GCC 14. Libraries are written in C++23 and narrow only on evidence of a missing
-  feature, with the narrowed subset noted in the library's documentation. A spike builds the P4 with GCC 16 and answers:
-  how ESP-IDF takes a custom toolchain, whether the ESP-IDF components and `esp_lvgl_port` build with it, which C++23
-  library features work (`std::expected`, `std::print`, `std::flat_map`, `<span>`, `<mdspan>`), code size and speed
-  against GCC 14, and what CI needs. If it works the toolchain is pinned at the floor and the narrowing goes.
+- The stable ESP-IDF (v6.1) builds with GCC 15.2; `master` (v6.2 in development) with GCC 16.1. The spike
+  ([esp32-spike.md](esp32-spike.md)) answered the questions: the four portable libraries build with all the project's
+  warnings on GCC 14.2, 15.2 and 16.1 and play the same games on RISC-V 32 as on a PC, so they need no narrowing;
+  a firmware with them, the board support package, LVGL 9.6 and `esp_lvgl_port` builds on `master` with GCC 16.1, but
+  not on v6.1 with GCC 16.1 swapped in. Code size is the same within half a percent; speed needs the chip.
 
 ## Phases
 
@@ -173,6 +173,8 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 **Phase 5: ESP32-P4** (release 0.4.0)
 
 20. Spike: build for the ESP32-P4 with GCC 16 (questions under ESP32-P4 above). A short note with the commands. (M)
+    Done: [esp32-spike.md](esp32-spike.md). GCC 16.1 works on ESP-IDF `master`, not on v6.1; the libraries need no
+    narrowing. Steps 21 to 23 follow its recommendations.
 21. Amend the standard if needed. ESP-IDF project builds in CI from Espressif's container, with no hardware in CI. (M)
 22. Drivers (panel, touch, MPU-6050 once fitted), LVGL renderer (flat fills, hard shadows, capped particles), bitmap
     fonts, tilt navigation in menus. (L)
