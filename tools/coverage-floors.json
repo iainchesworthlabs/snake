@@ -5,16 +5,16 @@
   },
   "components": {
     "libs/core": {
-      "line": 95,
-      "branch": 90
+      "line": 96,
+      "branch": 91
     },
     "apps/snake": {
       "line": 96,
-      "branch": 84
+      "branch": 86
     },
     "libs/profile": {
-      "line": 98,
-      "branch": 95
+      "line": 99,
+      "branch": 99
     },
     "libs/sim": {
       "line": 98,
@@ -22,15 +22,15 @@
     },
     "libs/input": {
       "line": 98,
-      "branch": 95
+      "branch": 99
     },
     "libs/audio": {
-      "line": 98,
-      "branch": 95
+      "line": 99,
+      "branch": 99
     },
     "libs/raster": {
-      "line": 98,
-      "branch": 95
+      "line": 99,
+      "branch": 99
     }
   }
 }
