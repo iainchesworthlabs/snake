@@ -70,11 +70,13 @@ $env:ICL_VCPKG_STORE = 'C:\repos\vcpkg-store'
 
 cmake --preset windows-msvc-release
 cmake --build --preset windows-msvc-release
-ctest --preset windows-msvc-release -C Release
+$env:PATH = "$env:ICL_QT_ROOT\bin;$env:PATH"
+ctest --test-dir build\windows-msvc-release -C Release
 ```
 
 The PyPI release of aqtinstall cannot read the Windows repository for Qt 6.11 and later; CI installs the commit
-named by `aqtsource` in `.github/toolchain-versions.json`. Use `windows-msvc-asan` for AddressSanitizer.
+named by `aqtsource` in `.github/toolchain-versions.json`. There is no Windows test preset, so `ctest` is pointed at
+the build directory, and the tests find Qt's DLLs through `PATH`. Use `windows-msvc-asan` for AddressSanitizer.
 
 ## Android
 
