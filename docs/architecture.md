@@ -201,6 +201,11 @@ profile starts afresh. A file from a newer version, or one that cannot be read, 
 writing, so an older program never destroys what a newer one saved. The profile is written after each game that ends
 (the unlocks may have changed) and after each score is saved; a write that fails is logged and tried again next time.
 
+On a computer, lying down, the column beside the board that holds the d-pad of a phone holds `KeyHints` instead: a card with a chip
+for each key (W A S D, Space, Esc and, in Hot potato, Enter) and what it does, with the buttons of a gamepad in coral beside
+them when `GameScreen.gamepad` is set (the program sets it from `GamepadController.connected`). The names of the keys that have
+a name in the language are translated as the keyboards of the language print them.
+
 The leaderboard is a `LeaderboardModel` (place, name, score as six digits, and whether the line is the one saved last) of
 the mode in `boardMode`; saving a score sets the mode and marks its line, and loading a save file clears the mark.
 

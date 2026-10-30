@@ -46,7 +46,7 @@ Window {
     // A gamepad plays the game by sending this window the keys the keyboard has: the d-pad and the left stick for the arrows,
     // Start for Space, Select and B for Escape, A for Enter.
     GamepadController {
-        id: gamepad
+        id: gamepadController
 
         objectName: "gamepad"
         target: root
@@ -159,6 +159,7 @@ Window {
         profile: profileModel
         effects: effectsModel
         input: inputModel
+        gamepad: gamepadController.connected
     }
 
     PauseScreen {

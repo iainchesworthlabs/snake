@@ -153,6 +153,41 @@
     </message>
 </context>
 <context>
+    <name>KeyHints</name>
+    <message>
+        <source>Steer (or the arrow keys)</source>
+        <translation>Steuern (oder die Pfeiltasten)</translation>
+    </message>
+    <message>
+        <source>Space</source>
+        <translation>Leertaste</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pause</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>Menü</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Eingabe</translation>
+    </message>
+    <message>
+        <source>Shed the tail</source>
+        <translation>Schwanz abwerfen</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>Steuerung</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>

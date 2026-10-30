@@ -153,6 +153,41 @@
     </message>
 </context>
 <context>
+    <name>KeyHints</name>
+    <message>
+        <source>Steer (or the arrow keys)</source>
+        <translation>うごかす（やじるしキーでも）</translation>
+    </message>
+    <message>
+        <source>Space</source>
+        <translation>スペース</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>一時停止</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>メニュー</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Enter</translation>
+    </message>
+    <message>
+        <source>Shed the tail</source>
+        <translation>しっぽを すてる</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>そうさ</translation>
+    </message>
+</context>
+<context>
     <name>LeaderboardScreen</name>
     <message>
         <source>Leaderboard</source>
