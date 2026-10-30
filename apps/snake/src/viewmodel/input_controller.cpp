@@ -3,7 +3,7 @@
 
 #include "device/device.hpp"
 #include "device/haptics.hpp"
-#include "snake/input/eight_way_selector.hpp"
+#include "snake/input/joystick_steering.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
@@ -211,13 +211,13 @@ void InputController::on_settings_changed()
     emit tiltSettingsChanged();
     // The choice of the profile may have changed what steers.
     m_Swipe.cancel();
-    m_Stick.reset();
+    m_Stick.release();
     emit controlsChanged();
 }
 
 void InputController::on_game_started()
 {
-    m_Stick.reset();
+    m_Stick.release();
     // A game begins with the phone held as the player likes: that is neutral, taken after a short wait that the screen
     // shows.
     startCalibration();
@@ -378,45 +378,26 @@ void InputController::joystickMoved(double right, double up)
     {
         return;
     }
-    m_StickRight = static_cast<float>(right);
-    m_StickUp = static_cast<float>(up);
-    m_StickHeld = true;
+    m_Stick.hold(static_cast<float>(right), static_cast<float>(up));
     steer_by_joystick();
 }
 
 void InputController::joystickReleased()
 {
-    m_StickHeld = false;
-    m_StickRight = 0.0F;
-    m_StickUp = 0.0F;
-    m_Stick.reset();
+    m_Stick.release();
 }
 
 void InputController::steer_by_joystick()
 {
-    if (m_Game == nullptr || !m_StickHeld || m_Game->state() != GameViewModel::State::Running)
-    {
-        return;
-    }
-    const sim::Simulation& simulation = m_Game->session().simulation();
-    const auto& pending = simulation.pending_turns();
-    // The heading the snake will have when a turn made now takes effect: the last turn waiting, or the one it has.
-    const sim::Direction heading = pending.empty() ? simulation.heading() : pending.at(pending.size() - 1);
-    const auto selection = m_Stick.update(m_StickRight, m_StickUp, heading);
-    if (!selection)
-    {
-        return;
-    }
-    // A diagonal is a turn across the snake's line, and the line changes with each turn, so while a turn is waiting it
-    // is left until the tick has taken it (held on a diagonal, the knob then asks for the next one: a staircase). A
-    // straight direction is offered at once, so that a flick to the diagonal and back, inside one tick, is two turns:
-    // up, and right again.
-    if (selection->diagonal && !pending.empty())
+    if (m_Game == nullptr || m_Game->state() != GameViewModel::State::Running)
     {
         return;
     }
     // The input buffer drops a repeat of the direction already in force.
-    static_cast<void>(m_Game->turn(selection->direction));
+    if (const auto turn = m_Stick.again(m_Game->session().simulation()))
+    {
+        static_cast<void>(m_Game->turn(*turn));
+    }
 }
 
 } // namespace snake::ui

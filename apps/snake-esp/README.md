@@ -7,10 +7,16 @@ component (`components/snake_portable`); the panel, the touch controller and LVG
 
 ## What is here
 
-- A title with the four modes, the game (the board is a canvas that `libs/raster` paints into, with the score beside it, and
-  the Shed button and its fuse in Hot potato) and the end of a game. A swipe on the touch screen steers.
-- Nothing is saved yet: the unlocks and the leaderboards need the flash storage that comes later, so all four modes are open.
+- A title with the four modes, the game (the board is a canvas that `libs/raster` paints into, with the score on its left,
+  the controls on its right, and the Shed button and its fuse in Hot potato) and the end of a game.
+- Steering is by thumb, as on a phone: an on-screen joystick (the first choice; it reads eight ways with the phone's own
+  rule, `JoystickSteering` in `libs/input`, where a diagonal is a turn across the snake), a d-pad, or a swipe anywhere.
+  Chips under the control choose between them. A fourth chip, Tilt, is there and switched off: the board has no motion
+  sensor, so tilt waits for the MPU-6050. The choice is not kept yet; each start begins at the joystick.
+- Nothing else is saved yet: the unlocks and the leaderboards need the flash storage that comes later, so all four modes are
+  open.
 - No sound, and no tilt: the board has no motion sensor, and the MPU-6050 that will be wired to it is not fitted.
+- An Exit button on the title. See "Trying it on a board that is running other firmware" below.
 
 ## What has been checked
 
@@ -27,6 +33,22 @@ idf.py set-target esp32p4
 idf.py build
 idf.py -p <port> flash monitor
 ```
+
+For the ESP32-P4X Function EV Board, whose chip is revision v3.x, add the overlay that selects that silicon (an image for a v1.x
+chip does not boot on it, and the other way round):
+
+```sh
+idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.p4-rev3" set-target esp32p4
+idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.p4-rev3" build
+```
+
+## Trying it on a board that is running other firmware
+
+Snake has no network of its own, so it cannot update itself and nothing can update it. It also never marks itself as good
+(`esp_ota_mark_app_valid_cancel_rollback`). On a board that has two application slots and rolls back (the owner's board, over its
+Ethernet), an image of Snake written to the slot that is not running therefore runs until the next restart, and the bootloader
+then boots the firmware it came from. The Exit button on the title does that restart at once. A board flashed over USB with
+Snake alone has no other slot: Exit does nothing there.
 
 `dependencies.lock` pins the versions of the components that the build fetches (the board support package and LVGL 9.6), so
 that a build today is the build of next week.

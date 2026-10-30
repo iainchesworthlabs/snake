@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# For an ESP32-P4 of chip revision v3.x (v3.1, v3.2 and on): the ESP32-P4X Function EV Board. After sdkconfig.defaults:
+#
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.p4-rev3" set-target esp32p4
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.p4-rev3" build
+#
+# Images for v1.x and for v3.x chips are not interchangeable (Espressif's user guide for v3.x, section 1.1): this one
+# refuses a v1.x chip at boot, and the default one refuses this chip. Same two lines as the other firmware that runs on
+# the owner's board.
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=n
+CONFIG_ESP32P4_REV_MIN_301=y

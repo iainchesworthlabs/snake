@@ -2,4 +2,4 @@
 idf_component_register(
     SRCS "main.cpp" "snake_app.cpp"
     INCLUDE_DIRS "."
-    REQUIRES snake_portable)
+    REQUIRES snake_portable app_update)
