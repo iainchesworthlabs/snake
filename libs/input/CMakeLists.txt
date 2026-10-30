@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# How the player's hands become directions: the tilt processor and its sample source, the swipe recogniser, and the key
-# and gamepad maps. A portable library (standard section 3.1), like libs/sim: it includes no Qt or platform header,
+# How the player's hands become directions: the tilt processor and its sample source, the swipe recogniser, the joystick
+# that steers a game, and the key and gamepad maps. A portable library (standard section 3.1), like libs/sim: it includes no Qt or platform header,
 # uses no exceptions, RTTI, iostream or clock, and allocates nothing, so the ESP32-P4 can link it. It may use floating
 # point, because none of it is part of the simulation. Reading the sensor, the touch screen and the keyboard is the
 # business of the platform. Exceptions and RTTI are switched off for its sources.
@@ -9,6 +9,7 @@ add_library(snake_input
     src/direction_selector.cpp
     src/eight_way_selector.cpp
     src/gamepad_map.cpp
+    src/joystick_steering.cpp
     src/key_map.cpp
     src/swipe_recogniser.cpp
     src/tilt_processor.cpp)

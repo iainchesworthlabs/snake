@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include "snake/input/eight_way_selector.hpp"
+#include "snake/input/joystick_steering.hpp"
 #include "snake/input/sample_source.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
@@ -215,11 +215,7 @@ private:
     input::TiltProcessor m_Tilt;
     input::TiltReading m_Reading;
     input::SwipeRecogniser m_Swipe;
-    input::EightWaySelector m_Stick{input::TOUCH_JOYSTICK};
-    // Where the knob is, while a thumb is on it.
-    float m_StickRight = 0.0F;
-    float m_StickUp = 0.0F;
-    bool m_StickHeld = false;
+    input::JoystickSteering m_Stick;
     input::AccelSample m_Raw{};
     int m_RawCount = 0;
     bool m_Calibrating = false;

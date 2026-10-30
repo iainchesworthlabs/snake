@@ -1,0 +1,1 @@
+**Touch controls on the ESP32-P4 board.** The board's game has the phone's on-screen joystick, a d-pad and swiping, with the joystick first, and the score on the left, the board in the middle and the controls on the right. Tilt is on the list and switched off, because the board has no motion sensor. It has not run on a board yet. (The words are English only for now.)

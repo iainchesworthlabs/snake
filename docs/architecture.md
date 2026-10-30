@@ -11,8 +11,8 @@ libs/audio/           portable library: note table, synthesiser, sound effects a
   include/snake/audio/
   src/
   tests/
-libs/input/           portable library: tilt processor, sample sources, swipe recogniser, direction selector, key and
-                      gamepad maps; public headers, sources, tests
+libs/input/           portable library: tilt processor, sample sources, swipe recogniser, direction selector, joystick
+                      steering, key and gamepad maps; public headers, sources, tests
   include/snake/input/
   src/
   tests/
@@ -124,6 +124,11 @@ of a class that its users also derive from or instantiate is defined in a source
 from where the last direction was given, so one stroke can turn the snake more than once. The platform passes touch
 presses, moves and releases, and calls `cancel()` when the system takes the touch away. The on-screen d-pad is a set of
 buttons that call the same turn function as every other input and needs no code in the library.
+
+`EightWaySelector` reads the on-screen joystick (the knob's place as a fraction of its travel) in eight ways, and
+`JoystickSteering` applies it to a game: it judges a diagonal against the heading the snake will have when the turn is made,
+holds a diagonal back while a turn is waiting, and asks again after each tick, so that a thumb held on a diagonal steers a
+staircase. The phones and the ESP32-P4 panel both use it, with the platform only reporting where the thumb is.
 The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## The application

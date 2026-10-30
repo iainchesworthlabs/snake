@@ -183,8 +183,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     fonts, tilt navigation in menus. (L)
     Begun: `libs/raster` paints the board (tested on the desktop) and `apps/snake-esp` is an ESP-IDF project with a title,
     the game, the Shed button and the end of a game on the board support package's panel and touch, built in CI with ESP-IDF
-    v6.1 (`esp32-firmware.yml`). Not done: the MPU-6050 and the tilt, sound through the ES8311, the pixel fonts and the
-    translations, the saved profile, hard shadows and particles. Nothing has run on a board.
+    v6.1 (`esp32-firmware.yml`), with the phone's touch controls (the joystick first, the d-pad and swiping; tilt is
+    listed and off while the board has no sensor). Not done: the MPU-6050 and the tilt, sound through the ES8311, the
+    pixel fonts and the translations, the saved profile, hard shadows and particles. Nothing has run on a board.
 23. On-device frame-rate and tilt-feel checks, recorded here. (M)
 
 **Phase 6: 1.0**
