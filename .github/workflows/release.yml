@@ -345,7 +345,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@721426d0ced1522f7c690d4ebd3e0d66f550bb8b # v0.1.8
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@39916ecd272182b334f2be893b170e6a98c52c12 # v0.1.9
     secrets:
       REPO_GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
       REPO_GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}
