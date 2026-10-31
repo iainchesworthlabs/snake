@@ -2,7 +2,8 @@ name: ESP32-P4 firmware
 
 # The ESP32-P4 front end (apps/snake-esp) built with ESP-IDF v6.1 in Espressif's container, which has the toolchain that the
 # release is built for (GCC 15.2). The container is pinned by digest in the "esp32p4" entry of .github/toolchain-versions.json.
-# Nothing is flashed or run: there is no board in CI.
+# Nothing is flashed or run: there is no board in CI. Built twice: for a chip of revision v1.x and, with the overlay
+# sdkconfig.p4-rev3, for v3.x (the ESP32-P4X board).
 #
 # Not a required check and not on the merge queue, like the phone builds: it runs only when something the firmware reads
 # changes (a required check that a path filter keeps from running never reports, which would hold every unrelated pull
@@ -87,3 +88,27 @@ jobs:
               --env HOME=/tmp/idf-home \
               --volume "$GITHUB_WORKSPACE:/project" --workdir /project/apps/snake-esp \
               "$IMAGE" bash -c 'set -euo pipefail; idf.py set-target esp32p4; idf.py build; idf.py size'
+
+      # The ESP32-P4X board has a chip of revision v3.x, and an image for one revision does not boot on the other: the same
+      # project is built a second time with the overlay for it, in a build directory and a configuration file of its own so that
+      # it does not touch the first build. The check that follows is for the overlay having taken effect (an unknown option in a
+      # defaults file is dropped without a word).
+      - name: Build the firmware for a chip of revision v3.x
+        shell: bash
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+        run: |
+          set -euo pipefail
+          docker run --rm --user "$(id -u):$(id -g)" \
+              --env HOME=/tmp/idf-home \
+              --volume "$GITHUB_WORKSPACE:/project" --workdir /project/apps/snake-esp \
+              "$IMAGE" bash -c 'set -euo pipefail
+                  defaults="sdkconfig.defaults;sdkconfig.p4-rev3"
+                  common=(-B build-p4x -DSDKCONFIG=build-p4x/sdkconfig "-DSDKCONFIG_DEFAULTS=$defaults")
+                  idf.py "${common[@]}" set-target esp32p4
+                  idf.py "${common[@]}" build'
+          grep -q '^CONFIG_ESP32P4_REV_MIN_301=y$' apps/snake-esp/build-p4x/sdkconfig
+          if grep -q '^CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y$' apps/snake-esp/build-p4x/sdkconfig; then
+              echo "::error::the overlay for revision v3.x did not take effect"
+              exit 1
+          fi
