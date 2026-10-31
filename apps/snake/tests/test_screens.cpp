@@ -2728,6 +2728,12 @@ TEST_CASE("The Shed button is there only in Hot potato, and wakes when there is 
     REQUIRE(found);
     app.game().advance((app.game().session().tick_interval_ms() + 1) / 1000.0);
     REQUIRE(app.game().canShed());
+    // The steps above took real time that no frame has seen. The first frame would tell the game about all of it at once,
+    // and on a slow machine that is enough ticks to end the game. Pausing stops the frames, and resuming starts them again
+    // from now.
+    app.game().pause();
+    app.game().resume();
+    REQUIRE(app.game().canShed());
     QTest::qWait(20);
     CHECK(app.item("shedButton")->isEnabled());
     CHECK(app.item("fuseTrack")->opacity() == Catch::Approx(1.0));
