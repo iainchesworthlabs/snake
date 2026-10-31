@@ -6,6 +6,7 @@
 #include "esp_ota_ops.h"
 #include "esp_random.h"
 #include "lvgl.h"
+#include "snake/profile/player_name.hpp"
 #include "snake/raster/board_painter.hpp"
 #include "snake/raster/palette.hpp"
 #include "snake/sim/direction.hpp"
@@ -24,6 +25,37 @@ namespace
 {
 
 constexpr const char* TAG = "snake";
+
+// What the profile calls the ways of steering, and the way back. The board has no sensor, so a profile that chose tilt
+// (one that was saved by a phone) steers by the joystick.
+SnakeApp::Controls controls_of(snake::profile::ControlScheme scheme)
+{
+    switch (scheme)
+    {
+    case snake::profile::ControlScheme::DPAD:
+        return SnakeApp::Controls::DPAD;
+    case snake::profile::ControlScheme::SWIPE:
+        return SnakeApp::Controls::SWIPE;
+    case snake::profile::ControlScheme::TILT:
+    case snake::profile::ControlScheme::JOYSTICK:
+        break;
+    }
+    return SnakeApp::Controls::JOYSTICK;
+}
+
+snake::profile::ControlScheme scheme_of(SnakeApp::Controls controls)
+{
+    switch (controls)
+    {
+    case SnakeApp::Controls::DPAD:
+        return snake::profile::ControlScheme::DPAD;
+    case SnakeApp::Controls::SWIPE:
+        return snake::profile::ControlScheme::SWIPE;
+    case SnakeApp::Controls::JOYSTICK:
+        break;
+    }
+    return snake::profile::ControlScheme::JOYSTICK;
+}
 
 // The panel, and the two columns beside the board: the score on the left, the controls on the right, each as wide as
 // what is left of the panel after the board and a margin on every side.
@@ -127,7 +159,7 @@ lv_obj_t* make_page(lv_obj_t* parent)
 
 } // namespace
 
-SnakeApp::SnakeApp() : m_Session(snake::sim::Mode::EASY, new_seed())
+SnakeApp::SnakeApp() : m_Session(snake::sim::Mode::EASY, new_seed()), m_Save(m_Store.load())
 {
     lv_obj_t* screen = lv_screen_active();
     lv_obj_set_style_bg_color(screen, colour(0xFFC93C), 0);
@@ -147,6 +179,7 @@ SnakeApp::SnakeApp() : m_Session(snake::sim::Mode::EASY, new_seed())
     build_title(screen);
     build_game(screen);
     build_over(screen);
+    set_controls(controls_of(m_Save.settings.controls));
     show_title();
 
     // A swipe anywhere steers the snake.
@@ -326,8 +359,17 @@ void SnakeApp::show_over()
     lv_obj_set_hidden(m_Title, true);
     lv_obj_set_hidden(m_Game, true);
     lv_obj_set_hidden(m_Over, false);
-    lv_label_set_text_fmt(m_OverLabel, "%s: %u points", name_of(m_Mode),
-                          static_cast<unsigned>(m_Session.simulation().score()));
+    record_game();
+    const unsigned score = static_cast<unsigned>(m_Session.simulation().score());
+    if (m_NewBest)
+    {
+        lv_label_set_text_fmt(m_OverLabel, "%s: %u points\nA new best!", name_of(m_Mode), score);
+    }
+    else
+    {
+        lv_label_set_text_fmt(m_OverLabel, "%s: %u points\nBest: %u", name_of(m_Mode), score,
+                              static_cast<unsigned>(m_Save.leaderboards.of(m_Mode).best_score()));
+    }
 }
 
 void SnakeApp::start_game(snake::sim::Mode mode)
@@ -470,6 +512,20 @@ void SnakeApp::set_controls(Controls controls)
     choose(m_SwipeChip, Controls::SWIPE);
 }
 
+void SnakeApp::record_game()
+{
+    const std::uint32_t score = m_Session.simulation().score();
+    snake::profile::Leaderboard& board = m_Save.leaderboards.of(m_Mode);
+    m_NewBest = score > board.best_score();
+    static_cast<void>(m_Save.unlocks.record_score(m_Mode, score));
+    // The board has no keyboard yet, so every score is under the one name; and no clock, so the date is left at zero.
+    if (const auto name = snake::profile::PlayerName::from_text("Player"); name && score > 0)
+    {
+        static_cast<void>(board.insert({.name = *name, .score = score, .unix_seconds = 0}));
+    }
+    m_Store.store(m_Save);
+}
+
 void SnakeApp::follow_stick(int dx, int dy)
 {
     const auto travel = static_cast<float>(STICK_TRAVEL);
@@ -577,6 +633,8 @@ void SnakeApp::on_controls_chip(lv_event_t* event)
     {
         app->set_controls(Controls::SWIPE);
     }
+    app->m_Save.settings.controls = scheme_of(app->m_Controls);
+    app->m_Store.store(app->m_Save);
 }
 
 void SnakeApp::on_shed_clicked(lv_event_t* event)

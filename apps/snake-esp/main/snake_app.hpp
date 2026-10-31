@@ -2,7 +2,9 @@
 #pragma once
 
 #include "lvgl.h"
+#include "save_store.hpp"
 #include "snake/input/joystick_steering.hpp"
+#include "snake/profile/save_data.hpp"
 #include "snake/raster/board_painter.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/sim/session.hpp"
@@ -68,6 +70,8 @@ private:
     void steer(lv_dir_t direction);
     void turn(snake::sim::Direction direction);
     void set_controls(Controls controls);
+    /// The game that ended: the unlocks and the leaderboard of its mode, saved.
+    void record_game();
     /// The thumb is at (dx, dy) pixels from the middle of the joystick.
     void follow_stick(int dx, int dy);
     void let_go_of_stick();
@@ -90,6 +94,10 @@ private:
     std::uint32_t m_Frame = 0;
     Controls m_Controls = Controls::JOYSTICK;
     snake::input::JoystickSteering m_Stick;
+    SaveStore m_Store;
+    snake::profile::SaveData m_Save;
+    /// Whether the game that just ended beat the best score of its mode.
+    bool m_NewBest = false;
 
     lv_obj_t* m_Title = nullptr;
     lv_obj_t* m_Game = nullptr;

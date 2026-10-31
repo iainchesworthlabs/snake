@@ -12,9 +12,11 @@ component (`components/snake_portable`); the panel, the touch controller and LVG
 - Steering is by thumb, as on a phone: an on-screen joystick (the first choice; it reads eight ways with the phone's own
   rule, `JoystickSteering` in `libs/input`, where a diagonal is a turn across the snake), a d-pad, or a swipe anywhere.
   Chips under the control choose between them. A fourth chip, Tilt, is there and switched off: the board has no motion
-  sensor, so tilt waits for the MPU-6050. The choice is not kept yet; each start begins at the joystick.
-- Nothing else is saved yet: the unlocks and the leaderboards need the flash storage that comes later, so all four modes are
-  open.
+  sensor, so tilt waits for the MPU-6050. The choice is kept: the board starts with the one you last chose.
+- The profile is saved in the flash's non-volatile storage (`main/save_store.cpp`), in the format that `libs/profile` writes
+  for the phones: the way of steering, the unlocks and a leaderboard for each mode. The end of a game shows the best score
+  of the mode. There is no keyboard and no clock on the board yet, so every score is saved as `PLAYER` and without a date,
+  and the modes are all open: the unlocks are recorded, and nothing is locked behind them.
 - No sound, and no tilt: the board has no motion sensor, and the MPU-6050 that will be wired to it is not fitted.
 - An Exit button on the title. See "Trying it on a board that is running other firmware" below.
 
@@ -52,3 +54,7 @@ Snake alone has no other slot: Exit does nothing there.
 
 `dependencies.lock` pins the versions of the components that the build fetches (the board support package and LVGL 9.6), so
 that a build today is the build of next week.
+
+Snake keeps its profile in the same storage partition as the firmware it was started from, in a namespace of its own (`snake`),
+and never erases the partition: when it cannot be opened Snake runs without saving. Nothing of the other firmware's is read
+or written.
