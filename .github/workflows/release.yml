@@ -203,7 +203,7 @@ jobs:
 
       # Qt's iOS kit, and the macOS kit that aqtinstall's --autodesktop installs beside it for the host tools (as ios-build.yml).
       - name: Install Qt (iOS kit and macOS host kit)
-        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
         with:
           version: "6.12.0"
           host: mac
@@ -345,7 +345,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@39916ecd272182b334f2be893b170e6a98c52c12 # v0.1.9
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
     secrets:
       REPO_GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
       REPO_GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}
