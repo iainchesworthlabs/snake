@@ -60,17 +60,17 @@ jobs:
       # The vcpkg toolchain is the toolchain file of every preset, iOS's included (it chains to Qt's): the manifest has one
       # dependency for a device, miniaudio, which is a header.
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@c412e6a542644c2316d21db351ef4218fa3e185d # v0.1.19
 
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@c412e6a542644c2316d21db351ef4218fa3e185d # v0.1.19
 
       # Two kits: Qt's iOS kit, and, installed alongside it by aqtinstall's --autodesktop (the action adds it), the macOS
       # kit that supplies the host tools a cross build runs (moc, rcc, qmlcachegen, qsb, lrelease). The game uses Qt Quick and Qt
       # Sensors (the accelerometer), so that module is installed. Not cached: the iOS kit is several gigabytes, and the repository's cache
       # quota is better spent on the builds that run on every push.
       - name: Install Qt (iOS kit and macOS host kit)
-        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
         with:
           version: "6.12.0"
           host: mac
