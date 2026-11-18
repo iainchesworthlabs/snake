@@ -1,0 +1,16 @@
+/* The Snake palette: the one file that holds its colours. Eight roles, each light-dark(light, dark).
+   The colours are the game's own, sampled from the app icon (apps/snake/packaging/ios/Assets.xcassets) and
+   docs/design/tokens.json: Sunshine #ffc93c, Coral #ff6b4a, Night purple #2b1d52, Cream #fff1d6. The coral of the
+   icon is too light to mark things on white, so the light accent is a darker coral.
+   Held to the company contract by tools/ci/check_site_kit.py (WCAG 2.2 AA, light and dark). Change a colour here and
+   run: python tools/ci/check_site_kit.py */
+[data-app="snake"] {
+  --app-primary:       light-dark(#2b1d52, #ffc93c);
+  --app-on-primary:    light-dark(#fff1d6, #2b1d52);
+  --app-accent:        light-dark(#d4452a, #ff6b4a);
+  --app-link:          light-dark(#3d2a85, #ffc93c);
+  --app-tint:          light-dark(#fff1d6, #221844);
+  --app-gradient-from: light-dark(#ffc93c, #2b1d52);
+  --app-gradient-to:   light-dark(#ff6b4a, #1a1035);
+  --app-on-gradient:   light-dark(#2b1d52, #fff1d6);
+}
