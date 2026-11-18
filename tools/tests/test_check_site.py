@@ -13,9 +13,11 @@ import importlib.util
 import os
 import re
 import shutil
+import struct
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,6 +43,17 @@ def load_hook():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def png(width: int, height: int) -> bytes:
+    """The smallest PNG of the given size (a blank grey image), made by hand so the tests need no imaging library."""
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    rows = b"".join(bytes([0]) + bytes([0x80]) * width for _ in range(height))
+    header = struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0)
+    return bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A]) + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
 
 
 PAGE = """<!doctype html><html lang="en-AU" data-app="snake"><head><title>T</title>
@@ -157,8 +170,27 @@ class PagesCheck(unittest.TestCase):
         picture = self.site / "assets" / "img" / "toybox-title.png"
         picture.parent.mkdir(parents=True, exist_ok=True)
         picture.write_bytes(b"x")
-        self.assertTrue(any("design mock" in p for p in self.problems('<img src="../assets/img/toybox-title.png" alt="">')))
-        self.assertEqual(self.problems('<img src="../assets/img/icon-1024.png" alt="">'), [])
+        self.assertTrue(any("design mock" in p for p in self.problems('<img src="../assets/img/toybox-title.png" width="8" height="8" alt="">')))
+        self.assertEqual(self.problems('<img src="../assets/img/icon-1024.png" width="8" height="8" alt="">'), [])
+
+    def test_a_picture_needs_alt_text_and_a_size(self) -> None:
+        self.assertTrue(any("no alt" in p for p in self.problems('<img src="../assets/img/icon-1024.png" width="8" height="8">')))
+        self.assertTrue(any("width" in p for p in self.problems('<img src="../assets/img/icon-1024.png" height="8" alt="">')))
+        self.assertTrue(any("height" in p for p in self.problems('<img src="../assets/img/icon-1024.png" width="8" alt="">')))
+        self.assertTrue(any("width" in p for p in self.problems('<img src="../assets/img/icon-1024.png" width="wide" height="8" alt="">')))
+
+    def test_alt_text_that_is_a_file_name_or_too_short_is_reported(self) -> None:
+        sized = 'src="../assets/img/icon-1024.png" width="8" height="8"'
+        self.assertTrue(any("file name" in p for p in self.problems(f'<img {sized} alt="icon-1024.png">')))
+        self.assertTrue(any("shorter" in p for p in self.problems(f'<img {sized} alt="Icon">')))
+        self.assertTrue(any("decorative" in p for p in self.problems(f'<img {sized} alt=" ">')))
+        self.assertEqual(self.problems(f'<img {sized} alt="The Snake icon: a coral snake on yellow.">'), [])
+
+    def test_a_size_of_the_wrong_shape_for_a_png_is_reported(self) -> None:
+        (self.site / "assets" / "img").mkdir(parents=True, exist_ok=True)
+        (self.site / "assets" / "img" / "icon-1024.png").write_bytes(png(40, 20))
+        self.assertEqual(self.problems('<img src="../assets/img/icon-1024.png" width="400" height="200" alt="">'), [])
+        self.assertTrue(any("shape" in p for p in self.problems('<img src="../assets/img/icon-1024.png" width="200" height="200" alt="">')))
 
     def test_a_page_needs_one_heading(self) -> None:
         (self.site / "faq" / "index.html").write_text(page().replace("</main>", "<h1>Two</h1></main>"), encoding="utf-8")
@@ -172,6 +204,23 @@ class PagesCheck(unittest.TestCase):
 
 class TheRepository(unittest.TestCase):
     """The checks run on the files of this repository, as CI runs them."""
+
+    def test_the_pictures_of_the_pages_are_png_files_with_the_sizes_the_pages_write(self) -> None:
+        # The sizes in the markup of docs/*.md, against the files in docs/assets/img, without building the site.
+        pictures = {path.name: pages_check.png_size(path) for path in (ROOT / "docs" / "assets" / "img").glob("*.png")}
+        self.assertTrue(pictures)
+        for name, size in pictures.items():
+            self.assertIsNotNone(size, f"{name} is not a PNG file")
+        for path in sorted((ROOT / "docs").glob("*.md")):
+            for match in re.finditer(r'<img [^>]*src="(?:[.][.]/)?assets/img/([^"]+)"[^>]*>', path.read_text(encoding="utf-8")):
+                tag = match.group(0)
+                width = re.search(r'width="(\d+)"', tag)
+                height = re.search(r'height="(\d+)"', tag)
+                self.assertTrue(width and height, f"{path.name}: {match.group(1)} has no width and height")
+                real = pictures.get(match.group(1))
+                self.assertIsNotNone(real, f"{path.name}: {match.group(1)} is not in docs/assets/img")
+                self.assertAlmostEqual(int(width.group(1)) / int(height.group(1)), real[0] / real[1],
+                                       delta=0.02 * real[0] / real[1], msg=f"{path.name}: {match.group(1)}")
 
     @needs_node
     def test_the_kit_and_palette_of_the_repository_pass(self) -> None:

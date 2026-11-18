@@ -13,6 +13,8 @@ description: "How to play Snake: the aim, the four modes, how scoring and the co
 <h2>The aim</h2>
 <p>The snake moves all the time. You choose which way it turns. Each blueberry it eats makes it longer and scores points. The game ends when its head runs into its own body, or into a wall (in every mode but Easy). The snake starts short, in the middle, heading right. It gets faster as it eats.</p>
 <p>You cannot turn straight back on yourself. The game checks each turn against the way the snake will be heading by then, so a quick up-then-left while heading right does not fold it back.</p>
+<figure class="sk-window"><img src="../assets/img/snake-desktop-game.png" width="1100" height="700" loading="lazy" alt="A Classic game on a computer: a long snake in coral and cream on a teal checkerboard with a blueberry and a gold bonus item, the score 000710 and the best score 004210 on the left, and a card that lists the keys on the right."></figure>
+<p class="sk-caption">A game of Classic on a computer. The blueberry is the food. The gold item is the bonus.</p>
 
 <h2>The modes</h2>
 <dl class="sk-qa">
@@ -45,6 +47,8 @@ description: "How to play Snake: the aim, the four modes, how scoring and the co
 <p>With a gamepad plugged in or paired, the d-pad or the left stick steers, Start pauses, Select or B opens the menu, and A presses the button that has the focus (and sheds). The game pauses by itself when its window loses the focus.</p>
 <h3>On a phone or tablet</h3>
 <p>Choose one of four ways to steer: tilt the device, swipe, an on-screen d-pad, or an on-screen joystick that reads eight directions. Tilt starts with a short calibration and has three sensitivities. The device taps when the snake eats and knocks when it crashes. Hold the device upright or on its side. The screen is held still during a game, so tilting never turns it.</p>
+<figure class="icl-device"><img src="../assets/img/snake-phone-game.png" width="390" height="844" loading="lazy" alt="A game in the phone layout: the score 000700 and the best score 004210 above the board, a snake in coral and cream, a blueberry and a gold bonus item on the board, a tilt control and a pause button below."></figure>
+<p class="sk-caption">The phone layout, with the tilt control under the board.</p>
 
 <h2>The leaderboard</h2>
 <p>Each mode keeps its own top 10 on your device. If your score is on it, the game asks for a name of up to 12 letters (A to Z and the space). The three names you used most recently are there as one-tap shortcuts. In Settings you can reset the leaderboard of one mode, after a confirmation.</p>

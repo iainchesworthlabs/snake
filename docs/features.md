@@ -23,8 +23,17 @@ description: "What Snake does: four modes, combos and bonus items, five ways to 
 </ul>
 </div></section>
 
-<section class="icl-section icl-section--tint"><div class="icl-wrap">
+<section class="icl-section icl-section--tint" id="see"><div class="icl-wrap">
+<h2>See it</h2>
+<div class="sk-gallery sk-gallery--computer">
+<figure><div class="sk-window"><img src="../assets/img/snake-desktop-title.png" width="1100" height="700" loading="lazy" alt="The title screen on a computer: the word Snake above a small board with a snake and a blueberry, a Play button and a Leaderboard button, and a card for each mode: Easy, which is chosen, then Classic, Portals and Hot potato."></div><figcaption>The title screen on a computer: four modes, a leaderboard and settings.</figcaption></figure>
+<figure><div class="sk-window"><img src="../assets/img/snake-desktop-leaderboard.png" width="1100" height="700" loading="lazy" alt="The Classic leaderboard on a computer: six names with their scores, MAYA first with 004210, then LEO, JUNO, KAI, POPPY and SAM, above a Play button. Tabs along the top choose the mode."></div><figcaption>A leaderboard for each mode. The names here are made up.</figcaption></figure>
+</div>
+<p class="sk-note"><a href="../#screens">More pictures, including the phone layout</a></p>
+</div></section>
+
+<section class="icl-section" id="also"><div class="icl-wrap">
 <h2>Also</h2>
-<p>An ESP32-P4 board version of the game exists. It has the board, the touch controls and the Shed button, and no tilt, because the board has no motion sensor. Its words are in English only. It is a hobby build for people who work with the board, and there is nothing to download for it yet.</p>
+<p>An ESP32-P4 board version of the game exists. It has the board, the touch controls and the Shed button, and no tilt, because the board has no accelerometer. Its words are in English only. It is a hobby build for people who work with the board, and there is nothing to download for it.</p>
 <p>Snake is open source. See <a href="../privacy/">Privacy</a> for what the game keeps, and <a href="../whats-new/">What's new</a> for the changes.</p>
 </div></section>
