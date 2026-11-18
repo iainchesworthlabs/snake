@@ -2,12 +2,15 @@
 """Tests for check_site_kit.py, check_site_pages.py and site_shell_hook.py (CTest label: unit). The Snake pages.
 
 Run with: python3 -m unittest discover -s tools/tests -v
+The tests that need Node (the company's palette checker) or jinja2 (the MkDocs hook) skip themselves when it is missing, as in
+a CTest run on a machine without them. With SNAKE_SITE_TESTS_STRICT=1 (the Site job of ci.yml) a missing tool fails instead.
 The page checks run on small sites written to a temporary folder; the kit check runs on a copy of the kit.
 """
 
 from __future__ import annotations
 
 import importlib.util
+import os
 import re
 import shutil
 import sys
@@ -16,6 +19,17 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def requires(present: bool, reason: str):  # noqa: ANN201
+    """Skip a test when a tool is missing, unless SNAKE_SITE_TESTS_STRICT is set: then the test runs and fails."""
+    if os.environ.get("SNAKE_SITE_TESTS_STRICT"):
+        return lambda item: item
+    return unittest.skipUnless(present, reason)
+
+
+needs_node = requires(shutil.which("node") is not None, "node is not installed")
+needs_jinja = requires(importlib.util.find_spec("jinja2") is not None, "jinja2 is not installed")
 sys.path.insert(0, str(ROOT / "tools" / "ci"))
 
 import check_site_kit as kit_check  # noqa: E402
@@ -53,6 +67,7 @@ class KitCheck(unittest.TestCase):
     def tearDown(self) -> None:
         self.dir.cleanup()
 
+    @needs_node
     def test_the_pinned_copy_and_palette_pass(self) -> None:
         self.assertEqual(kit_check.check_sums(self.root), [])
         self.assertEqual(kit_check.check_palette(self.root), [])
@@ -74,6 +89,7 @@ class KitCheck(unittest.TestCase):
         path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
         self.assertEqual(kit_check.check_sums(self.root), [])
 
+    @needs_node
     def test_a_palette_that_fails_contrast_is_reported(self) -> None:
         theme = self.root / kit_check.THEME
         theme.write_text(theme.read_text(encoding="utf-8").replace("light-dark(#2b1d52, #ffc93c)", "light-dark(#ffe08a, #ffc93c)", 1),
@@ -82,6 +98,7 @@ class KitCheck(unittest.TestCase):
         self.assertEqual(len(problems), 1)
         self.assertIn("FAIL", problems[0])
 
+    @needs_node
     def test_a_property_that_is_not_a_role_is_reported(self) -> None:
         theme = self.root / kit_check.THEME
         theme.write_text(theme.read_text(encoding="utf-8").replace("}", "  --app-extra: #000000;\n}"), encoding="utf-8")
@@ -156,6 +173,7 @@ class PagesCheck(unittest.TestCase):
 class TheRepository(unittest.TestCase):
     """The checks run on the files of this repository, as CI runs them."""
 
+    @needs_node
     def test_the_kit_and_palette_of_the_repository_pass(self) -> None:
         self.assertEqual(kit_check.check_sums(ROOT), [])
         self.assertEqual(kit_check.check_palette(ROOT), [])
@@ -178,6 +196,7 @@ class TheRepository(unittest.TestCase):
                     self.assertTrue(value.startswith('"') and value.endswith('"'), f"{path.name}: quote the {key}")
 
 
+@needs_jinja
 class ShellHook(unittest.TestCase):
     def test_data_app_is_added_once(self) -> None:
         hook = load_hook()
