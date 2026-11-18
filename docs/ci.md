@@ -88,7 +88,9 @@ that list. The look is the company site's shell:
 - `tools/ci/check_site_pages.py` builds the site (`mkdocs build --strict`) and fails on a page that has no title, no canonical
   address, no `lang="en-AU"` or not one `h1`; a page that has a `<script>` (except JSON-LD), a `<style>` or `style=`, loads
   anything from another host, links to an email address or uses a picture that does not show the game as built
-  (`STALE_PICTURES` in the check: the renders of the design mock); a link to a file or an anchor that is not in the built
+  (`STALE_PICTURES` in the check: the renders of the design mock); an `<img>` with no `alt` attribute (`alt=""` is for a
+  picture that only decorates), with an alt that is a file name or shorter than 10 characters, with no `width` and
+  `height` in pixels, or, for a PNG, with a width and height of another shape than the file's; a link to a file or an anchor that is not in the built
   site, or to `/snake/` instead of a relative link; and a built site that lacks `privacy/` or `support/` (a store listing will
   print them, and they never move) or one of the other pages.
 
@@ -97,6 +99,20 @@ precheck (the page check is skipped there when `mkdocs-material` is not installe
 `pip install -r requirements/docs.txt`). Their unit tests are `tools/tests/test_check_site.py`: the Site job runs them, and
 CTest runs them as `tools.site_checks` with the label `unit` when Python 3 is found (the tests that run the palette checker
 skip themselves without Node).
+
+#### Pictures on the pages
+
+Only real pictures go on the pages: the icon, and screenshots of the game itself. `docs/design/screenshots/` are renders of
+the design mock and stay off (`STALE_PICTURES`). The screenshots are `docs/assets/img/snake-*.png`: the title, game and
+leaderboard screens in the computer layout (1100 by 700 pixels) and the phone layout (390 by 844 pixels). They were taken from
+a Windows build of the game, by rendering `Main.qml` off screen with the software renderer, as `apps/snake/tests/test_screens.cpp`
+does, with the game's own font (the woff2 files of `docs/design/fonts/` converted to ttf, because the prebuilt Qt used cannot
+read woff2) and made-up names on the leaderboard (MAYA, LEO, JUNO, KAI, POPPY, SAM). They were not taken on a phone or on Linux
+or macOS, and the pages say "the phone layout", not "an iPhone". To take them again, do the same at the same sizes, **look at
+each picture**, and update the alt text and the `width` and `height` in the markup (a unit test compares them with the files).
+A frame of CSS around a picture (`.sk-window`, the shell's `.icl-device`) is fine; a frame around a screen nobody has looked at
+is not, and neither is badge or logo artwork that was not supplied. A photo of the ESP32-P4 board and a screenshot from a real
+iPhone or iPad are the owner's to supply: the places for them are `OWNER DECISION` comments in `docs/index.md` and `docs/press.md`.
 
 A change to a page needs no changelog fragment: the pages are under `docs/` and `tools/`. A change to the game does.
 

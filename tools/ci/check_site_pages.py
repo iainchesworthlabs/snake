@@ -17,7 +17,11 @@ The pages (tools/docs/theme/marketing.html) run under a preview that blocks ever
 
 - no <script> except a JSON-LD data block, no <style> and no style= attribute;
 - nothing loaded from another host: no src, srcset, stylesheet link or CSS url() or @import that starts with http(s):// or //;
-- no mailto: link (support is through GitHub issues only), no picture that does not show the game as built.
+- no mailto: link (support is through GitHub issues only), no picture that does not show the game as built;
+- every <img> has an alt attribute (alt="" for a picture that only decorates; any other alt is a description of at least
+  10 characters, not a file name), a width and a height in pixels, and, for a PNG, a width and height of the same shape as
+  the file, so the page does not shift as the picture loads. Whether the alt text is true of the picture is for a person
+  to check: look at each picture before writing its alt.
 
 And the addresses that a store listing or the app will print exist: /, privacy/, support/ (they never move once printed),
 and the other pages of the site.
@@ -40,6 +44,9 @@ FIXED = ["index.html", "privacy/index.html", "support/index.html", "how-to-play/
          "faq/index.html", "whats-new/index.html", "accessibility/index.html", "press/index.html", "theme.css",
          "assets/icl.css", "assets/snake.css", "assets/img/icon-1024.png"]
 ALLOWED_HOSTS = {"github.com", "www.gnu.org"}
+PNG_SIGNATURE = bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A])
+MIN_ALT = 10
+FILE_NAME = re.compile(r"[.](png|jpe?g|gif|svg|webp|avif)", re.IGNORECASE)
 # Pictures in the repository that do not show the game as built: docs/design/screenshots are renders of the design mock
 # (docs/design/screens/*.html), not of the game. They stay off the pages until the owner re-renders them from the game.
 # Remove a name here when its picture has been re-rendered.
@@ -61,6 +68,7 @@ class Page(HTMLParser):
         self.scripts: list[str] = []  # the type of each <script>
         self.styles = 0
         self.style_attrs = 0
+        self.images: list[dict[str, str | None]] = []  # src, alt (None when absent), width, height of each <img>
 
     def handle_starttag(self, tag, attrs):  # noqa: ANN001, ANN201
         a = {k: (v or "") for k, v in attrs}
@@ -74,6 +82,9 @@ class Page(HTMLParser):
             self.scripts.append(a.get("type", ""))
         if tag == "style":
             self.styles += 1
+        if tag == "img":
+            self.images.append({"src": a.get("src", ""), "alt": a["alt"] if "alt" in a else None,
+                                "width": a.get("width"), "height": a.get("height")})
         if "style" in a:
             self.style_attrs += 1
         if "id" in a:
@@ -120,6 +131,49 @@ def target_file(site: Path, page_file: Path, link: str) -> Path | None:
     return target
 
 
+def png_size(path: Path) -> tuple[int, int] | None:
+    """The width and height of a PNG file, or None when the file is not a PNG."""
+    try:
+        with path.open("rb") as handle:
+            head = handle.read(24)
+    except OSError:
+        return None
+    if len(head) < 24 or not head.startswith(PNG_SIGNATURE) or head[12:16] != b"IHDR":
+        return None
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
+def check_images(site: Path, path: Path, page: Page) -> list[str]:
+    """The picture rules of the module docstring, for the <img> elements of one page."""
+    where = path.relative_to(site).as_posix()
+    problems: list[str] = []
+    for image in page.images:
+        src = image["src"] or "(no src)"
+        alt = image["alt"]
+        if alt is None:
+            problems.append(f'{where}: {src}: <img> has no alt attribute (alt="" if it only decorates)')
+        elif alt.strip():
+            if FILE_NAME.search(alt):
+                problems.append(f"{where}: {src}: the alt text looks like a file name; describe what the picture shows")
+            elif len(alt.strip()) < MIN_ALT:
+                problems.append(f"{where}: {src}: the alt text is shorter than {MIN_ALT} characters; describe what the picture shows")
+        elif alt != "":
+            problems.append(f'{where}: {src}: write alt="" for a decorative picture, not a space')
+        sizes = []
+        for name in ("width", "height"):
+            value = image[name]
+            if value is None or not value.isdigit() or int(value) <= 0:
+                problems.append(f"{where}: {src}: <img> needs a {name} in pixels, so the page does not shift as it loads")
+            else:
+                sizes.append(int(value))
+        if len(sizes) == 2 and image["src"] and not urlparse(image["src"]).scheme and not image["src"].startswith(("/", "//")):
+            target = target_file(site, path, image["src"])
+            real = png_size(target) if target is not None and target.is_file() else None
+            if real and abs(sizes[0] / sizes[1] - real[0] / real[1]) > 0.02 * real[0] / real[1]:
+                problems.append(f"{where}: {src}: width {sizes[0]} and height {sizes[1]} are not the shape of the picture ({real[0]} by {real[1]})")
+    return problems
+
+
 def check_site(site: Path, root: Path) -> list[str]:
     problems: list[str] = []
     for name in FIXED:
@@ -144,6 +198,7 @@ def check_site(site: Path, root: Path) -> list[str]:
                 problems.append(f"{where}: has a <script>; the pages are script-free (a preview blocks scripts)")
         if page.styles or page.style_attrs:
             problems.append(f"{where}: has <style> or a style= attribute; put it in docs/assets/snake.css")
+        problems.extend(check_images(site, path, page))
         for tag, attribute, value in page.refs:
             value = value.strip()
             if not value or value.startswith(("data:", "javascript:")):
