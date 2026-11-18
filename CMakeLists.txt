@@ -41,6 +41,7 @@ if(SNAKE_BUILD_TESTS)
     include(CTest)
     find_package(Catch2 3 CONFIG REQUIRED)
     include(Catch)
+    add_subdirectory(tools/tests)
 endif()
 
 add_subdirectory(libs/sim)

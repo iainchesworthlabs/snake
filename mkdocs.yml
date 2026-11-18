@@ -1,23 +1,38 @@
-site_name: snake
-site_description: Snake game on Qt 6 and C++23
+site_name: Snake
+site_description: A Snake game with four modes, for Linux, macOS, Windows and, soon, iPhone and iPad
 repo_url: https://github.com/iainchesworthlabs/snake
+# The one place that holds the site's address. Pages write {{ site_url }} where they need it.
+# A custom domain is a change here (docs/ci.md, "The Snake pages").
+site_url: https://iainchesworthlabs.com/snake/
 docs_dir: docs
+# Not published. These are for the people who work on the game and stay in the repository only.
+exclude_docs: |
+  architecture.md
+  building.md
+  ci.md
+  testing.md
+  releasing.md
+  playtest.md
+  i18n.md
+  prd.md
+  roadmap.md
+  esp32-spike.md
+  migration.md
+  ios-install.md
+  design/
+  signing-key.asc
 strict: true
+hooks:
+  - tools/docs/site_shell_hook.py
+markdown_extensions:
+  - def_list  # the questions and answers of the FAQ page
 theme:
   name: material
-  features:
-    - navigation.sections
-    - content.code.copy
-nav:
-  - Home: index.md
-  - Building: building.md
-  - Architecture: architecture.md
-  - Testing: testing.md
-  - Continuous integration: ci.md
-  - Releasing: releasing.md
-  - Playtest and tuning: playtest.md
-  - Translations: i18n.md
-  - Product requirements: prd.md
-  - Roadmap: roadmap.md
-  - ESP32-P4 spike: esp32-spike.md
-  - Migration from the original code: migration.md
+  custom_dir: tools/docs/theme  # the Snake pages (marketing.html); see tools/docs/site_shell_hook.py
+  font: false  # no web font: the site loads nothing from other sites
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+# The Snake pages (marketing.html) carry their own links, so there is no menu to list them in.

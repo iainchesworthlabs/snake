@@ -5,7 +5,9 @@
     python3 tools/ci/precheck.py [--base develop] [--root .]
 
 Finds a checkout of icl-common-infra in ICL_COMMON_INFRA, then ../icl-common-infra, and runs
-its scripts/precheck.py with the same arguments. These are the checks the Policy job runs.
+its scripts/precheck.py with the same arguments. These are the checks the Policy job runs. Then it runs this
+repository's own checks of the site (docs/ci.md, "The Snake pages"): the kit and palette check, and the page check, which
+builds the site and is skipped when mkdocs-material is not installed (pip install -r requirements/docs.txt).
 """
 
 from __future__ import annotations
@@ -17,6 +19,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+SITE_KIT_CHECK = "check_site_kit.py"
+SITE_PAGE_CHECK = "check_site_pages.py"
 
 
 def find_infra() -> Path | None:
@@ -39,7 +43,18 @@ def main() -> int:
     args = sys.argv[1:]
     if "--root" not in args:
         args += ["--root", str(ROOT)]
-    return subprocess.call([sys.executable, str(infra / "scripts" / "precheck.py"), *args])
+    status = subprocess.call([sys.executable, str(infra / "scripts" / "precheck.py"), *args])
+    return max(status, site_checks())
+
+
+def site_checks() -> int:
+    """The Snake site's own checks. The page check needs mkdocs-material and is skipped without it."""
+    status = subprocess.call([sys.executable, str(HERE / SITE_KIT_CHECK)])
+    if subprocess.run([sys.executable, "-c", "import mkdocs, material"], capture_output=True, check=False).returncode != 0:
+        print(f"precheck: mkdocs-material is not installed, so {SITE_PAGE_CHECK} was not run "
+              "(pip install -r requirements/docs.txt)", file=sys.stderr)
+        return status
+    return max(status, subprocess.call([sys.executable, str(HERE / SITE_PAGE_CHECK)]))
 
 
 if __name__ == "__main__":

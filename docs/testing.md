@@ -9,6 +9,7 @@ flaky tests stay visible. A phase that matches no tests fails, unless the phase 
 | Kind | Where | Example |
 |---|---|---|
 | unit | `libs/*/tests` | `test_game.cpp` |
+| unit | `tools/tests` | `tools.site_checks` runs the Python tests of the site checks (`test_check_site.py`), when Python 3 is found |
 | ui | `apps/snake` | `app.smoke` starts the application without a display, waits for the first frame and exits |
 | ui | `apps/snake/tests/test_screens.cpp` | loads `Main.qml` in an off-screen window, clicks the buttons, presses the keys and reads back the pixels |
 
