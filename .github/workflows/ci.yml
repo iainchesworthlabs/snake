@@ -179,14 +179,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install the docs tooling
+        run: python3 -m pip install --quiet -r requirements/docs.txt
       - name: Test the site checks
+        env:
+          SNAKE_SITE_TESTS_STRICT: "1" # Node and jinja2 must be here: a skipped test would hide a broken check
         run: python3 -m unittest discover -s tools/tests -v
       - name: Check the site kit and the Snake palette
         run: python3 tools/ci/check_site_kit.py
       - name: Build the site and check the Snake pages
-        run: |
-          python3 -m pip install --quiet -r requirements/docs.txt
-          python3 tools/ci/check_site_pages.py
+        run: python3 tools/ci/check_site_pages.py
 
   ci-status:
     name: CI Status
