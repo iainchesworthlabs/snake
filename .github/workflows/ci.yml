@@ -168,10 +168,30 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: iainchesworthlabs/icl-common-infra/actions/dependency-review@e15f14812b7446517252d6677abf755698d57986 # v0.1.18
 
+  site:
+    name: Site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test the site checks
+        run: python3 -m unittest discover -s tools/tests -v
+      - name: Check the site kit and the Snake palette
+        run: python3 tools/ci/check_site_kit.py
+      - name: Build the site and check the Snake pages
+        run: |
+          python3 -m pip install --quiet -r requirements/docs.txt
+          python3 tools/ci/check_site_pages.py
+
   ci-status:
     name: CI Status
     if: always()
-    needs: [policy, plan, build-fast, build-full, coverage, zizmor, dependency-scan]
+    needs: [policy, plan, build-fast, build-full, coverage, zizmor, dependency-scan, site]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -186,5 +206,6 @@ jobs:
               "build-fast": ${{ needs.plan.outputs.build == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }},
               "coverage": ${{ needs.plan.outputs.build == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }},
               "build-full": ${{ needs.plan.outputs.build == 'true' && github.event_name != 'pull_request' }},
-              "dependency-scan": ${{ github.event_name != 'push' }}
+              "dependency-scan": ${{ github.event_name != 'push' }},
+              "site": true
             }
