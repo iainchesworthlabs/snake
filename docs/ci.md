@@ -8,7 +8,7 @@ commit SHA. Dependabot proposes the SHA bump; the pull request also needs
 
 | Event | Jobs |
 |---|---|
-| Draft pull request | Policy, Plan, workflow analysis, dependency scan |
+| Draft pull request | Policy, Plan, Site, workflow analysis, dependency scan |
 | Ready pull request | Above, plus Linux release and sanitizer builds and coverage |
 | Merge queue, push to `develop` | Above, plus Linux debug and TSan, macOS, Windows release and ASan |
 | Nightly | CodeQL |
@@ -66,10 +66,67 @@ artifact `ios-adhoc` for 7 days and goes to the release only if `IOS_IPA_ON_RELE
 devices, and neither place is private in a public repository. How to install is in
 [Installing on an iPhone or iPad](ios-install.md). The Android upload key is a later step.
 
+## The Snake pages
+
+The game's public pages (home, How to play, Features, FAQ, What's new, Privacy, Support, Accessibility, Press) are
+Markdown files in `docs/` whose body is plain HTML, drawn by `tools/docs/theme/marketing.html`. They are served by
+iainchesworthlabs.com under `/snake/`. They are script-free, because a preview blocks every script, and every link on them
+is relative, so they work under a preview address. The developer pages in `docs/` (building, architecture, testing, this
+page, releasing and the rest) are not published: `exclude_docs` in `mkdocs.yml` lists them. A new developer page goes in
+that list. The look is the company site's shell:
+
+- `tools/docs/site-kit/v1/` is a **pinned copy** of the company kit (`icl.css`, the header and footer, the palette checker).
+  Nothing is fetched at build or run time. `tools/docs/site_shell_hook.py` lets the templates include the kit's header and
+  footer, puts `data-app="snake"` on any page that lacks it and copies `icl.css` to `assets/icl.css` of the site. To move to
+  a newer kit, copy the files of its `/assets/v1/` folder over the copy, with the same layout (the checksum file is
+  `kit/SHA256SUMS.txt`, the version `kit/VERSION.txt`), run `check_site_kit.py` and note the version in the pull request.
+- `docs/theme.css` is the Snake palette: eight colour roles, light and dark, in one file. Its colours are the game's own,
+  sampled from the app icon (see the comment at the top of the file). To change a colour, change that file only.
+- `docs/assets/snake.css` is the layout the shell does not have. It uses the shell's variables and holds no colour.
+- `tools/ci/check_site_kit.py` fails when a file of the copy differs from the kit's `SHA256SUMS.txt`, or the palette fails
+  the company's checker (`check-palette.mjs`, Node 20 or later: shape, and WCAG 2.2 AA contrast against the shell's neutrals).
+- `tools/ci/check_site_pages.py` builds the site (`mkdocs build --strict`) and fails on a page that has no title, no canonical
+  address, no `lang="en-AU"` or not one `h1`; a page that has a `<script>` (except JSON-LD), a `<style>` or `style=`, loads
+  anything from another host, links to an email address or uses a picture that does not show the game as built
+  (`STALE_PICTURES` in the check: the renders of the design mock); a link to a file or an anchor that is not in the built
+  site, or to `/snake/` instead of a relative link; and a built site that lacks `privacy/` or `support/` (a store listing will
+  print them, and they never move) or one of the other pages.
+
+Both run in the **Site** job of `ci.yml`, which `CI Status` waits for, and `tools/ci/precheck.py` runs them after the shared
+precheck (the page check is skipped there when `mkdocs-material` is not installed:
+`pip install -r requirements/docs.txt`). Their unit tests are `tools/tests/test_check_site.py`: the Site job runs them, and
+CTest runs them as `tools.site_checks` with the label `unit` when Python 3 is found (the tests that run the palette checker
+skip themselves without Node).
+
+A change to a page needs no changelog fragment: the pages are under `docs/` and `tools/`. A change to the game does.
+
+### Publishing the site
+
+`docs.yml` builds the site on every pull request that touches `docs/**`, `mkdocs.yml`, `requirements/docs.txt`,
+`tools/docs/**` or the workflow, and publishes it, as Field Test does, with the shared `docs-deploy-aws.yml`:
+
+| Event | What happens |
+|---|---|
+| Pull request from this repository | The site is built and uploaded to `https://iainchesworthlabs.com/_preview/snake/pr-<n>/` through the preview role (`_preview/snake/*` only). One comment on the pull request carries the address. A preview needs the secrets below; without them the step says so and is skipped. |
+| Pull request closed | The preview is deleted. |
+| Push to `develop`, or a manual run from `develop` | The site is synced to `snake/` of the bucket with `--delete` and the path is invalidated, through the production role (`snake/*` only). It refuses any other ref. |
+
+It replaces the earlier publication to GitHub Pages (`https://iainchesworthlabs.github.io/snake/`), which went out on a push
+to `main`. The setup is the owner's, once:
+
+1. In `icl-site`, add an entry to `APPS` in `infra/lib/apps.ts` (slug `snake`, repo `iainchesworthlabs/snake`, its numeric
+   repository id, a role name such as `icl-site-deploy-snake`), customise this repository's OIDC subject claim as the other
+   apps' are, and run the site stack's `cdk deploy`. The roles trust a push to `develop` and a pull request of this repository.
+2. Set the repository secrets `DOCS_ROLE_ARN`, `DOCS_PREVIEW_ROLE_ARN`, `DOCS_BUCKET` and `DOCS_DISTRIBUTION_ID` from the stack's
+   outputs.
+3. Run the Docs workflow from `develop`. If the production deploy fails, the job *Explain a failed deploy* says what to check.
+4. Point the repository's homepage (and `homepage` and `pages` in `.github/repo-settings.json`) at
+   `https://iainchesworthlabs.com/snake/` and turn Pages off.
+
 ## Required checks
 
 Two jobs defined in `ci.yml` are the required checks: **CI Status** and **Scan dependency diff**.
-CI Status fails when any job failed or was cancelled, and when a job the plan asked for was
+CI Status (which includes the Site job) fails when any job failed or was cancelled, and when a job the plan asked for was
 skipped. Do not require checks from the called workflows by name; their names carry the caller's
 job name as a prefix.
 
