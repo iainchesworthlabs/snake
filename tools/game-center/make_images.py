@@ -138,12 +138,18 @@ class Picture:
         self.cells: dict[tuple[int, int], Colour] = {}
         self.silhouette: set[tuple[int, int]] = set()
 
-    def part(self, paint, outline: bool = True) -> None:  # noqa: ANN001
+    def part(self, paint, outline: bool = True, clip: set[tuple[int, int]] | None = None) -> None:  # noqa: ANN001
+        """Paints a piece. With `clip`, only the cells of the piece inside it are kept, and the outline is drawn round
+        what is left, outline too: a piece that goes through a wall is cut off by the wall."""
         layer = Layer()
         paint(layer)
+        if clip is not None:
+            layer.cells = {cell: colour for cell, colour in layer.cells.items() if cell in clip}
         edge = {
             (x + dx, y + dy) for x, y in layer.cells for dx in (-1, 0, 1) for dy in (-1, 0, 1)
         } - layer.cells.keys()
+        if clip is not None:
+            edge &= clip
         if outline:
             for cell in edge:
                 self.cells[cell] = self.palette.ink
@@ -309,21 +315,26 @@ def segment(layer: Layer, p: Palette, x: int, y: int, size: int, index: int) -> 
 
 
 def wrap(p: Palette) -> Picture:
-    """A snake leaving the right edge of a small board with its head coming in at the left."""
+    """The whole board with a cream wall round it: the snake's head comes out of the wall at the left, its body goes into
+    the wall at the right, and there is plain board between them, so it is one snake that went through the wall."""
     picture = Picture(p)
+    side = 19  # cells across the board with its wall, the most that fits the safe square with an outline and a shadow
+    inside = {(i, j) for j in range(1, side - 1) for i in range(1, side - 1)}
 
     def board(layer: Layer) -> None:
-        for j in range(17):
-            for i in range(14):
-                layer.dot(9 + i, 7 + j, p.board_light if (i // 2 + j // 2) % 2 else p.board_dark)
+        for j in range(side):
+            for i in range(side):
+                if (i, j) in inside:
+                    layer.dot(i, j, p.board_light if ((i - 1) // 3 + (j - 1) // 3) % 2 else p.board_dark)
+                else:
+                    layer.dot(i, j, p.cream)
 
     def body(layer: Layer) -> None:
-        segment(layer, p, 15, 13, 5, 1)
-        segment(layer, p, 20, 13, 5, 0)
+        segment(layer, p, 14, 7, 5, 0)
 
     picture.part(board)
-    picture.part(body)
-    picture.part(lambda layer: snake_head(layer, p, 6, 13, "right"))
+    picture.part(body, clip=inside)
+    picture.part(lambda layer: snake_head(layer, p, 0, 7, "right", tongue=False), clip=inside)
     return picture
 
 
@@ -427,17 +438,32 @@ def portals(p: Palette) -> Picture:
 
 
 def portal_through(p: Palette) -> Picture:
-    """A snake going into one portal, along the top, and its head coming out of another, along the bottom."""
+    """One large portal with the head of the snake, large, coming out of its dark centre and across its rim."""
     picture = Picture(p)
+    d = 16
 
-    def body(layer: Layer) -> None:
-        segment(layer, p, 5, 7, 4, 1)
-        segment(layer, p, 9, 7, 4, 0)
+    def ring(layer: Layer) -> None:
+        layer.disc(0, 0, d, p.pink)
+        layer.disc(2, 2, d - 4, p.ink)
+        layer.rect(d // 2 - 1, d // 2 - 1, 2, 2, p.pink)
 
-    picture.part(body)
-    picture.part(lambda layer: portal(layer, p, 13, 5, 9, p.pink))
-    picture.part(lambda layer: portal(layer, p, 5, 14, 9, p.pink))
-    picture.part(lambda layer: snake_head(layer, p, 11, 16, "right"))
+    def head(layer: Layer) -> None:
+        snake_head(layer, p, 9, 3, "right", k=2, tongue=False)
+
+    def edge_of(paint) -> set[tuple[int, int]]:  # noqa: ANN001
+        layer = Layer()
+        paint(layer)
+        return {(x + dx, y + dy) for x, y in layer.cells for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+
+    # The head is in front of the portal and has no outline over it, where ink on ink or on the rim would blur it: it
+    # has one only where it is out in the open.
+    def outline(layer: Layer) -> None:
+        for cell in edge_of(head) - edge_of(ring):
+            layer.dot(cell[0], cell[1], p.ink)
+
+    picture.part(ring)
+    picture.part(outline, outline=False)
+    picture.part(head, outline=False)
     return picture
 
 
@@ -450,20 +476,18 @@ def hotpotato(p: Palette) -> Picture:
 
 
 def shed(p: Palette) -> Picture:
-    """A snake with its tail dropped behind it, and the bomb in the dropped part."""
+    """The live snake, head up, going away at the right; the dropped end, a bomb on a segment, left behind at the left.
+    The game just takes the dropped cells off the board, so the dropped end is drawn as it was, with nothing between."""
     picture = Picture(p)
 
     def live(layer: Layer) -> None:
-        segment(layer, p, 10, 6, 5, 1)
-        snake_head(layer, p, 15, 6, "right")
-
-    def dropped(layer: Layer) -> None:
-        segment(layer, p, 5, 17, 5, 0)
-        segment(layer, p, 10, 17, 5, 1)
+        snake_head(layer, p, 15, 4, "up")
+        segment(layer, p, 15, 9, 5, 1)
+        segment(layer, p, 15, 14, 5, 0)
 
     picture.part(live)
-    picture.part(dropped)
-    picture.part(lambda layer: bomb(layer, p, 4, 15, 7))
+    picture.part(lambda layer: segment(layer, p, 3, 14, 5, 1))
+    picture.part(lambda layer: bomb(layer, p, 1, 5, 9))
     return picture
 
 
