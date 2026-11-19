@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>Succès</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Retour</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>Obtenu</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>Pas encore obtenu</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -467,6 +486,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>Classement</translation>
+    </message>
+    <message>
+        <source>Achievements</source>
+        <translation>Succès</translation>
     </message>
     <message>
         <source>Settings</source>

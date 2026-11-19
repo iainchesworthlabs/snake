@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>דערגרייכונגען</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>צוריק</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>דערגרייכט</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>נאָך נישט דערגרייכט</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -467,6 +486,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>רעקאָרד־טאָוול</translation>
+    </message>
+    <message>
+        <source>Achievements</source>
+        <translation>דערגרייכונגען</translation>
     </message>
     <message>
         <source>Settings</source>

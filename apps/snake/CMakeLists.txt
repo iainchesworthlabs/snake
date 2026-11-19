@@ -70,6 +70,7 @@ endfunction()
 # one, so the tests run the same screens against the same types.
 set(SNAKE_QML_FILES
     qml/AboutScreen.qml
+    qml/AchievementsScreen.qml
     qml/ArrowButton.qml
     qml/ConfirmDialog.qml
     qml/DashedFrame.qml

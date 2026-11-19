@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>成就</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>已达成</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>还没达成</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -466,6 +485,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>排行榜</translation>
+    </message>
+    <message>
+        <source>Achievements</source>
+        <translation>成就</translation>
     </message>
     <message>
         <source>Settings</source>

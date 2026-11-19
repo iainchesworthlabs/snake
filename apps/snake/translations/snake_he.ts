@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>הישגים</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>חזרה</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>הושג</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>עדיין לא הושג</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -467,6 +486,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>לוח תוצאות</translation>
+    </message>
+    <message>
+        <source>Achievements</source>
+        <translation>הישגים</translation>
     </message>
     <message>
         <source>Settings</source>

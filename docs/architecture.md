@@ -164,6 +164,12 @@ is recorded and when a save file is loaded. The names and descriptions are trans
 `Scoring` and the targets in `profile/achievements.hpp`, never from the text. The title's second `GameViewModel`, which
 plays the demo, is not watched by the profile and earns nothing.
 
+`AchievementsScreen` lists the twelve rows of that model, opened from the title by the Achievements button between Leaderboard and
+Settings. Upright the rows are one column of twelve; lying down they are two of six, the first six on the leading side. One row is
+always chosen (a tap, or the arrow keys, which a gamepad also sends), and the strip under the panel gives its description and
+whether it is earned. A row shows a tick when earned and a padlock when not, and its accessible name is the name, the
+description, whether it is earned and the progress, in one string.
+
 The new modes reach the screens through the events of `GameViewModel`: `AtePotato`, `Teleported`, `Shed` and `Exploded`
 join `Ate`, `AteBonus`, `Crashed` and `Won`, each with a sound (`Effect::POTATO`, `PORTAL`, `SHED`, `EXPLODE`), a show of
 specks in `Effects`, and for the haptics a tap (the bomb, a shed) or a knock (an explosion). `canShed`, `hasBomb` and `fuse`
@@ -359,8 +365,8 @@ private folder on Android and `Library/Application Support` in the bundle's cont
 Android's backup is off, so the scores stay on the device.
 
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
-that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
-`"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game
+that are not states of the game, name entry, the leaderboard, the achievements and the settings, are an `overlay` property of `Main.qml` (`""`,
+`"nameEntry"`, `"leaderboard"`, `"achievements"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game
 over screen offers Save score in place of Play again while a score waits for a name, and Menu lets that score go. The
 leaderboard's Back goes to the title (through `newGame()` when it was reached from the end of a game). `NameEntryScreen`
 keeps the keyboard on the screen itself, so letters and Space type into the name and the buttons on it answer touch only;

@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>たっせい</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>もどる</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>できた</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>まだ できてない</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -466,6 +485,10 @@
     <message>
         <source>Leaderboard</source>
         <translation>ランキング</translation>
+    </message>
+    <message>
+        <source>Achievements</source>
+        <translation>たっせい</translation>
     </message>
     <message>
         <source>Settings</source>

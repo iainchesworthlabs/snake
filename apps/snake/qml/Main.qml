@@ -20,7 +20,7 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
-    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "settings", "about" or "notice". A game that starts
+    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "achievements", "settings", "about" or "notice". A game that starts
     // clears it.
     property string overlay
 
@@ -157,6 +157,7 @@ Window {
             profileModel.boardMode = gameModel.mode;
             root.overlay = "leaderboard";
         }
+        onAchievementsRequested: root.overlay = "achievements"
         onSettingsRequested: root.overlay = "settings"
     }
 
@@ -235,6 +236,16 @@ Window {
         title: root.noticeTitle
         body: root.noticeBody
         onClosed: root.overlay = "about"
+    }
+
+    AchievementsScreen {
+        objectName: "achievementsScreen"
+        anchors.fill: parent
+        visible: root.overlay === "achievements"
+        focus: visible
+        game: gameModel
+        profile: profileModel
+        onClosed: root.overlay = ""
     }
 
     LeaderboardScreen {

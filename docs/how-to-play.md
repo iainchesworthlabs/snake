@@ -2,7 +2,7 @@
 template: marketing.html
 title: How to play
 title_tag: How to play Snake
-description: "How to play Snake: the aim, the four modes, how scoring and the combo work, the controls on a computer, a gamepad and a phone, and the leaderboard."
+description: "How to play Snake: the aim, the four modes, how scoring and the combo work, the controls on a computer, a gamepad and a phone, the leaderboard and the achievements."
 ---
 <section class="sk-head"><div class="icl-wrap">
 <h1>How to play</h1>
@@ -52,5 +52,7 @@ description: "How to play Snake: the aim, the four modes, how scoring and the co
 
 <h2>The leaderboard</h2>
 <p>Each mode keeps its own top 10 on your device. If your score is on it, the game asks for a name of up to 12 letters (A to Z and the space). The three names you used most recently are there as one-tap shortcuts. In Settings you can reset the leaderboard of one mode, after a confirmation.</p>
+<h2>Achievements</h2>
+<p>There are twelve achievements, such as eating a bonus item, going through a portal or opening a mode. A game that you finish can earn them, and the game over screen names any that it did. A game that you leave from the pause menu earns nothing. They are kept on your device. The Achievements button on the title screen opens the list: a tick marks the ones you have earned and a padlock the ones you have not, and a tap or the arrow keys show what each one takes.</p>
 <p>Questions? See the <a href="../faq/">FAQ</a>, or <a href="../support/">Support</a>.</p>
 </section>
