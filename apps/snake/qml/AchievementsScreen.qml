@@ -12,6 +12,7 @@ FocusScope {
 
     required property GameViewModel game
     required property ProfileViewModel profile
+    required property GameCenterDirector gameCenter
 
     // The row that is chosen, 0 to 11, and the row item that shows it (what the strip under the panel reads).
     property int current: 0
@@ -54,12 +55,31 @@ FocusScope {
         }
 
         ShadowText {
+            objectName: "achievementsHeading"
             x: Theme.mirrored(page.landscape ? 66 : 74, width, page.pageWidth)
-            maxWidth: page.landscape ? page.pageWidth - 66 - 15 : 300
+            // Shares the line with the Game Center button when there is one, and is set smaller to leave it room.
+            maxWidth: root.gameCenter.available ? page.pageWidth - (page.landscape ? 66 : 74) - 15 - gameCenterButton.width - 8 : (page.landscape ? page.pageWidth - 66 - 15 : 300)
             y: page.landscape ? 8 : 26
             offset: 3
             pixelSize: page.landscape ? 30 : 34
             text: qsTr("Achievements")
+        }
+
+        // Game Center's own screen for the achievements, for a player who is signed in to it, at the trailing end of the
+        // heading. The list is the one on this device either way.
+        ToyButton {
+            id: gameCenterButton
+
+            objectName: "achievementsGameCenterButton"
+            visible: root.gameCenter.available
+            x: Theme.mirrored(page.pageWidth - 15 - width, width, page.pageWidth)
+            y: page.landscape ? 12 : 32
+            width: 130
+            height: page.landscape ? 34 : 38
+            radius: 10
+            fontSize: 15
+            text: qsTr("Game Center")
+            onClicked: root.gameCenter.showAchievements()
         }
 
         Item {

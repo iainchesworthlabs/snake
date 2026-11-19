@@ -290,6 +290,19 @@ normal one, granted at install and never asked of the person, and the only permi
 `UIImpactFeedbackGenerator` (`device.mm`, Objective-C++ with automatic reference counting). Anywhere else it does nothing.
 `HapticsDirector` listens to `GameViewModel::tickEvent`: a tap for eating, a thud for a crash. Neither has run on a device.
 
+**Game Center.** `device::GameCenter` (`device/game_center.hpp`) is the interface to Apple's Game Center: `available()` (the player is
+signed in), `submit_score()`, `show_leaderboard()`, `report_achievement()` and `show_achievements()`, each of which does nothing
+when the player is not signed in, and none of which is tried again when it fails. `NoGameCenter` is every other device. The iOS one
+(`device/ios/device.mm`) uses GameKit; it has not been compiled or run on a device. `GameCenterDirector` is the only user of it,
+and has the `game` and the `profile` it watches. It sends the score of a finished game, and for achievements it reports what
+`ProfileViewModel::earnedNow()` says a game newly earned at 100 and each of the two blueberry counts that is not earned at its whole
+percentage (rounded down, and nothing at zero). Whenever Game Center becomes available (start-up with a signed-in player, or a later
+sign-in), and whenever the profile is set or loads a save file while it is, it reports everything the device holds, so that what was
+earned offline or before signing in gets there without a retry; reporting twice does no harm. The device is the record and Game
+Center is a copy, so nothing here changes what the device holds. `GameCenterDirector::achievement_id()` and `leaderboard_id()` are
+the identifiers entered in App Store Connect and never change; a test checks them against
+`apps/snake/packaging/ios/game-center/components.json`, which lists what the owner enters there.
+
 **Steering by gamepad.** A computer's gamepads are read through SDL3's gamepad subsystem and nothing else of SDL (the vcpkg port is
 built with no video, so no display library is needed; it is a static library, which on Windows is why the preset uses the
 `x64-windows-static-md` triplet). `device::GamepadSource` is the interface (`poll()` gives the events since the last call: a

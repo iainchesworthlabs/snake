@@ -1,0 +1,154 @@
+{
+  "leaderboards": [
+    { "id": "com.iainchesworthlabs.snake.leaderboard.easy", "referenceName": "Easy" },
+    { "id": "com.iainchesworthlabs.snake.leaderboard.classic", "referenceName": "Classic" },
+    { "id": "com.iainchesworthlabs.snake.leaderboard.portals", "referenceName": "Portals" },
+    { "id": "com.iainchesworthlabs.snake.leaderboard.hotpotato", "referenceName": "Hot potato" }
+  ],
+  "achievements": [
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.wrap",
+      "referenceName": "Through the wall",
+      "points": 10,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Through the wall",
+        "preEarnedDescription": "In Easy, leave one side of the board and come back on the other.",
+        "earnedDescription": "You went through the wall in Easy."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.bonus",
+      "referenceName": "Bonus item",
+      "points": 10,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Bonus item",
+        "preEarnedDescription": "Eat a bonus item before it goes.",
+        "earnedDescription": "You ate a bonus item."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.combo",
+      "referenceName": "Top combo",
+      "points": 20,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Top combo",
+        "preEarnedDescription": "Eat a blueberry at the top combo.",
+        "earnedDescription": "You ate a blueberry at the top combo."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.best",
+      "referenceName": "New best",
+      "points": 20,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "New best",
+        "preEarnedDescription": "Beat the top score on a mode's leaderboard on your device.",
+        "earnedDescription": "You beat your best score."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.speed",
+      "referenceName": "Top speed",
+      "points": 30,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Top speed",
+        "preEarnedDescription": "Eat until the snake is as fast as it gets.",
+        "earnedDescription": "Your snake reached its top speed."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.berries100",
+      "referenceName": "100 blueberries",
+      "points": 20,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "100 blueberries",
+        "preEarnedDescription": "Eat 100 blueberries, over as many games as it takes.",
+        "earnedDescription": "You have eaten 100 blueberries."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.berries1000",
+      "referenceName": "1,000 blueberries",
+      "points": 50,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "1,000 blueberries",
+        "preEarnedDescription": "Eat 1,000 blueberries, over as many games as it takes.",
+        "earnedDescription": "You have eaten 1,000 blueberries."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.portals",
+      "referenceName": "Portals open",
+      "points": 30,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Portals open",
+        "preEarnedDescription": "Open the Portals mode.",
+        "earnedDescription": "You opened the Portals mode."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.portal",
+      "referenceName": "Through a portal",
+      "points": 10,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Through a portal",
+        "preEarnedDescription": "Go into a portal and come out of its twin.",
+        "earnedDescription": "You went through a portal."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.hotpotato",
+      "referenceName": "Hot potato open",
+      "points": 50,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Hot potato open",
+        "preEarnedDescription": "Open the Hot potato mode.",
+        "earnedDescription": "You opened the Hot potato mode."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.shed",
+      "referenceName": "Shed in time",
+      "points": 20,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "Shed in time",
+        "preEarnedDescription": "Drop a bomb with Shed before it goes off.",
+        "earnedDescription": "You shed a bomb in time."
+      }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.achievement.allmodes",
+      "referenceName": "All four modes",
+      "points": 30,
+      "hidden": false,
+      "achievableMoreThanOnce": false,
+      "en": {
+        "name": "All four modes",
+        "preEarnedDescription": "Finish a game in each of the four modes.",
+        "earnedDescription": "You finished a game in all four modes."
+      }
+    }
+  ]
+}

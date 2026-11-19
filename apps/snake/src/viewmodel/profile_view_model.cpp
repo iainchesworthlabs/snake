@@ -160,11 +160,11 @@ void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score, const si
 
     // What the game earned, worked out after the unlocks it opened, which two of the achievements are made of.
     m_AchievedNow.clear();
-    const profile::Achievements earned = m_Data.achievements.note_game(mode, score, tally, m_Data.unlocks, best);
+    m_EarnedNow = m_Data.achievements.note_game(mode, score, tally, m_Data.unlocks, best);
     for (std::uint8_t number = 0; number < profile::ACHIEVEMENT_COUNT; ++number)
     {
         const auto achievement = static_cast<profile::Achievement>(number);
-        if (earned.has(achievement))
+        if (m_EarnedNow.has(achievement))
         {
             m_AchievedNow.push_back(AchievementListModel::name_of(achievement));
         }

@@ -16,7 +16,7 @@ description: "What has been added to Snake so far."
 <li>Four modes: Easy, Classic, Portals and Hot potato</li>
 <li>A leaderboard for each mode, with names, kept on your device</li>
 <li>Twelve achievements, earned by finishing games and kept on your device, with a list of them opened from the title screen</li>
-<li>Game Center leaderboards on iPhone and iPad, for players who are signed in to it</li>
+<li>Game Center leaderboards and achievements on iPhone and iPad, for players who are signed in to it</li>
 <li>Combos and bonus items</li>
 <li>Steering by tilt, swipe, an on-screen d-pad or joystick, the keyboard, or a gamepad</li>
 <li>A volume setting, with switches for sound and music</li>

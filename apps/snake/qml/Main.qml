@@ -110,12 +110,14 @@ Window {
         game: gameModel
     }
 
-    // Game Center, for a phone whose player is signed in to it: sends the score of each game, and opens its leaderboards.
+    // Game Center, for a phone whose player is signed in to it: sends the score of each game and the achievements the device holds,
+    // and opens its leaderboards and achievements.
     GameCenterDirector {
         id: gameCenterModel
 
         objectName: "gameCenter"
         game: gameModel
+        profile: profileModel
     }
 
     ProfileViewModel {
@@ -253,6 +255,7 @@ Window {
         focus: visible
         game: gameModel
         profile: profileModel
+        gameCenter: gameCenterModel
         onClosed: root.overlay = ""
     }
 

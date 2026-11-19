@@ -2095,8 +2095,14 @@ public:
     {
         shown = std::string(leaderboard_id);
     }
+    void report_achievement(std::string_view, double) override {}
+    void show_achievements() override
+    {
+        ++achievements_shown;
+    }
 
     std::string shown;
+    int achievements_shown = 0;
 };
 
 } // namespace
@@ -3659,6 +3665,76 @@ void check_the_achievements_fit(App& app, const char* label)
 }
 
 } // namespace
+
+TEST_CASE("The achievements have a Game Center button only for a signed in player, and it opens Game Center's list",
+          "[screens][achievements][game-center]")
+{
+    {
+        App app(true);
+        open_achievements(app);
+        CHECK_FALSE(app.shows("achievementsGameCenterButton"));
+    }
+
+    SignedInGameCenter game_center;
+    App app(true);
+    open_achievements(app);
+    REQUIRE(app.shows("achievementsGameCenterButton"));
+    CHECK(game_center.achievements_shown == 0);
+    app.click("achievementsGameCenterButton");
+    CHECK(game_center.achievements_shown == 1);
+    // The list on the device is still there.
+    CHECK(app.shows("achievementsScreen"));
+}
+
+TEST_CASE("The Game Center button is at the trailing end of the heading and clear of it, in every language, upright "
+          "and lying down",
+          "[screens][achievements][languages][landscape][game-center]")
+{
+    struct Size
+    {
+        int width;
+        int height;
+        const char* label;
+    };
+    SignedInGameCenter game_center;
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        const bool mirrored = std::string_view(code) == "he" || std::string_view(code) == "yi";
+        for (const Size size :
+             {Size{PAGE_WIDTH, PAGE_HEIGHT, "upright"}, Size{600, 360, "600 wide"}, Size{900, 360, "900 wide"}})
+        {
+            INFO("language " << code << ", " << size.label);
+            const InLanguage language(code);
+            App app(true, size.width, size.height);
+            fill_the_profile(app);
+            open_achievements(app);
+            REQUIRE(app.shows("achievementsGameCenterButton"));
+            check_fit(app, "achievements with Game Center");
+            check_the_achievements_fit(app, size.label);
+
+            const QRectF page(0, 0, app.window().width(), app.window().height());
+            const QRectF heading = scene_rect(app, "achievementsHeading");
+            const QRectF button = scene_rect(app, "achievementsGameCenterButton");
+            const QRectF back = scene_rect(app, "achievementsBackButton");
+            const QRectF panel = rect_in_scene(app.item("achievementsPanel"));
+            CHECK(page.contains(button));
+            CHECK(page.contains(heading));
+            CHECK_FALSE(heading.intersects(button));
+            CHECK_FALSE(heading.intersects(back));
+            CHECK_FALSE(button.intersects(back));
+            CHECK(button.bottom() <= panel.top());
+            // The heading follows the Back button, and the Game Center button is at the other end.
+            if (mirrored)
+            {
+                CHECK(button.right() < heading.left());
+            }
+            else
+            {
+                CHECK(button.left() > heading.right());
+            }
+        }
+    }
+}
 
 TEST_CASE("The achievements fit in every language, upright and lying down at 600 and 900 wide",
           "[screens][achievements][languages][landscape]")

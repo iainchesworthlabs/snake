@@ -175,6 +175,12 @@ public:
         return m_AchievedNow;
     }
 
+    /// The achievements the last game earned, as a set (what achievedNow names). Holds nothing before the first game.
+    [[nodiscard]] const profile::Achievements& earnedNow() const noexcept
+    {
+        return m_EarnedNow;
+    }
+
     [[nodiscard]] QString saveFile() const;
     void setSaveFile(const QString& path);
     [[nodiscard]] QString saveStatus() const;
@@ -322,6 +328,7 @@ private:
     int m_PointsToBest = -1;
     QStringList m_UnlockedNow;
     QStringList m_AchievedNow;
+    profile::Achievements m_EarnedNow;
 };
 
 } // namespace snake::ui
