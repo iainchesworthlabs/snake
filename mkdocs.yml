@@ -19,6 +19,7 @@ exclude_docs: |
   esp32-spike.md
   migration.md
   ios-install.md
+  app-store.md
   design/
   signing-key.asc
 strict: true
