@@ -76,19 +76,22 @@ microseconds, and asks it for each tick that is due, passing the session's curre
 clock. It keeps at most 250 ms, so a stall (a dragged window, a slow frame) does not make the game race through the
 ticks it missed, and the simulation is unaffected by frame timing: a game is the same whatever the frames were.
 `libs/profile` is portable in the same way. It holds what a player keeps between runs: names, leaderboards, settings,
-unlocks and the versioned bytes they are saved as. It never reads or writes a file. The platform service keeps the
-bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each stores them its own
-way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
+unlocks, achievements and the versioned bytes they are saved as. It never reads or writes a file. The platform
+service keeps the bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each
+stores them its own way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
 
-The save file holds the settings, unlocks, recent names and leaderboards, at most 565 bytes. It starts with the marker
-`SNKS` and a version number, which stay in those places in every version, then the size of the rest, the data, and an
-FNV-1a checksum. `decode_save()` reads every version up to the current one and fills fields that a newer version added
-with their defaults, so an update never loses a player's scores. It returns an error value, never a partly filled
-save, for a file that is cut short, has bytes left over, fails its checksum or holds a value that is not allowed. A file
-written by a newer program is reported as `NEWER_VERSION`, and the program then leaves it alone instead of replacing it
-with an older save. The recorded games are separate files in the replay format, because they are up to 64 KB each and
-change at other times. The platform service stores the bytes: it writes a new file next to the old one and renames it
-into place, so a crash or a flat battery leaves the old save whole.
+The save file holds the settings, unlocks, achievements, recent names and leaderboards, at most 1,076 bytes. The
+achievements are the earned bits, the blueberries eaten in all (which stops at its largest value) and the modes a game
+has been finished in. The file starts with the marker `SNKS` and a version number, which stay in those places in every
+version, then the size of the rest, the data, and an FNV-1a checksum. `decode_save()` reads every version up to the
+current one and fills fields that a newer version added with their defaults (a file from before the achievements reads
+with none earned except the two that its unlock bits give), so an update never loses a player's scores. It
+returns an error value, never a partly filled save, for a file that is cut short, has bytes left over, fails its
+checksum or holds a value that is not allowed. A file written by a newer program is reported as `NEWER_VERSION`, and
+the program then leaves it alone instead of replacing it with an older save. The recorded games are separate files in
+the replay format, because they are up to 64 KB each and change at other times. The platform service stores the bytes:
+it writes a new file next to the old one and renames it into place, so a crash or a flat battery leaves the old save
+whole.
 `libs/audio` is portable in the same way, and makes the sound of the game from numbers. `note_frequency_q8()` gives the
 frequency of a MIDI note, times 256, in whole-number arithmetic. `Synth` has four effect voices and up to three music
 channels, each a square (with a duty), triangle or noise oscillator on a 32-bit phase; an effect is a list of `Segment`s,
