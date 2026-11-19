@@ -206,11 +206,16 @@ function(snake_add_ui_module target)
         target_link_libraries(${target} PRIVATE SDL3::SDL3)
     endif()
     if(ICL_PLATFORM STREQUAL "linux")
-        # SDL's own file of C library calls (SDL_stdlib.c) calls atan2f, asinf and sqrtf, and glibc 2.43 gave those three a
-        # new symbol version, so a program linked on a system with glibc 2.43 does not start on glibc 2.39. The linker sends
-        # the three calls to src/device/linux/float_math.cpp, which works in double. The check-glibc-floor step of the
-        # release workflow is what fails if a call of this kind is added.
-        target_link_options(${target} PRIVATE LINKER:--wrap=atan2f LINKER:--wrap=asinf LINKER:--wrap=sqrtf)
+        # SDL's own file of C library calls (SDL_stdlib.c) calls these float functions, and glibc 2.43 gave some of them (the
+        # release workflow found atan2f, asinf, sqrtf, acosf and log10f) a new symbol version, so a program linked on a
+        # system with glibc 2.43 does not start on glibc 2.39. The linker sends the calls to
+        # src/device/linux/float_math.cpp, which works in double. The ones SDL calls that are not here (roundf, lroundf,
+        # fmodf, modff, scalbnf) are exact, and keep the C library's. The check-glibc-floor step of the release workflow is
+        # what fails if a call of this kind is added.
+        set(snake_wrapped_float_functions acosf asinf atanf atan2f cosf expf logf log10f powf sinf sqrtf tanf)
+        foreach(function IN LISTS snake_wrapped_float_functions)
+            target_link_options(${target} PRIVATE "LINKER:--wrap=${function}")
+        endforeach()
         # The wrapped sqrtf is a square root in double, which the optimiser would turn back into a call of the sqrtf that
         # is wrapped, for a negative number, unless the C library's error number is left alone.
         set_source_files_properties(src/device/linux/float_math.cpp PROPERTIES COMPILE_OPTIONS -fno-math-errno)
