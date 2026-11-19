@@ -174,8 +174,65 @@ for them.
 
 ### App Store badge and ID
 
-After approval the App Store ID appears in the record (and in the app's link). Apple's badge artwork is downloaded from
-Apple's marketing resources and used as it is. Neither is in the repository.
+The App Store ID is in the record already (App Store Connect, App Information, "Apple ID"); the link
+`https://apps.apple.com/app/id<ID>` opens the store page only once the app is live. The badge is Apple's own SVG, from
+Apple's marketing tools (`toolbox.marketingtools.apple.com`, "Download on the App Store", English, black for a light
+background and white for a dark one). Use it as it is: no recolouring, no redrawing, and the clear space and minimum size
+in [Apple's guidelines](https://developer.apple.com/app-store/marketing/guidelines/). Neither it nor the ID is in the
+repository yet, and both go in with the pull request that follows approval ("After approval"), not before: until the app
+is live the page says "Coming to the App Store".
+
+## Game Center, accessibility and privacy
+
+### Game Center: not in 1.0.0
+
+Nothing in the game uses Game Center or GameKit (no code, no entitlement), and the requirements list online leaderboards
+and accounts as out of scope for v1. Adding it would make the game use the network and an Apple account, which the
+[privacy](privacy.md) page, the App Privacy answer (Data Not Collected) and the store text all say it does not. So:
+**leave Game Center unconfigured** in App Store Connect (no leaderboards or achievements), and do not tick it in the record.
+The leaderboards stay on the device. If it is wanted later, it is a change to the game, the privacy page and the
+App Privacy answers together.
+
+### Accessibility
+
+*App Store Connect, the app, Accessibility* (Apple's accessibility nutrition labels) lets the owner say which features
+the app supports. Apple expects a feature to be declared only if people can do the app's common tasks with it, and the
+repository does not show that for any of them yet:
+
+| Feature | What the repository shows | To declare it |
+|---|---|---|
+| VoiceOver | Buttons, switches and mode cards carry names and roles (`Accessible.*` in `apps/snake/qml`). The board has none beyond a pane. It has never been tried with VoiceOver. | Try the whole path with VoiceOver on: title, play, pause, game over, name entry, leaderboard, Settings. Whether a game can be played with it is a real question. |
+| Voice Control | Not tried | Say each button's name on a device |
+| Larger Text | The game draws its own text; not checked | Set the largest text size and look at every screen |
+| Dark Interface | The game has its own look and does not follow the device's | Do not declare |
+| Differentiate Without Color Alone | Not checked | Look at the modes, the food, the tilt indicator and the unlock state without colour |
+| Sufficient Contrast | The site's colours are measured; the game's are not | Measure the game's, or do not declare |
+| Reduced Motion | A switch in Settings, set from the device's setting on a first run | Check on the device that the setting is followed and shake and flashing stop |
+| Captions, Audio Descriptions | The game has no speech or video | Not applicable |
+
+Declare nothing that has not been tried. The [accessibility page](accessibility.md) says the same ("Not tested yet"): after
+the owner has tried these on the iPhone and iPad, change that page to match what was found, in the same pull request as
+the labels. If Apple makes these labels required, the answer for a feature not supported is simply "not declared". Check
+App Store Connect for whether they are required now.
+
+### Privacy
+
+- **The policy and the label** are as above: the page at `https://iainchesworthlabs.com/snake/privacy/` and Data Not
+  Collected. Read the page once more against the build you submit, in particular "What leaves your device" (nothing, but the
+  About screen opens the source page in the browser) and the permissions line for iPhone and iPad (none; tilt needs none).
+- **A privacy manifest.** Apple requires an app to declare, in `PrivacyInfo.xcprivacy`, the reason for any "required
+  reason" system API it or its libraries use (file times, disk space, user defaults and the like). The repository has no
+  such file of its own; the game reads and writes its save file and uses Qt, which may add one to the app. Apple's
+  validation of the 0.2.0 build passed. **On the build you submit, check** that the IPA holds a `PrivacyInfo.xcprivacy`
+  (`unzip -l snake-...-ios-appstore.ipa | grep -i privacy`, from the `ios-appstore` artifact of the run that made it) and
+  read the email Apple sends after processing, which names any missing declaration (an `ITMS-91053` warning). A missing one
+  is a fix to the build, not to the store text.
+- **Tracking.** None: no advertising identifier, no tracking domains, so there is no tracking prompt and the App Privacy
+  tracking answer is No.
+- **Age.** The name on the leaderboard is typed letters and stays on the device. Do not choose the Kids category unless the
+  owner means to take on its extra rules; the game does not need it.
+- **The About screen's link** opens the browser. Apple's reviewers may follow it, so the source page must be public and
+  work on the day.
 
 ## TestFlight test plan
 
@@ -207,6 +264,9 @@ for tilt, swipe and the d-pad, and what to write down.
 | Reduced motion: follows the device's setting on a first run; the switch removes shake and flashing | |
 | A long session, ten minutes: it holds its frame rate, does not get hot, and does not run out of memory | |
 | About: the version says 1.0.0 and the build number is the run number; the source link opens the browser | |
+| VoiceOver on: each screen reads sensibly, the controls can be reached and used, and how far a game can be played is written down | |
+| Largest text size and Bold Text on: nothing is cut off or overlaps (the game draws its own text, so it may not change at all, which is fine to record) | |
+| Reduce Motion on in iOS Settings, then a clean install: the game's switch starts on and the shake and flashing are gone | |
 
 A failure is an issue on GitHub with the device, the iOS version, the build number and what happened. A fix is a pull
 request to `develop`; then upload a new build.
@@ -220,6 +280,7 @@ the notch or the home indicator, or a leaderboard that is lost.
 - [ ] Every row of the test plan has a result, and nothing on the stop list is open.
 - [ ] iPhone and iPad screenshots are uploaded, from a device or the Simulator.
 - [ ] The description, the keywords, the URLs and the copyright above are entered, and the three URLs open.
+- [ ] Game Center is left unconfigured; the accessibility labels declare only what was tried; the IPA's privacy manifest is checked.
 - [ ] The age rating and App Privacy (Data Not Collected) are answered, and the review contact and notes are filled in.
 - [ ] Price and availability are set.
 - [ ] The release option is chosen: **manually release** is the safe one, so the site and the GitHub Release can be put right the day it goes live.
