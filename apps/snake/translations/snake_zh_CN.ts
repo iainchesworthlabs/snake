@@ -218,6 +218,10 @@
         <translation>本设备前十名</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>还没有得分。</translation>
     </message>

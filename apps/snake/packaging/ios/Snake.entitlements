@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- What the signed iOS application is allowed. Game Center needs this entitlement, and the provisioning profile must carry
+     it too: enable Game Center for the App ID in the developer portal and make the App Store profile again (docs/app-store.md,
+     "Game Center"). A profile without it stops the signed build. -->
+<plist version="1.0">
+<dict>
+    <key>com.apple.developer.game-center</key>
+    <true/>
+</dict>
+</plist>
