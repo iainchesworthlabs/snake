@@ -1,0 +1,1 @@
+**A volume setting.** Settings has a volume from silent to full, turned down and up with the minus and plus buttons or the left and right arrow keys, and kept with the other settings. Sound and Music are still there on top of it. (Saves from the earlier builds still open, at full volume.)

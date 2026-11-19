@@ -1,0 +1,1 @@
+**Downloads for Linux, macOS and Windows.** Each release has a package for each, with checksums, signatures, a list of what is in it and a proof of where it was built. The Windows files are test-signed and the macOS app is not signed or notarised yet.

@@ -1,0 +1,1 @@
+**Key hints on a computer.** Lying down, the game now shows what the keys do beside the board: W A S D or the arrow keys to steer, Space to pause, Esc for the menu and, in Hot potato, Enter to shed the tail. (The new words are machine translations.)

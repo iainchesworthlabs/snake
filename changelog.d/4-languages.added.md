@@ -1,0 +1,1 @@
+**Eight languages.** English, French, Spanish, German, Japanese, Simplified Chinese, Hebrew and Yiddish, chosen from the languages your device prefers, with the right-to-left languages mirrored. The translations are made by machine and have not been read by someone who speaks the language.

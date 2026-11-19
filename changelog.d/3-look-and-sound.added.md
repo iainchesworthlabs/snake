@@ -1,0 +1,1 @@
+**The Toybox Pixel look, with sound.** A striped snake, a blueberry that bobs, bursts of specks and rising points, a shake when you crash and a short death scene. The sound effects and the music are made by the game itself. Settings has sound and music switches and a reduced motion option, and About tells you the version, the licence and where the source is.

@@ -1,0 +1,1 @@
+**The ESP32-P4 board remembers.** The way you chose to steer is kept for the next start, and the end of a game shows the best score of the mode, which is saved with the unlocks in the board's flash. Every score is saved under one name for now, because the board has no keyboard yet. It has not run on a board yet. (The words are English only for now.)
