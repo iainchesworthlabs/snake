@@ -2544,6 +2544,100 @@ TEST_CASE("The title, the game and the pause dialog fit in every language lying 
     }
 }
 
+namespace
+{
+
+/// Complaints about the four mode cards of the title and the words in them: a card or a word that is not inside the
+/// page, a card that is too small to touch, cards that overlap, a word that runs out of its card. Empty when all is
+/// well.
+QStringList card_misfits(App& app, const QRectF& page)
+{
+    static_cast<void>(app.render());
+    constexpr double SLACK = 0.5;
+    constexpr double MINIMUM_TOUCH = 44.0;
+    QStringList complaints;
+    QRectF previous;
+    for (int card = 0; card < 4; ++card)
+    {
+        const std::string name = "modeCard" + std::to_string(card);
+        const QQuickItem* item = app.item(name.c_str());
+        const QRectF box = item->mapRectToScene(QRectF(0, 0, item->width(), item->height()));
+        const QString label = QString::fromStdString(name);
+        if (!page.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(box))
+        {
+            complaints << QString("%1 is not on the page (%2 to %3 down, the page is %4 high)")
+                              .arg(label)
+                              .arg(box.top())
+                              .arg(box.bottom())
+                              .arg(page.height());
+        }
+        if (box.height() < MINIMUM_TOUCH)
+        {
+            complaints << QString("%1 is only %2 high to touch").arg(label).arg(box.height());
+        }
+        if (card > 0 && box.top() < previous.bottom() - SLACK)
+        {
+            complaints << QString("%1 overlaps the card above it").arg(label);
+        }
+        previous = box;
+
+        std::vector<QQuickItem*> texts;
+        collect_texts(const_cast<QQuickItem*>(item), texts);
+        REQUIRE(texts.size() >= 2);
+        for (QQuickItem* text : texts)
+        {
+            const QRectF where = text->mapRectToScene(QRectF(0, 0, text->width(), text->height()));
+            const QString words = text->property("text").toString();
+            if (!page.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(where))
+            {
+                complaints << QString("\"%1\" of %2 is not on the page (%3 to %4 down)")
+                                  .arg(words, label)
+                                  .arg(where.top())
+                                  .arg(where.bottom());
+            }
+            if (!box.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(where))
+            {
+                complaints << QString("\"%1\" of %2 runs out of its card").arg(words, label);
+            }
+        }
+    }
+    return complaints;
+}
+
+} // namespace
+
+TEST_CASE("The four mode cards of the title are on the page in every language, lying down and upright",
+          "[screens][languages][landscape]")
+{
+    struct Size
+    {
+        int width;
+        int height;
+    };
+    // An iPad lying down is 4:3, which gives the narrowest page there is; 900 wide is the widest; upright is the phone.
+    for (const Size size : {Size{600, 360}, Size{900, 360}, Size{390, 844}})
+    {
+        for (const char* code : TESTED_LANGUAGES)
+        {
+            // The words of a locked mode are not the words of one that is open.
+            for (const bool earned : {false, true})
+            {
+                INFO("language " << code << ", " << size.width << " by " << size.height
+                                 << (earned ? ", modes earned" : ""));
+                const InLanguage language(code);
+                App app(true, size.width, size.height);
+                if (earned)
+                {
+                    fill_the_profile(app);
+                }
+                const QStringList bad = card_misfits(app, QRectF(0, 0, size.width, size.height));
+                INFO(bad.join("; ").toStdString());
+                CHECK(bad.isEmpty());
+            }
+        }
+    }
+}
+
 TEST_CASE("Lying down, the leaderboard is two columns of five lines", "[screens][landscape]")
 {
     App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);

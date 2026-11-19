@@ -118,9 +118,11 @@ FocusScope {
 
         Column {
             x: page.landscape ? page.trailingX : 15
-            y: page.landscape ? 14 : 300
+            y: page.landscape ? 8 : 300
             width: page.landscape ? page.columnWidth : 360
-            spacing: 10
+            // Lying down the page is 360 high, and the four cards with two lines of detail each have to fit under the
+            // heading in every language, so the spaces are smaller and the cards are compact.
+            spacing: page.landscape ? 6 : 10
 
             Text {
                 width: parent.width
@@ -132,7 +134,7 @@ FocusScope {
 
             Column {
                 width: parent.width
-                spacing: 8
+                spacing: page.landscape ? 6 : 8
 
                 Repeater {
                     model: root.profile.modes
@@ -142,6 +144,7 @@ FocusScope {
 
                         objectName: "modeCard" + card.entry
                         width: parent.width
+                        compact: page.landscape
                         chosen: card.selectable && root.game.mode === card.gameMode
                         onPicked: root.game.mode = card.gameMode
                     }

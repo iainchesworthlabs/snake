@@ -1,0 +1,1 @@
+**The four modes on the title screen fit the page when it lies down.** On a screen as short as an iPad held sideways, the words of the last mode cards ran off the bottom of the page in Spanish, German, Japanese and Yiddish; the cards now sit closer together so that all four, and all their words, are on the page in every language.
