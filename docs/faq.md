@@ -47,7 +47,7 @@ Short answers.
 : In a file in the game's data folder on your device. See [Privacy](privacy.md).
 
 **Does the game send anything anywhere?**
-: No. It does not use the network.
+: Not from a computer. On an iPhone or iPad, if you are signed in to Game Center, it sends the score of each game to Game Center, which is Apple's. If you are not signed in, it sends nothing. See [Privacy](privacy.md).
 
 **How do I clear a leaderboard?**
 : Settings, Reset a leaderboard. It asks you to confirm.

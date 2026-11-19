@@ -218,6 +218,10 @@
         <translation>Top 10 sur cet appareil</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>Aucun score pour l&apos;instant.</translation>
     </message>

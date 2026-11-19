@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/device.hpp"
+#include "device/game_center.hpp"
 #include "device/haptics.hpp"
 #include "language/language_choice.hpp"
 #include "platform/audio_output.hpp"
@@ -133,6 +134,10 @@ int main(int argc, char* argv[])
     const auto haptics = snake::ui::device::make_haptics();
     snake::ui::device::set_default_haptics(haptics.get());
 
+    // Game Center, for a phone whose player is signed in to it. A computer has none.
+    const auto game_center = snake::ui::device::make_game_center();
+    snake::ui::device::set_default_game_center(game_center.get());
+
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); },
@@ -163,5 +168,6 @@ int main(int argc, char* argv[])
     // The user interface is gone: nothing may play on the sink, which goes with this function.
     snake::ui::set_default_sound_sink(nullptr);
     snake::ui::device::set_default_haptics(nullptr);
+    snake::ui::device::set_default_game_center(nullptr);
     return status;
 }
