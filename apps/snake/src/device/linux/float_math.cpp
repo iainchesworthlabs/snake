@@ -82,66 +82,69 @@ float float_tan(float value) noexcept
 
 } // namespace snake::ui::device
 
+// The functions below are not instrumented for coverage: gcovr treats a function whose name starts with two underscores
+// as the compiler's own, and stops with an error (KeyError) when it removes it from the report. The tests run them
+// through the functions above, which are measured.
 extern "C"
 {
 
     // NOLINTBEGIN(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
-    float __wrap_acosf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_acosf(float value)
     {
         return snake::ui::device::float_acos(value);
     }
 
-    float __wrap_asinf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_asinf(float value)
     {
         return snake::ui::device::float_asin(value);
     }
 
-    float __wrap_atanf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_atanf(float value)
     {
         return snake::ui::device::float_atan(value);
     }
 
-    float __wrap_atan2f(float y, float x)
+    [[gnu::no_profile_instrument_function]] float __wrap_atan2f(float y, float x)
     {
         return snake::ui::device::float_atan2(y, x);
     }
 
-    float __wrap_cosf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_cosf(float value)
     {
         return snake::ui::device::float_cos(value);
     }
 
-    float __wrap_expf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_expf(float value)
     {
         return snake::ui::device::float_exp(value);
     }
 
-    float __wrap_logf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_logf(float value)
     {
         return snake::ui::device::float_log(value);
     }
 
-    float __wrap_log10f(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_log10f(float value)
     {
         return snake::ui::device::float_log10(value);
     }
 
-    float __wrap_powf(float base, float exponent)
+    [[gnu::no_profile_instrument_function]] float __wrap_powf(float base, float exponent)
     {
         return snake::ui::device::float_pow(base, exponent);
     }
 
-    float __wrap_sinf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_sinf(float value)
     {
         return snake::ui::device::float_sin(value);
     }
 
-    float __wrap_sqrtf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_sqrtf(float value)
     {
         return snake::ui::device::float_sqrt(value);
     }
 
-    float __wrap_tanf(float value)
+    [[gnu::no_profile_instrument_function]] float __wrap_tanf(float value)
     {
         return snake::ui::device::float_tan(value);
     }
