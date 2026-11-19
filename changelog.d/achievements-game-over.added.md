@@ -1,0 +1,1 @@
+**Achievements.** A finished game can now earn one of twelve achievements, such as eating a bonus item or going through a portal, and the game over screen names what it earned, which the game keeps on your device. (The new words are machine translations.)

@@ -5,6 +5,8 @@
 #include "snake/profile/player_name.hpp"
 #include "snake/profile/save_data.hpp"
 #include "snake/sim/mode.hpp"
+#include "snake/sim/tally.hpp"
+#include "viewmodel/achievement_list_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/leaderboard_model.hpp"
 #include "viewmodel/mode_list_model.hpp"
@@ -36,6 +38,9 @@ class ProfileViewModel : public QObject
     /// The game to watch. Set once, when the profile is created.
     Q_PROPERTY(snake::ui::GameViewModel* game READ game WRITE setGame NOTIFY gameChanged FINAL)
     Q_PROPERTY(snake::ui::ModeListModel* modes READ modes CONSTANT FINAL)
+    /// The twelve achievements, with which of them are earned. Read again whenever an achievement is earned or a save
+    /// file is loaded.
+    Q_PROPERTY(snake::ui::AchievementListModel* achievements READ achievements CONSTANT FINAL)
     /// The best score of the mode of the current game, as six digits.
     Q_PROPERTY(QString best READ best NOTIFY bestChanged FINAL)
     /// The last game beat the best score its mode had before it.
@@ -45,6 +50,8 @@ class ProfileViewModel : public QObject
     Q_PROPERTY(int pointsToBest READ pointsToBest NOTIFY resultChanged FINAL)
     /// The names of the modes the last game opened, in the order of the list. Empty when it opened none.
     Q_PROPERTY(QStringList unlockedNow READ unlockedNow NOTIFY resultChanged FINAL)
+    /// The names of the achievements the last game earned, in the order of the list. Empty when it earned none.
+    Q_PROPERTY(QStringList achievedNow READ achievedNow NOTIFY resultChanged FINAL)
     /// The file the profile is kept in, or empty for none. Setting it loads the file when there is one.
     Q_PROPERTY(QString saveFile READ saveFile WRITE setSaveFile NOTIFY saveFileChanged FINAL)
     /// True while changes are being written to the save file: false without a file, and after the file was found to
@@ -134,6 +141,11 @@ public:
         return &m_Modes;
     }
 
+    [[nodiscard]] AchievementListModel* achievements() noexcept
+    {
+        return &m_Achievements;
+    }
+
     [[nodiscard]] LeaderboardModel* leaderboard() noexcept
     {
         return &m_Board;
@@ -156,6 +168,11 @@ public:
     [[nodiscard]] QStringList unlockedNow() const
     {
         return m_UnlockedNow;
+    }
+
+    [[nodiscard]] QStringList achievedNow() const
+    {
+        return m_AchievedNow;
     }
 
     [[nodiscard]] QString saveFile() const;
@@ -245,9 +262,11 @@ public:
         return m_Data;
     }
 
-    /// Notes a game that ended with `score` in `mode`: the best score, the unlocks and the result the screens show.
-    /// The view-model calls it for each game it watches; the tests call it for scores that are hard to play.
-    void record_game(sim::Mode mode, std::uint32_t score);
+    /// Notes a game that ended with `score` in `mode`: the best score, the unlocks, the achievements and the result the
+    /// screens show. `tally` is what happened in the game; the default is a game in which nothing did, so that only
+    /// what the score and the unlocks give is earned. The view-model calls it for each game it watches; the tests call
+    /// it for scores that are hard to play.
+    void record_game(sim::Mode mode, std::uint32_t score, const sim::Tally& tally = sim::Tally{});
 
 signals:
     void gameChanged();
@@ -263,7 +282,7 @@ signals:
     void entryChanged();
     void recentNamesChanged();
     void standingChanged();
-    /// A game ended and its result is in newBest, pointsToBest and unlockedNow.
+    /// A game ended and its result is in newBest, pointsToBest, unlockedNow and achievedNow.
     void resultChanged();
 
 private:
@@ -290,6 +309,7 @@ private:
     MotionPreference m_MotionPreference;
     profile::SaveData m_Data;
     ModeListModel m_Modes;
+    AchievementListModel m_Achievements;
     LeaderboardModel m_Board;
     GameViewModel::Mode m_BoardMode = GameViewModel::Mode::Easy;
     std::unique_ptr<SaveFile> m_File;
@@ -301,6 +321,7 @@ private:
     bool m_NewBest = false;
     int m_PointsToBest = -1;
     QStringList m_UnlockedNow;
+    QStringList m_AchievedNow;
 };
 
 } // namespace snake::ui

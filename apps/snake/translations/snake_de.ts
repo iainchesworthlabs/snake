@@ -82,6 +82,17 @@
         <translation>Du hast deinen Rekord eingestellt.</translation>
     </message>
     <message>
+        <source>Achievement: %1</source>
+        <translation>Erfolg: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n Erfolg</numerusform>
+            <numerusform>%n Erfolge</numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Game over</source>
         <translation>Spiel vorbei</translation>
     </message>
@@ -467,6 +478,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 von %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>Durch die Wand</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>Bonus-Objekt</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>Top-Kombo</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>Neuer Rekord</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>Höchsttempo</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 Blaubeeren</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>Portale offen</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>Durch ein Portal</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>Heiße Kartoffel offen</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>Rechtzeitig abgeworfen</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>Alle vier Modi</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>Verlass im Modus Leicht das Spielfeld an einer Seite und komm auf der anderen zurück.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>Iss ein Bonus-Objekt, bevor es verschwindet.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>Iss eine Blaubeere, die %L1 Punkte wert ist.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>Schlag den besten Wert der Bestenliste eines Modus.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>Iss, bis die Schlange so schnell ist wie möglich.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>Iss %L1 Blaubeeren, in so vielen Spielen wie nötig.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>Schalte den Modus Portale frei.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>Geh in ein Portal hinein und komm aus dem Zwilling wieder heraus.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>Schalte den Modus Heiße Kartoffel frei.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>Wirf eine Bombe mit Abwerfen ab, bevor sie hochgeht.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>Beende ein Spiel in jedem der vier Modi.</translation>
     </message>
 </context>
 <context>

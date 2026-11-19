@@ -82,6 +82,17 @@
         <translation>Igualaste tu récord.</translation>
     </message>
     <message>
+        <source>Achievement: %1</source>
+        <translation>Logro: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n logro</numerusform>
+            <numerusform>%n logros</numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Game over</source>
         <translation>Fin del juego</translation>
     </message>
@@ -467,6 +478,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 de %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>Atravesar la pared</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>Objeto extra</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>Combo máximo</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>Nuevo récord</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>Velocidad máxima</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 arándanos</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>Portales abiertos</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>Por un portal</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>Patata caliente abierta</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>Soltar a tiempo</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>Los cuatro modos</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>Sal por un lado del tablero en Fácil y vuelve a entrar por el otro.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>Come un objeto extra antes de que desaparezca.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>Come un arándano que valga %L1 puntos.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>Supera la mejor puntuación de la clasificación de un modo.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>Come hasta que la serpiente vaya lo más rápido posible.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>Come %L1 arándanos, en las partidas que hagan falta.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>Abre el modo Portales.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>Entra en un portal y sal por su gemelo.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>Abre el modo Patata caliente.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>Suelta una bomba con Soltar antes de que explote.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>Termina una partida en cada uno de los cuatro modos.</translation>
     </message>
 </context>
 <context>

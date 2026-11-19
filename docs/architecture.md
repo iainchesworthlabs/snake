@@ -148,10 +148,21 @@ function the tests give. The state, score and mode are properties, and `boardCha
 
 `ProfileViewModel` is what QML sees of the player's record. It watches a `GameViewModel` and, when a game ends, notes
 the score against the best of the game's mode and against the unlock rules of `libs/profile`, which gives the game-over
-screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `profile::SaveData` in memory and a
-`ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
+screen its figures (`newBest`, `pointsToBest`, `unlockedNow`, `achievedNow`). It owns the `profile::SaveData` in memory
+and a `ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
 is locked or open: Easy and Classic always are, and Portals and Hot potato open at 2,000 and 3,000 points in Classic, and
 can be chosen and played from then on. The best score of a mode is the top of its leaderboard.
+
+A finished game also earns achievements. `record_game` gives `profile::Achievements::note_game` the mode, the score,
+the game's `sim::Tally` (read from `GameViewModel::tally()`; a game recorded without one has an empty tally), the unlocks
+after the game and the best of the mode before it. What the call newly earned is `achievedNow`, the names in the order of
+`profile::Achievement`, which the game over screen shows as one line and `SoundDirector` answers with the new-best jingle
+(once, whether the game was a new best, earned an achievement, or both). The profile saves after every game, so what was
+earned lasts. `AchievementListModel` is the twelve achievements as rows (`number`, `name`, `description`, `earned` and
+`progress`, which is text such as "37 / 100" for the two blueberry counts and empty for the others), refreshed when a game
+is recorded and when a save file is loaded. The names and descriptions are translated; the numbers in them come from
+`Scoring` and the targets in `profile/achievements.hpp`, never from the text. The title's second `GameViewModel`, which
+plays the demo, is not watched by the profile and earns nothing.
 
 The new modes reach the screens through the events of `GameViewModel`: `AtePotato`, `Teleported`, `Shed` and `Exploded`
 join `Ate`, `AteBonus`, `Crashed` and `Won`, each with a sound (`Effect::POTATO`, `PORTAL`, `SHED`, `EXPLODE`), a show of

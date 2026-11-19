@@ -82,6 +82,17 @@
         <translation>השווית את השיא שלך.</translation>
     </message>
     <message>
+        <source>Achievement: %1</source>
+        <translation>הישג: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n הישג</numerusform>
+            <numerusform>%n הישגים</numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Game over</source>
         <translation>המשחק נגמר</translation>
     </message>
@@ -467,6 +478,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 מתוך %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>דרך הקיר</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>פריט בונוס</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>קומבו מרבי</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>שיא חדש</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>מהירות שיא</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 אוכמניות</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>שערים פתוחים</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>דרך שער</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>תפוח אדמה לוהט פתוח</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>השלכה בזמן</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>כל ארבעת המצבים</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>צאו מצד אחד של הלוח במצב קל וחזרו מהצד השני.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>אכלו פריט בונוס לפני שייעלם.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>אכלו אוכמנית ששווה %L1 נקודות.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>עקפו את התוצאה הגבוהה בטבלת השיאים של מצב.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>אכלו עד שהנחש מהיר ככל האפשר.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>אכלו %L1 אוכמניות, במשחקים רבים ככל שיידרש.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>פתחו את מצב שערים.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>היכנסו לשער וצאו מהתאום שלו.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>פתחו את מצב תפוח אדמה לוהט.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>השליכו פצצה באמצעות השלך לפני שתתפוצץ.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>סיימו משחק בכל אחד מארבעת המצבים.</translation>
     </message>
 </context>
 <context>

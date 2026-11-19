@@ -41,6 +41,8 @@ add_executable(snake_viewmodel_tests
     ../src/language/language_choice.hpp
     ../src/device/haptics.cpp
     ../src/device/haptics.hpp
+    ../src/viewmodel/achievement_list_model.cpp
+    ../src/viewmodel/achievement_list_model.hpp
     ../src/viewmodel/effects_model.cpp
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp

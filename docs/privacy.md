@@ -7,7 +7,7 @@ layout: prose
 ---
 # Privacy
 
-Last changed: 18 November 2026.
+Last changed: 19 November 2026.
 
 **Snake collects no data about you.** It has no accounts, no analytics and no advertising, and the game does not use the network. This page says what that means in practice.
 
@@ -22,6 +22,7 @@ The game keeps one small file in its own folder on your device. It holds:
 
 - **Your settings.** How you steer, how sensitive tilt is, whether the axes are inverted, the sound and music switches, the volume and the reduced motion switch.
 - **Which modes you have opened.**
+- **Your achievements.** Which achievements you have earned, how many blueberries you have eaten in all, and which modes you have finished a game in.
 - **Your leaderboards.** For each mode, the top 10: the name you typed, the score and the date the game ended. A name is letters A to Z and spaces, up to 12.
 - **Your three most recent names**, so you can pick one again.
 

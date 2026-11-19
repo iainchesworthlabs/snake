@@ -5,14 +5,17 @@
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
+#include "played_tally.hpp"
 #include "scripted_gamepad.hpp"
 #include "snake/audio/tunes.hpp"
 #include "snake/input/sample_source.hpp"
+#include "snake/profile/achievements.hpp"
 #include "snake/sim/autoplayer.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
 #include "theme/tokens.hpp"
+#include "viewmodel/achievement_list_model.hpp"
 #include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/gamepad_controller.hpp"
@@ -24,6 +27,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <QAccessible>
 #include <QByteArray>
 #include <QColor>
 #include <QGuiApplication>
@@ -865,6 +869,63 @@ TEST_CASE("The game over screen announces a new best, a matched best and a mode 
     app.profile().record_game(Mode::CLASSIC, 5000);
     CHECK(app.text_of("verdict") == "You matched your best.");
     CHECK_FALSE(app.item("unlocked")->isVisible());
+}
+
+TEST_CASE("The game over screen names an achievement, counts several and hides the line when there are none",
+          "[screens][gameover][achievements]")
+{
+    using snake::test::Played;
+    using snake::test::tally_of;
+    App app;
+    app.start_classic();
+    app.crash();
+
+    // A game that earned nothing: the line is not there, and nothing is left to read.
+    app.profile().record_game(Mode::CLASSIC, 10);
+    CHECK(app.profile().achievedNow().isEmpty());
+    CHECK_FALSE(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved").isEmpty());
+
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.bonus = true}));
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved") == "Achievement: Bonus item");
+    // It has a name and a role for a screen reader: it is text, and the name is what it says.
+    QAccessible::setActive(true);
+    const QAccessibleInterface* accessible = QAccessible::queryAccessibleInterface(app.item("achieved"));
+    REQUIRE(accessible != nullptr);
+    CHECK(accessible->text(QAccessible::Name) == "Achievement: Bonus item");
+    CHECK(accessible->role() == QAccessible::StaticText);
+
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.portal = true, .shed = true}));
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved") == "2 achievements");
+
+    // The next game earns nothing new and the line goes.
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.portal = true, .shed = true}));
+    CHECK_FALSE(app.item("achieved")->isVisible());
+}
+
+TEST_CASE("The attract game on the title earns nothing", "[screens][attract][achievements]")
+{
+    App app;
+    GameViewModel& demo = app.demo();
+    // The demo plays on its own; it is let run through many ticks and games of its own.
+    for (int i = 0; i < 6000; ++i)
+    {
+        demo.advance(0.05);
+        if (demo.state() == State::GameOver)
+        {
+            demo.restart();
+        }
+    }
+    CHECK(demo.session().simulation().ticks() > 0);
+    // Nothing of what the demo did reached the profile.
+    CHECK(app.profile().data().achievements.none());
+    CHECK(app.profile().data().achievements.blueberries_eaten() == 0);
+    CHECK(app.profile().data().achievements.modes_finished() == 0);
+    CHECK(app.profile().achievedNow().isEmpty());
+    CHECK(app.profile().data().leaderboards.of(Mode::EASY).empty());
+    CHECK(app.profile().best() == "000000");
 }
 
 TEST_CASE("A mode that opened no longer shows as locked on the title screen", "[screens][modes]")
@@ -2862,5 +2923,142 @@ TEST_CASE("The key hints fit in every language", "[screens][hints][languages]")
         app.start_mode(3);
         app.pad({GamepadEvent{GamepadEvent::Kind::CONNECTED}});
         check_fit(app, "hot potato with hints");
+    }
+}
+
+namespace
+{
+
+/// The bottom of the panel on the game over screen stays above the top of every button under it, and the line of
+/// achievements is one line that fits in the panel.
+void check_the_panel_clears_the_buttons(App& app)
+{
+    const QRectF panel = scene_rect(app, "resultPanel");
+    const QRectF line = scene_rect(app, "achieved");
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.item("achieved")->property("lineCount").toInt() == 1);
+    CHECK(app.item("achieved")->property("contentWidth").toDouble() <= app.item("achieved")->width() + 0.5);
+    CHECK(line.bottom() <= panel.bottom());
+    for (const char* name : {"saveScoreButton", "playAgainButton", "menuButton"})
+    {
+        if (app.item(name)->isVisible())
+        {
+            INFO("button " << name << ": panel bottom " << panel.bottom() << ", button top "
+                           << scene_rect(app, name).top());
+            CHECK(panel.bottom() < scene_rect(app, name).top());
+        }
+    }
+}
+
+/// A game over with everything on the panel at once: a new best, both modes opening and several achievements.
+void check_the_fullest_game_over(App& app)
+{
+    app.start_classic();
+    app.crash();
+    // A score of 3,000 in Classic on a new profile is a best, opens Portals and Hot potato, and with a tally of
+    // everything a game can do earns several achievements.
+    app.profile().record_game(Mode::CLASSIC, 3000, snake::test::full_tally());
+    REQUIRE(app.profile().newBest());
+    REQUIRE(app.profile().unlockedNow().size() == 2);
+    REQUIRE(app.profile().achievedNow().size() > 1);
+    check_fit(app, "game over");
+    check_the_panel_clears_the_buttons(app);
+}
+
+} // namespace
+
+TEST_CASE("The game over panel with a new best, two modes opened and several achievements clears the buttons in every "
+          "language",
+          "[screens][languages][gameover][achievements]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true);
+        check_the_fullest_game_over(app);
+    }
+}
+
+TEST_CASE("The game over panel with a new best, two modes opened and several achievements clears the buttons in every "
+          "language lying down",
+          "[screens][languages][gameover][achievements][landscape]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        check_the_fullest_game_over(app);
+    }
+}
+
+TEST_CASE("The game over line for each achievement alone fits in every language, upright and lying down",
+          "[screens][languages][gameover][achievements]")
+{
+    using snake::test::Played;
+    using snake::test::tally_of;
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        for (const bool lying : {false, true})
+        {
+            INFO("language " << code << (lying ? ", lying down" : ", upright"));
+            const InLanguage language(code);
+            App app(true, lying ? LANDSCAPE_WIDTH : PAGE_WIDTH, lying ? LANDSCAPE_HEIGHT : PAGE_HEIGHT);
+            app.start_classic();
+            app.crash();
+
+            // Each game earns exactly one achievement, in an order that leaves the next one still to earn.
+            struct Step
+            {
+                Mode mode;
+                std::uint32_t score;
+                Played played;
+                snake::profile::Achievement earned;
+            };
+            using snake::profile::Achievement;
+            app.profile().record_game(Mode::EASY, 100);
+            app.save_score_as("MUM");
+            const std::vector<Step> steps{
+                {Mode::EASY, 200, {}, Achievement::BEST},
+                {Mode::EASY, 1, {.wrap = true}, Achievement::WRAP},
+                {Mode::EASY, 1, {.bonus = true}, Achievement::BONUS},
+                {Mode::EASY, 1, {.blueberries = 1, .combo = 5}, Achievement::COMBO},
+                {Mode::EASY, 1, {.foods = 40}, Achievement::SPEED},
+                {Mode::EASY, 1, {.portal = true}, Achievement::PORTAL},
+                {Mode::EASY, 1, {.shed = true}, Achievement::SHED},
+                {Mode::CLASSIC, 1, {}, Achievement::BERRIES_100},
+                {Mode::CLASSIC, 1, {}, Achievement::BERRIES_1000},
+                {Mode::CLASSIC, 2000, {}, Achievement::PORTALS},
+                {Mode::CLASSIC, 3000, {}, Achievement::HOT_POTATO},
+                {Mode::PORTALS, 1, {}, Achievement::ALL_MODES},
+            };
+            for (const Step& step : steps)
+            {
+                const QString name = snake::ui::AchievementListModel::name_of(step.earned);
+                INFO("achievement " << name.toStdString());
+                if (step.mode == Mode::PORTALS)
+                {
+                    // The last mode that has not had a game: Hot potato, then the one that finishes the set.
+                    app.profile().record_game(Mode::HOT_POTATO, 1);
+                }
+                Played played = step.played;
+                // The counted ones are earned by the blueberries still missing, whatever the first game ate.
+                const std::uint32_t eaten = app.profile().data().achievements.blueberries_eaten();
+                if (step.earned == Achievement::BERRIES_100)
+                {
+                    played.blueberries = static_cast<std::uint16_t>(snake::profile::BERRIES_100_TARGET - eaten);
+                }
+                if (step.earned == Achievement::BERRIES_1000)
+                {
+                    played.blueberries = static_cast<std::uint16_t>(snake::profile::BERRIES_1000_TARGET - eaten);
+                }
+                app.profile().record_game(step.mode, step.score, tally_of(played));
+                REQUIRE(app.profile().achievedNow() == QStringList{name});
+                check_fit(app, "game over");
+                CHECK(app.text_of("achieved").contains(name));
+                check_the_panel_clears_the_buttons(app);
+            }
+        }
     }
 }

@@ -154,6 +154,8 @@ set(SNAKE_UI_SOURCES
     src/theme/theme.cpp
     src/theme/theme.hpp
     src/theme/tokens.hpp
+    src/viewmodel/achievement_list_model.cpp
+    src/viewmodel/achievement_list_model.hpp
     src/viewmodel/effects_model.cpp
     src/viewmodel/effects_model.hpp
     src/viewmodel/game_view_model.cpp
