@@ -205,6 +205,16 @@ function(snake_add_ui_module target)
         target_sources(${target} PRIVATE src/device/sdl_gamepad.cpp src/device/sdl_gamepad.hpp)
         target_link_libraries(${target} PRIVATE SDL3::SDL3)
     endif()
+    if(ICL_PLATFORM STREQUAL "linux")
+        # SDL's own file of C library calls (SDL_stdlib.c) calls atan2f, asinf and sqrtf, and glibc 2.43 gave those three a
+        # new symbol version, so a program linked on a system with glibc 2.43 does not start on glibc 2.39. The linker sends
+        # the three calls to src/device/linux/float_math.cpp, which works in double. The check-glibc-floor step of the
+        # release workflow is what fails if a call of this kind is added.
+        target_link_options(${target} PRIVATE LINKER:--wrap=atan2f LINKER:--wrap=asinf LINKER:--wrap=sqrtf)
+        # The wrapped sqrtf is a square root in double, which the optimiser would turn back into a call of the sqrtf that
+        # is wrapped, for a negative number, unless the C library's error number is left alone.
+        set_source_files_properties(src/device/linux/float_math.cpp PROPERTIES COMPILE_OPTIONS -fno-math-errno)
+    endif()
     if(IOS)
         # The haptics are Objective-C++, with automatic reference counting.
         set_source_files_properties(src/device/ios/device.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
