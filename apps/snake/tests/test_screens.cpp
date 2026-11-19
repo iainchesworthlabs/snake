@@ -342,6 +342,26 @@ TEST_CASE("The title screen has the wordmark on the yellow of the design", "[scr
     CHECK(image.pixel(app.face_of("playButton")) == rgb_of(tokens::INK));
 }
 
+TEST_CASE("The focus ring of Play clears the mode cards above it and the buttons below it", "[screens]")
+{
+    App app;
+    REQUIRE(app.focus_name() == "playButton");
+    const QQuickItem* play = app.item("playButton");
+    const double drop = play->property("drop").toDouble();
+    // The ring of the focus is 6 outside the face on every side and also takes in the drop of the shadow.
+    const QRectF ring(play->mapToScene(QPointF(-6, -6)), QSizeF(play->width() + 12, play->height() + 12 + drop));
+    constexpr double clearance = 8.0;
+
+    const QQuickItem* leaderboard = app.item("leaderboardButton");
+    const QQuickItem* settings = app.item("settingsButton");
+    CHECK(leaderboard->mapToScene(QPointF(0, 0)).y() - ring.bottom() >= clearance);
+    CHECK(settings->mapToScene(QPointF(0, 0)).y() - ring.bottom() >= clearance);
+
+    const QQuickItem* last_card = app.item("modeCard3");
+    const double card_bottom = last_card->mapToScene(QPointF(0, last_card->height())).y();
+    CHECK(ring.top() - card_bottom >= clearance);
+}
+
 TEST_CASE("The title screen lists the four modes, two to play and two locked", "[screens][modes]")
 {
     const UsLocale locale;

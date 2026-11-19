@@ -153,7 +153,7 @@ FocusScope {
 
             objectName: "playButton"
             x: page.landscape ? page.leadingX : 15
-            y: page.landscape ? 224 : 686
+            y: page.landscape ? 224 : 678
             width: page.landscape ? page.columnWidth : 360
             height: page.landscape ? 56 : 62
             focus: true
@@ -168,7 +168,7 @@ FocusScope {
         ToyButton {
             objectName: "leaderboardButton"
             x: page.landscape ? Theme.mirrored(page.margin, width, page.pageWidth) : Theme.mirrored(15, width, 390)
-            y: page.landscape ? 296 : 762
+            y: page.landscape ? 300 : 762
             width: page.landscape ? page.columnWidth - 56 : 300
             height: page.landscape ? 48 : 50
             text: qsTr("Leaderboard")
@@ -178,7 +178,7 @@ FocusScope {
         ToyButton {
             objectName: "settingsButton"
             x: page.landscape ? Theme.mirrored(page.margin + page.columnWidth - 48, width, page.pageWidth) : Theme.mirrored(325, width, 390)
-            y: page.landscape ? 296 : 762
+            y: page.landscape ? 300 : 762
             width: page.landscape ? 48 : 50
             height: page.landscape ? 48 : 50
             Accessible.name: qsTr("Settings")
