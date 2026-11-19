@@ -24,6 +24,8 @@ claim in it is one the [privacy](privacy.md), [features](features.md) and [how t
 A tag builds, signs and uploads in one go, and builds are numbered by workflow run, so the same version can be uploaded
 as many times as needed. That decides the order: **test with builds from `develop`, then tag the commit that passed.**
 
+0. **Game Center** (steps 1 and 2 of "Game Center (in 1.0.0)" below, the portal and the profile) before the Game Center pull request merges,
+   or the signed build fails.
 1. **Prepare 1.0.0** in a pull request: the version in `CMakeLists.txt` and `vcpkg.json`, and the changelog assembled
    (`python3 <icl-common-infra>/scripts/changelog_tool.py assemble --version 1.0.0 --date YYYY-MM-DD`). Set the date to
    the day the tag is pushed. Merge it.
@@ -77,7 +79,7 @@ nothing in this plan is done for you.
 
 ### Promotional text (170 characters at most, can change without a new build)
 
-> Steer by tilt, swipe or d-pad. Four modes, a top 10 for each, eight languages. No account, no ads, and nothing leaves your device.
+> Steer by tilt, swipe or d-pad. Four modes, a top 10 for each, Game Center leaderboards, eight languages. No account, no ads, no tracking.
 
 ### Description (4,000 characters at most)
 
@@ -92,7 +94,8 @@ nothing in this plan is done for you.
 > **Steer your way.** Tilt the phone, swipe, or use an on-screen d-pad or joystick. Tilt has a dead zone and can be
 > recalibrated from the pause screen. The screen does not turn while you play.
 >
-> **A leaderboard for each mode.** The top 10, with the names you type, kept on your device.
+> **A leaderboard for each mode.** The top 10, with the names you type, kept on your device. Sign in to Game Center and
+> your scores also go on a Game Center leaderboard for each mode.
 >
 > **Sound you can set.** A volume control, and separate switches for sound and music.
 >
@@ -100,8 +103,8 @@ nothing in this plan is done for you.
 >
 > **Reduced motion.** A switch turns off the shake and the bobbing food. It follows your device's setting the first time.
 >
-> **Your data stays yours.** No account, no ads, no analytics. The game does not use the network, and it asks for no
-> permission. The source code is public under the GNU General Public License, version 3 or later.
+> **Your data stays yours.** No account, no ads, no analytics. The game works offline and asks for no permission; the
+> only thing it ever sends is your score, to Game Center, and only if you are signed in to it. The source code is public under the GNU General Public License, version 3 or later.
 
 The mode descriptions and the unlock scores come from [How to play](how-to-play.md); check them against the game before
 pasting.
@@ -128,8 +131,13 @@ Apple's scale puts it above the lowest.
 
 ### App Privacy ("nutrition label")
 
-*App Privacy, then Get Started.* **Data Not Collected.** The game has no analytics, no advertising, no account and no
-network use, so nothing is collected by it or by any third-party code in it. It keeps one file on the device
+*App Privacy, then Get Started.* The game has no analytics, no advertising and no account, and no code of its own or
+from a third party sends anything anywhere. The one thing that leaves the device is the score of a game, sent to Apple's
+Game Center when the player is signed in to it (the [privacy page](privacy.md) says so). **How App Store Connect wants
+that declared I have not confirmed.** My understanding is that data Game Center itself handles is Apple's and the
+developer does not declare it, which would leave **Data Not Collected**; if the form asks about it (gameplay content, or a
+user ID, linked to the player, not used for tracking), answer what it asks and change the policy page to match. Decide
+this on the screen, not from this page. The game keeps one file on the device
 ([Privacy](privacy.md), "What the game keeps"). Tilt reads the motion sensor while a game is on and does not keep the
 readings. Apple's validation of the 0.2.0 build passed the privacy declarations of the libraries in it; check that again
 on the 1.0.0 build.
@@ -145,7 +153,9 @@ and does not use https), so App Store Connect does not ask.
 > Play. Easy and Classic are open from the start; Portals (score 2,000 in Classic) and Hot potato (score 3,000 in
 > Classic) are shown on the title screen with their targets and open when the player has scored them, so a reviewer will
 > see them locked. Steering: swipe on the board, use the on-screen controls, or tilt the device. The
-> game does not use the network, collects no data and asks for no permission.
+> game works offline, collects no data and asks for no permission. Game Center is optional: if the player is signed in, the
+> score of each game goes to the Game Center leaderboard of its mode, and a Game Center button on the leaderboard screen opens
+> it; without it nothing changes.
 
 If Apple asks to see Portals or Hot potato, the way is to play Classic to those scores; there is no shortcut in the
 build. If the owner would rather reviewers could see them, that is a change to the game (a separate pull request), not
@@ -184,14 +194,36 @@ is live the page says "Coming to the App Store".
 
 ## Game Center, accessibility and privacy
 
-### Game Center: not in 1.0.0
+### Game Center (in 1.0.0)
 
-Nothing in the game uses Game Center or GameKit (no code, no entitlement), and the requirements list online leaderboards
-and accounts as out of scope for v1. Adding it would make the game use the network and an Apple account, which the
-[privacy](privacy.md) page, the App Privacy answer (Data Not Collected) and the store text all say it does not. So:
-**leave Game Center unconfigured** in App Store Connect (no leaderboards or achievements), and do not tick it in the record.
-The leaderboards stay on the device. If it is wanted later, it is a change to the game, the privacy page and the
-App Privacy answers together.
+The game sends the score of each finished game to a Game Center leaderboard, one for each mode, for a player who is
+signed in to Game Center, and shows a Game Center button on the leaderboard screen then. The leaderboards on the device are
+unchanged and nothing is sent without a sign-in. The code is in the pull request "Add Game Center leaderboards on iPhone
+and iPad". Steps, in this order, because the second one gates the build:
+
+1. **Developer portal:** Identifiers, `com.iainchesworthlabs.snake`, tick **Game Center**, save.
+2. **Make the App Store provisioning profile again** for that App ID and set the repository secret
+   `IOS_PROVISIONING_PROFILE_BASE64` to it (the steps are in `docs/ios-signing.md` of `icl-common-infra`). The signed build
+   now carries the `com.apple.developer.game-center` entitlement, and an older profile without it stops the build when the
+   app is archived. **Merge the Game Center pull request only after this.**
+3. **App Store Connect:** the app, then Game Center, turn it on. Then make four **classic** leaderboards with exactly these
+   identifiers, score format integer, sort high to low, and a name in English (add other languages if wanted):
+
+   | Mode | Leaderboard ID |
+   |---|---|
+   | Easy | `com.iainchesworthlabs.snake.leaderboard.easy` |
+   | Classic | `com.iainchesworthlabs.snake.leaderboard.classic` |
+   | Portals | `com.iainchesworthlabs.snake.leaderboard.portals` |
+   | Hot potato | `com.iainchesworthlabs.snake.leaderboard.hotpotato` |
+
+   An identifier that differs by one letter sends scores nowhere and shows nothing. App Store Connect has you add the
+   leaderboards to the version you submit, and a leaderboard goes live with it; test with a sandbox Game Center account
+   before then (the TestFlight plan below has the rows).
+4. **App Privacy and the privacy page:** see above and [Privacy](privacy.md), which now says what is sent.
+
+There are no achievements, no multiplayer and no Game Center access point; the player is asked to sign in by Game Center
+itself when the game starts, and the game sees only that they did. A score sent while offline is dropped, because the
+leaderboard on the device has it.
 
 ### Accessibility
 
@@ -217,9 +249,11 @@ App Store Connect for whether they are required now.
 
 ### Privacy
 
-- **The policy and the label** are as above: the page at `https://iainchesworthlabs.com/snake/privacy/` and Data Not
-  Collected. Read the page once more against the build you submit, in particular "What leaves your device" (nothing, but the
-  About screen opens the source page in the browser) and the permissions line for iPhone and iPad (none; tilt needs none).
+- **The policy and the label** are as above: the page at `https://iainchesworthlabs.com/snake/privacy/` and the App
+  Privacy answer (Data Not Collected, unless the Game Center decision above changes it). Read the page once more against
+  the build you submit, in particular "What leaves your device" (the score to Game Center for a signed-in player, and the
+  About screen's link, which opens the browser) and the permissions line for iPhone and iPad (none; Game Center asks to
+  sign in itself, and tilt needs no permission).
 - **A privacy manifest.** Apple requires an app to declare, in `PrivacyInfo.xcprivacy`, the reason for any "required
   reason" system API it or its libraries use (file times, disk space, user defaults and the like). The repository has no
   such file of its own; the game reads and writes its save file and uses Qt, which may add one to the app. Apple's
@@ -267,6 +301,8 @@ for tilt, swipe and the d-pad, and what to write down.
 | VoiceOver on: each screen reads sensibly, the controls can be reached and used, and how far a game can be played is written down | |
 | Largest text size and Bold Text on: nothing is cut off or overlaps (the game draws its own text, so it may not change at all, which is fine to record) | |
 | Reduce Motion on in iOS Settings, then a clean install: the game's switch starts on and the shake and flashing are gone | |
+| Game Center, signed in with a sandbox account: the Game Center button shows on the leaderboard screen, a finished game puts its score on that mode's leaderboard, and the button opens the right one upright and on its side, on iPhone and iPad | |
+| Game Center, signed out (iOS Settings, Game Center): no button, the game plays and saves as before, nothing is sent; sign back in and the button returns | |
 
 A failure is an issue on GitHub with the device, the iOS version, the build number and what happened. A fix is a pull
 request to `develop`; then upload a new build.
@@ -280,8 +316,8 @@ the notch or the home indicator, or a leaderboard that is lost.
 - [ ] Every row of the test plan has a result, and nothing on the stop list is open.
 - [ ] iPhone and iPad screenshots are uploaded, from a device or the Simulator.
 - [ ] The description, the keywords, the URLs and the copyright above are entered, and the three URLs open.
-- [ ] Game Center is left unconfigured; the accessibility labels declare only what was tried; the IPA's privacy manifest is checked.
-- [ ] The age rating and App Privacy (Data Not Collected) are answered, and the review contact and notes are filled in.
+- [ ] The Game Center capability and profile are done, the four leaderboards exist and are on the version, and a sandbox score appeared on one; the App Privacy answer for Game Center is decided; the accessibility labels declare only what was tried; the IPA's privacy manifest is checked.
+- [ ] The age rating and App Privacy are answered, and the review contact and notes are filled in.
 - [ ] Price and availability are set.
 - [ ] The release option is chosen: **manually release** is the safe one, so the site and the GitHub Release can be put right the day it goes live.
 
