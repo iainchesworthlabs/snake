@@ -41,6 +41,8 @@ Window {
         game: gameModel
         profile: profileModel
         touchDevice: root.touchDevice
+        // A phone's sensor may read in the device's own axes, whichever way the screen is drawn: tilt is turned to the screen.
+        landscape: root.lyingDown
     }
 
     // A gamepad plays the game by sending this window the keys the keyboard has: the d-pad and the left stick for the arrows,
@@ -65,6 +67,14 @@ Window {
     // new and the tilt was calibrated for the old one, and resuming calibrates it again.
     readonly property bool lyingDown: width > height
     onLyingDownChanged: {
+        if (touchDevice && gameModel.state === GameViewModel.State.Running)
+            gameModel.pause();
+    }
+
+    // The screen turned a half, from one landscape to the other: the window is the same shape, but the readings of tilt
+    // are turned the other way. The system says so, and the game waits for the player and calibrates again on resuming.
+    Screen.onOrientationChanged: {
+        inputModel.screenTurned();
         if (touchDevice && gameModel.state === GameViewModel.State.Running)
             gameModel.pause();
     }

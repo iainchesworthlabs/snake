@@ -30,10 +30,6 @@ class QtAccelerometerSource final : public QObject, public input::SampleSource
 public:
     QtAccelerometerSource()
     {
-        // The axes are those of the screen, which may be on its side: Qt turns the readings with the screen's
-        // orientation, so x is to the player's right and y is up the screen whichever way the phone is held. The screen
-        // does not turn during a game (device::lock_orientation()), so the calibrated pose stays in the same frame.
-        m_Sensor.setAxesOrientationMode(QAccelerometer::AutomaticOrientation);
         m_Sensor.setDataRate(DATA_RATE_HZ);
         connect(&m_Sensor, &QSensor::readingChanged, this, &QtAccelerometerSource::on_reading);
     }
@@ -41,7 +37,26 @@ public:
     /// Connects to the sensor and starts it. False when the device has none, or it cannot be had.
     [[nodiscard]] bool start()
     {
-        return m_Sensor.connectToBackend() && m_Sensor.start();
+        if (!m_Sensor.connectToBackend())
+        {
+            return false;
+        }
+        // The axes should be those of the screen, which may be on its side: x to the player's right and y up the screen
+        // whichever way the phone is held. Qt can turn the readings so, but only a backend that supports it does
+        // (QSensor::AxesOrientation); iOS's does not, and in the mode that it ignores it reads in the device's own
+        // axes whichever way the screen is drawn. Then the readings are left as they are, and say so, and the input
+        // controller turns them (input::ScreenFrameSource).
+        m_DeviceFrame = !m_Sensor.isFeatureSupported(QSensor::AxesOrientation);
+        if (!m_DeviceFrame)
+        {
+            m_Sensor.setAxesOrientationMode(QAccelerometer::AutomaticOrientation);
+        }
+        return m_Sensor.start();
+    }
+
+    [[nodiscard]] bool in_device_frame() const noexcept override
+    {
+        return m_DeviceFrame;
     }
 
     std::optional<input::AccelSample> next() noexcept override
@@ -72,6 +87,7 @@ private:
 
     QAccelerometer m_Sensor;
     std::deque<input::AccelSample> m_Queue;
+    bool m_DeviceFrame = false;
 };
 
 } // namespace

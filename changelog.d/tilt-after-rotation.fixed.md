@@ -1,0 +1,1 @@
+**Tilt keeps working after the phone is turned.** When the screen turned in the middle of a tilt game on an iPhone, tilting the top edge down steered sideways, because iOS gives the sensor's readings in the phone's own axes and the game did not turn them with the screen. The game now turns them itself, and takes the pose again when the player resumes.

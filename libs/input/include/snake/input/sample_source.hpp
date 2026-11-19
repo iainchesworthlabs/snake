@@ -36,6 +36,14 @@ public:
 
     /// The oldest sample not yet returned, or nothing when there is none for now.
     virtual std::optional<AccelSample> next() noexcept = 0;
+
+    /// True when the samples are in the device's own axes (x to the right edge of the device held upright, y to its
+    /// top edge) and not turned with the screen: the sensor interface of the platform does not turn them. A
+    /// ScreenFrameSource turns them. Most sources have turned them already, and say false.
+    [[nodiscard]] virtual bool in_device_frame() const noexcept
+    {
+        return false;
+    }
 };
 
 } // namespace snake::input

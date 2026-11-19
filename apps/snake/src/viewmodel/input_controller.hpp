@@ -3,6 +3,7 @@
 
 #include "snake/input/joystick_steering.hpp"
 #include "snake/input/sample_source.hpp"
+#include "snake/input/screen_frame.hpp"
 #include "snake/input/swipe_recogniser.hpp"
 #include "snake/input/tilt_processor.hpp"
 #include "snake/sim/direction.hpp"
@@ -53,6 +54,10 @@ class InputController : public QObject
     Q_PROPERTY(double rawY READ rawY NOTIFY rawChanged FINAL)
     Q_PROPERTY(double rawZ READ rawZ NOTIFY rawChanged FINAL)
     Q_PROPERTY(int rawCount READ rawCount NOTIFY rawChanged FINAL)
+    /// The screen is drawn in landscape (the window is wider than it is tall). A sensor whose interface does not turn
+    /// its readings with the screen (iOS's) reads in the device's own axes, and the controller turns them by this and
+    /// the pull of gravity (input::ScreenFrameSource), when the screen turns and at each calibration.
+    Q_PROPERTY(bool landscape READ landscape WRITE setLandscape NOTIFY landscapeChanged FINAL)
     /// True while the phone is being calibrated: a short wait, with the game held, in which the player holds the phone
     /// the way they like to play and the pose is taken as neutral. It follows the start of a game and a resume from the
     /// pause dialog when tilt steers, and the dialog's Recalibrate tilt.
@@ -109,6 +114,15 @@ public:
         return m_Source != nullptr;
     }
     [[nodiscard]] Scheme controls() const;
+
+    [[nodiscard]] bool landscape() const noexcept
+    {
+        return m_Landscape;
+    }
+    void setLandscape(bool landscape);
+    /// The screen turned a quarter or a half (the shape of the window may not say so): the readings are turned to it
+    /// from now. A game that is running is the caller's to pause; resuming calibrates in the new frame.
+    Q_INVOKABLE void screenTurned();
 
     [[nodiscard]] double tiltRight() const noexcept
     {
@@ -199,6 +213,7 @@ signals:
     void rawChanged();
     void calibratingChanged();
     void calibrationProgressChanged();
+    void landscapeChanged();
 
 private:
     class RecordingSource;
@@ -212,6 +227,8 @@ private:
 
     std::unique_ptr<input::SampleSource> m_Source;
     RecordingSource* m_Recording = nullptr; ///< m_Source, when there is one.
+    /// Turns what m_Source reads into the frame of the screen, when it reads in the device's.
+    std::unique_ptr<input::ScreenFrameSource> m_Frame;
     input::TiltProcessor m_Tilt;
     input::TiltReading m_Reading;
     input::SwipeRecogniser m_Swipe;
@@ -224,6 +241,7 @@ private:
     GameViewModel* m_Game = nullptr;
     ProfileViewModel* m_Profile = nullptr;
     bool m_TouchDevice = false;
+    bool m_Landscape = false;
 };
 
 } // namespace snake::ui

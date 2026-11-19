@@ -332,8 +332,14 @@ title: on Android it is `Activity.setRequestedOrientation` (locked, then full us
 `application:supportedInterfaceOrientationsForWindow:` for Qt's delegate with the orientation the screen was in when the game
 began, because Qt's view controller takes its orientations from the property list and offers no way to hold one. A computer's
 window does nothing. If the screen turns anyway the game pauses (`Main.qml`), because the layout is new and the tilt was
-calibrated for the old one; resuming calibrates again. The accelerometer is read with `AutomaticOrientation`, so Qt turns its
-axes with the screen and x is to the player's right in either orientation. None of it has run on a device. The save file is `save.snk` in `QStandardPaths::AppDataLocation`, which Qt makes the program's own
+calibrated for the old one; resuming calibrates again. The accelerometer asks Qt for `AutomaticOrientation`, which turns its axes
+with the screen so that x is to the player's right in either orientation, but only where the sensor backend supports
+`QSensor::AxesOrientation`, and iOS's (`IOSAccelerometer`) does not: it reads in the device's own axes whichever way the screen is
+drawn. Such a source says `SampleSource::in_device_frame()`, and `input::ScreenFrameSource` turns its samples: a screen in
+portrait has its top along the device's y, and a screen in landscape has it along the end of x that points up (gravity), taken
+when the window changes shape, when Qt says the screen turned and at each calibration (`InputController::screenTurned()`).
+An iPad drawn upside down is not told from upright. The rotation lock above has not run on a device and has been seen not to hold
+on an iPhone, so the turn of the screen has to be handled whether or not the lock works. The save file is `save.snk` in `QStandardPaths::AppDataLocation`, which Qt makes the program's own
 private folder on Android and `Library/Application Support` in the bundle's container on iOS: no storage permission, and
 Android's backup is off, so the scores stay on the device.
 
