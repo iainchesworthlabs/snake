@@ -227,8 +227,8 @@ the notch or the home indicator, or a leaderboard that is lost.
 ## Decisions and open questions
 
 - **Decided on 19 November 2026:** 1.0.0 is the first App Store version, so it is not held for the acceptance list on every
-  platform (the roadmap says so, in the pull request that changes the version). Android has no release and the ESP32-P4
-  board has no download with it, and the pages must not say otherwise.
+  platform (the roadmap says so, in the pull request that changes the version). Android and the ESP32-P4 board are later
+  work, not part of this release: Android has no release and the board has no download, and the pages must not say otherwise.
 - **Decided on 19 November 2026:** the owner is content with the licence (GPL-3.0-or-later) for the App Store.
 - **Support email.** Support is through GitHub issues only, which needs a GitHub account. Apple does not require an email,
   but a reviewer or a user who cannot sign in has no other route. The support page has an `OWNER DECISION` comment.
