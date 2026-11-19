@@ -16,6 +16,7 @@ add_executable(snake_viewmodel_tests
     test_profile_view_model.cpp
     test_qt_keys.cpp
     test_effects_model.cpp
+    test_game_center.cpp
     test_gamepad_controller.cpp
     test_haptics.cpp
     test_language_choice.cpp
@@ -36,15 +37,21 @@ add_executable(snake_viewmodel_tests
     ../src/board/effects.cpp
     ../src/board/effects.hpp
     ../src/device/accelerometer.cpp
+    ../src/device/game_center.cpp
+    ../src/device/game_center.hpp
     ../src/device/gamepad.cpp
     ../src/language/language_choice.cpp
     ../src/language/language_choice.hpp
     ../src/device/haptics.cpp
     ../src/device/haptics.hpp
+    ../src/viewmodel/achievement_list_model.cpp
+    ../src/viewmodel/achievement_list_model.hpp
     ../src/viewmodel/effects_model.cpp
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
+    ../src/viewmodel/game_center_director.cpp
+    ../src/viewmodel/game_center_director.hpp
     ../src/viewmodel/gamepad_controller.cpp
     ../src/viewmodel/gamepad_controller.hpp
     ../src/viewmodel/haptics_director.cpp
@@ -70,6 +77,9 @@ icl_platform_sources(snake_viewmodel_tests DIR "${CMAKE_CURRENT_SOURCE_DIR}/../s
 find_package(SDL3 CONFIG REQUIRED)
 target_sources(snake_viewmodel_tests PRIVATE test_sdl_gamepad.cpp ../src/device/sdl_gamepad.cpp ../src/device/sdl_gamepad.hpp)
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
+# The test of the Game Center identifiers reads the file that lists what the owner enters in App Store Connect.
+target_compile_definitions(snake_viewmodel_tests PRIVATE
+    SNAKE_GAME_CENTER_COMPONENTS="${PROJECT_SOURCE_DIR}/apps/snake/packaging/ios/game-center/components.json")
 target_link_libraries(snake_viewmodel_tests
     PRIVATE snake::audio snake::input snake::profile snake::sim SDL3::SDL3 Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_viewmodel_tests)

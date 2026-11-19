@@ -3,11 +3,14 @@
 
 #include "platform/motion_preference.hpp"
 #include "platform/save_file.hpp"
+#include "snake/profile/achievements.hpp"
 #include "snake/profile/leaderboard.hpp"
 #include "snake/profile/player_name.hpp"
 #include "snake/profile/unlocks.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/sim/scoring.hpp"
+#include "snake/sim/tally.hpp"
+#include "viewmodel/achievement_list_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 
 #include <QDateTime>
@@ -67,7 +70,7 @@ ProfileViewModel::ProfileViewModel(Clock clock, QObject* parent)
 
 ProfileViewModel::ProfileViewModel(Clock clock, MotionPreference motion_preference, QObject* parent)
     : QObject(parent), m_Clock(std::move(clock)), m_MotionPreference(std::move(motion_preference)),
-      m_Modes(m_Data.unlocks, this), m_Board(m_Data.leaderboards, this)
+      m_Modes(m_Data.unlocks, this), m_Achievements(m_Data.achievements, this), m_Board(m_Data.leaderboards, this)
 {
 }
 
@@ -121,11 +124,11 @@ void ProfileViewModel::on_state_changed()
 {
     if (m_Game->state() == GameViewModel::State::GameOver)
     {
-        record_game(to_sim(m_Game->mode()), static_cast<std::uint32_t>(m_Game->points()));
+        record_game(to_sim(m_Game->mode()), static_cast<std::uint32_t>(m_Game->points()), m_Game->tally());
     }
 }
 
-void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score)
+void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score, const sim::Tally& tally)
 {
     // The score of the board before this game: a game that was never saved does not count.
     const profile::Leaderboard& board = m_Data.leaderboards.of(mode);
@@ -154,6 +157,19 @@ void ProfileViewModel::record_game(sim::Mode mode, std::uint32_t score)
     {
         m_Modes.refresh();
     }
+
+    // What the game earned, worked out after the unlocks it opened, which two of the achievements are made of.
+    m_AchievedNow.clear();
+    m_EarnedNow = m_Data.achievements.note_game(mode, score, tally, m_Data.unlocks, best);
+    for (std::uint8_t number = 0; number < profile::ACHIEVEMENT_COUNT; ++number)
+    {
+        const auto achievement = static_cast<profile::Achievement>(number);
+        if (m_EarnedNow.has(achievement))
+        {
+            m_AchievedNow.push_back(AchievementListModel::name_of(achievement));
+        }
+    }
+    m_Achievements.refresh();
 
     const std::optional<std::size_t> place = board.rank_for(score);
     set_pending(place ? std::optional(Pending{.mode = mode, .score = score, .unix_seconds = m_Clock(), .place = *place})
@@ -223,6 +239,7 @@ void ProfileViewModel::setSaveFile(const QString& path)
         }
     }
     m_Modes.refresh();
+    m_Achievements.refresh();
     m_Board.mark_latest(std::nullopt, 0);
     m_Board.refresh();
     set_pending(std::nullopt);

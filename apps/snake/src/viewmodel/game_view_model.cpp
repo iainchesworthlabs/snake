@@ -51,6 +51,12 @@ GameViewModel::GameViewModel(QObject* parent) : GameViewModel(&system_seed, pare
 GameViewModel::GameViewModel(SeedSource seeds, QObject* parent)
     : QObject(parent), m_Seeds(std::move(seeds)), m_Session(sim::Mode::CLASSIC, next_seed())
 {
+    restart_tally();
+}
+
+void GameViewModel::restart_tally() noexcept
+{
+    m_Tally.start(m_Session.simulation().head());
 }
 
 GameViewModel::State GameViewModel::state() const
@@ -90,6 +96,7 @@ void GameViewModel::setMode(Mode mode)
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
     m_Session = sim::Session(to_sim(mode), next_seed());
+    restart_tally();
     m_Pacer.reset();
     emit modeChanged();
     publish(state_before, score_before, true);
@@ -100,6 +107,7 @@ void GameViewModel::newGame()
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
     m_Session = sim::Session(m_Session.mode(), next_seed());
+    restart_tally();
     m_Pacer.reset();
     publish(state_before, score_before, true);
 }
@@ -111,6 +119,7 @@ void GameViewModel::restart()
     const sim::GameState state_before = m_Session.state();
     const std::uint32_t score_before = m_Session.simulation().score();
     m_Session = sim::Session(m_Session.mode(), next_seed());
+    restart_tally();
     static_cast<void>(m_Session.start());
     m_Pacer.reset();
     publish(state_before, score_before, true);
@@ -221,6 +230,7 @@ bool GameViewModel::shed()
     {
         return false;
     }
+    m_Tally.note_shed();
     m_LastShed = std::move(dropped);
     emit tickEvent(Event::Shed);
     publish(state_before, score_before, true);
@@ -271,7 +281,9 @@ void GameViewModel::advance(double seconds)
         {
             static_cast<void>(m_Session.turn(sim::autoplay(m_Session.simulation())));
         }
-        const auto event = event_of(m_Session.tick());
+        const sim::TickOutcome outcome = m_Session.tick();
+        m_Tally.observe(outcome, m_Session.simulation());
+        const auto event = event_of(outcome);
         if (event)
         {
             emit tickEvent(*event);

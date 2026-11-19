@@ -33,7 +33,7 @@ Support is through GitHub issues only. There is no email address.
 
 ## What the game does not do
 
-The game has no accounts and sends nothing from your device, so nobody on the project can see your scores or look up your settings. See [Privacy](privacy.md).
+The game has no accounts and sends nothing to the project (on an iPhone or iPad it can send your scores and the achievements you have earned to Game Center, which is Apple's, if you are signed in), so nobody on the project can see your scores or look up your settings. See [Privacy](privacy.md).
 
 ## Press
 

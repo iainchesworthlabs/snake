@@ -10,7 +10,7 @@ description: "The Snake app icon and a short description, for writers."
 
 <section class="sk-text">
 <h2>About Snake</h2>
-<p>Snake is a Snake game with four modes: Easy, Classic, Portals and Hot potato. You steer by tilting, swiping, an on-screen d-pad or joystick, the keyboard or a gamepad. Each mode has its own leaderboard, kept on the device. The game has no account, does not use the network and collects no data. It is for Linux, macOS and Windows, with an iPhone and iPad version on its way to the App Store. The source code is public under the GNU General Public License, version 3 or later.</p>
+<p>Snake is a Snake game with four modes: Easy, Classic, Portals and Hot potato. You steer by tilting, swiping, an on-screen d-pad or joystick, the keyboard or a gamepad. Each mode has its own leaderboard, kept on the device, and on an iPhone or iPad a player who is signed in to Game Center can also put scores on its leaderboards and the achievements earned on the device in its achievements. The game has no account, collects no data and uses the network only for that. It is for Linux, macOS and Windows, with an iPhone and iPad version on its way to the App Store. The source code is public under the GNU General Public License, version 3 or later.</p>
 <p>Facts: <a href="../privacy/">privacy statement</a>, <a href="../features/">features</a>.</p>
 
 <h2>App icon</h2>

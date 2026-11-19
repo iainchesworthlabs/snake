@@ -11,6 +11,7 @@ FocusScope {
     required property ProfileViewModel profile
 
     signal leaderboardRequested
+    signal achievementsRequested
     signal settingsRequested
 
     // Each time the screen shows, the keyboard starts on its main button.
@@ -169,10 +170,41 @@ FocusScope {
             objectName: "leaderboardButton"
             x: page.landscape ? Theme.mirrored(page.margin, width, page.pageWidth) : Theme.mirrored(15, width, 390)
             y: page.landscape ? 300 : 762
-            width: page.landscape ? page.columnWidth - 56 : 300
+            width: page.landscape ? page.columnWidth - 112 : 240
             height: page.landscape ? 48 : 50
             text: qsTr("Leaderboard")
             onClicked: root.leaderboardRequested()
+        }
+
+        ToyButton {
+            objectName: "achievementsButton"
+            x: page.landscape ? Theme.mirrored(page.margin + page.columnWidth - 104, width, page.pageWidth) : Theme.mirrored(265, width, 390)
+            y: page.landscape ? 300 : 762
+            width: page.landscape ? 48 : 50
+            height: page.landscape ? 48 : 50
+            Accessible.name: qsTr("Achievements")
+            onClicked: root.achievementsRequested()
+
+            // A small cup: a bowl with a handle on each side, on a stem and a base.
+            Item {
+                anchors.centerIn: parent
+                width: 28
+                height: 22
+
+                Repeater {
+                    model: [[6, 0, 16, 10], [1, 2, 5, 3], [1, 5, 3, 3], [22, 2, 5, 3], [24, 5, 3, 3], [12, 10, 4, 6], [8, 16, 12, 3], [6, 19, 16, 3]]
+
+                    Rectangle {
+                        required property var modelData
+
+                        x: modelData[0]
+                        y: modelData[1]
+                        width: modelData[2]
+                        height: modelData[3]
+                        color: Theme.ink
+                    }
+                }
+            }
         }
 
         ToyButton {

@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>成就</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>返回</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>已达成</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>还没达成</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -80,6 +99,16 @@
     <message>
         <source>You matched your best.</source>
         <translation>与你的最高分持平。</translation>
+    </message>
+    <message>
+        <source>Achievement: %1</source>
+        <translation>成就：%1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n 个成就</numerusform>
+        </translation>
     </message>
     <message>
         <source>Game over</source>
@@ -216,6 +245,10 @@
     <message>
         <source>Top 10 on this device</source>
         <translation>本设备前十名</translation>
+    </message>
+    <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
     </message>
     <message>
         <source>No scores yet.</source>
@@ -458,6 +491,10 @@
         <translation>排行榜</translation>
     </message>
     <message>
+        <source>Achievements</source>
+        <translation>成就</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -467,6 +504,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>穿墙</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>奖励物品</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>最高连击</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>新纪录</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>最高速度</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 颗蓝莓</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>传送门已开启</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>穿过传送门</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>烫手山芋已开启</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>及时丢掉</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>全部四种模式</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>在简单模式中从棋盘一侧穿出，再从另一侧回来。</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>在奖励物品消失前吃掉它。</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>吃一颗价值 %L1 分的蓝莓。</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>超过某个模式排行榜上的最高分。</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>一直吃，直到蛇达到最快速度。</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>吃 %L1 颗蓝莓，可以分很多局。</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>开启传送门模式。</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>进入一个传送门，从它的另一端出来。</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>开启烫手山芋模式。</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>在炸弹爆炸前，用丢掉把炸弹丢出去。</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>在四种模式中各完成一局游戏。</translation>
     </message>
 </context>
 <context>

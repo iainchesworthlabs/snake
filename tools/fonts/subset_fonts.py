@@ -60,7 +60,8 @@ def characters_of(translations_dir: pathlib.Path, languages: list[str]) -> list[
         if not path.exists():
             continue
         for translation in ElementTree.parse(path).getroot().iter("translation"):
-            found.update(ord(c) for c in (translation.text or "") if ord(c) > 127)
+            # A string with plural forms keeps its text in one element for each form.
+            found.update(ord(c) for c in "".join(translation.itertext()) if ord(c) > 127)
     return sorted(found)
 
 

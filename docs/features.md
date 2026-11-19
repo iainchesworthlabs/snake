@@ -2,7 +2,7 @@
 template: marketing.html
 title: Features
 title_tag: "Features: Snake"
-description: "What Snake does: four modes, combos and bonus items, five ways to steer, a leaderboard for each mode, sound made by the game, eight languages and a reduced motion setting."
+description: "What Snake does: four modes, combos and bonus items, five ways to steer, a leaderboard for each mode, twelve achievements, sound made by the game, eight languages and a reduced motion setting."
 ---
 <section class="sk-head"><div class="icl-wrap">
 <h1>Features</h1>
@@ -15,6 +15,8 @@ description: "What Snake does: four modes, combos and bonus items, five ways to 
 <li><h3>Combos and bonus items</h3><p>Eat quickly to raise the combo to five times the points. Every fifth food brings a bonus item worth 50.</p></li>
 <li><h3>Steer your way</h3><p>Tilt, swipe, an on-screen d-pad or joystick on a phone or tablet. The keyboard or a gamepad on a computer.</p></li>
 <li><h3>A leaderboard for each mode</h3><p>The top 10, with names of up to 12 letters. Kept on your device between games.</p></li>
+<li><h3>Twelve achievements</h3><p>Things to do, such as eating a bonus item or going through a portal. A finished game can earn them. They are kept on your device, and a screen of their own, opened from the title, lists them.</p></li>
+<li><h3>Game Center</h3><p>On an iPhone or iPad, a player who is signed in to Game Center sends each game's score to that mode's leaderboard there, and the achievements earned on the device to its achievements, and opens them from the leaderboard and achievements screens. The leaderboards and achievements on the device are the same without it.</p></li>
 <li><h3>Made by the game</h3><p>The sound effects and the music are made by the game itself. There are switches for sound and music, and a volume.</p></li>
 <li><h3>Eight languages</h3><p>English, French, Spanish, German, Japanese, Simplified Chinese, Hebrew and Yiddish, picked from your device's languages. Hebrew and Yiddish are laid out right to left. The translations are made by machine and have not been read by someone who speaks each language.</p></li>
 <li><h3>Reduced motion</h3><p>A switch in Settings turns off the shake and the bobbing food. On a first run it follows your device's setting.</p></li>

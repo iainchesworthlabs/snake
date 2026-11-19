@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>Achievements</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>Earned</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>Not earned yet</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -80,6 +99,17 @@
     <message>
         <source>You matched your best.</source>
         <translation>You matched your best.</translation>
+    </message>
+    <message>
+        <source>Achievement: %1</source>
+        <translation>Achievement: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n achievement</numerusform>
+            <numerusform>%n achievements</numerusform>
+        </translation>
     </message>
     <message>
         <source>Game over</source>
@@ -216,6 +246,10 @@
     <message>
         <source>Top 10 on this device</source>
         <translation>Top 10 on this device</translation>
+    </message>
+    <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
     </message>
     <message>
         <source>No scores yet.</source>
@@ -458,6 +492,10 @@
         <translation>Leaderboard</translation>
     </message>
     <message>
+        <source>Achievements</source>
+        <translation>Achievements</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -467,6 +505,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 of %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>Through the wall</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>Bonus item</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>Top combo</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>New best</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>Top speed</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 blueberries</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>Portals open</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>Through a portal</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>Hot potato open</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>Shed in time</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>All four modes</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>Leave one side of the board in Easy and come back on the other.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>Eat a bonus item before it goes.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>Eat a blueberry worth %L1 points.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>Beat the top score on a mode&apos;s leaderboard.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>Eat until the snake is as fast as it gets.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>Eat %L1 blueberries, over as many games as it takes.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>Open the Portals mode.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>Go into a portal and come out of its twin.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>Open the Hot potato mode.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>Drop a bomb with Shed before it goes off.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>Finish a game in each of the four modes.</translation>
     </message>
 </context>
 <context>

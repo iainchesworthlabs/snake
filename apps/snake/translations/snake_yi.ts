@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>דערגרייכונגען</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>צוריק</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>דערגרייכט</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>נאָך נישט דערגרייכט</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -80,6 +99,17 @@
     <message>
         <source>You matched your best.</source>
         <translation>דו האָסט דערגרייכט דײַן רעקאָרד.</translation>
+    </message>
+    <message>
+        <source>Achievement: %1</source>
+        <translation>דערגרייכונג: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n דערגרייכונג</numerusform>
+            <numerusform>%n דערגרייכונגען</numerusform>
+        </translation>
     </message>
     <message>
         <source>Game over</source>
@@ -216,6 +246,10 @@
     <message>
         <source>Top 10 on this device</source>
         <translation>די בעסטע 10 אויף דער מאַשין</translation>
+    </message>
+    <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
     </message>
     <message>
         <source>No scores yet.</source>
@@ -458,6 +492,10 @@
         <translation>רעקאָרד־טאָוול</translation>
     </message>
     <message>
+        <source>Achievements</source>
+        <translation>דערגרייכונגען</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>אײַנשטעלונגען</translation>
     </message>
@@ -467,6 +505,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 פֿון %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>דורך דער וואנט</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>באָנוס זאַך</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>העכסטע קאָמבאָ</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>נײַער רעקאָרד</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>העכסטע גיכקייט</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 בלוביערן</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>טויערן אָפֿן</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>דורך אַ טויער</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>הייסער קאַרטאָפֿל אָפֿן</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>וואַרף צײַטלעך</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>אַלע פֿיר מאָדעס</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>גיי אַרויס פֿון איין זײַט פֿון דעם ברעט אין גרינג און קום צוריק פֿון דער אַנדערער.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>עס אַ באָנוס זאַך איידער עס גייט אַוועק.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>עס אַ בלוביער וואָס איז ווערט %L1 פּונקטן.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>שלאָג דעם העכסטן רעזולטאַט אין דער ליסטע פֿון אַ מאָדע.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>עס ביז דער שלאַנג איז ווי גיך ווי מעגלעך.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>עס %L1 בלוביערן, אין ווי פֿיל שפּילן ס&apos;איז נייטיק.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>עפֿן דעם מאָדע טויערן.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>גיי אַרײַן אין אַ טויער און קום אַרויס פֿון זײַן צווילינג.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>עפֿן דעם מאָדע הייסער קאַרטאָפֿל.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>וואַרף אַ באָמבע מיט וואַרף איידער זי פּלאַצט.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>ענדיק אַ שפּיל אין יעדן פֿון די פֿיר מאָדעס.</translation>
     </message>
 </context>
 <context>

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 add_executable(snake_profile_tests
+    test_achievements.cpp
     test_leaderboard.cpp
     test_player_name.cpp
     test_recent_names.cpp

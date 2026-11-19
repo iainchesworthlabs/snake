@@ -9,6 +9,7 @@ FocusScope {
 
     required property GameViewModel game
     required property ProfileViewModel profile
+    required property GameCenterDirector gameCenter
 
     // The player left the screen: the title shows next.
     signal closed
@@ -105,9 +106,14 @@ FocusScope {
             visible: !page.landscape
             x: Theme.mirrored(15, width, 390)
             y: 204
+            // Shares the line with the Game Center button when there is one, and shrinks to leave it room.
+            width: root.gameCenter.available ? 220 : 360
             color: Theme.ink
             font.pixelSize: 15
             font.weight: Font.Medium
+            fontSizeMode: Text.Fit
+            minimumPixelSize: 10
+            elide: Text.ElideRight
             text: qsTr("Top 10 on this device")
         }
 
@@ -217,6 +223,21 @@ FocusScope {
                     }
                 }
             }
+        }
+
+        // Game Center's leaderboard for the mode shown, for a player who is signed in to it. The top 10 above stay the ones on
+        // this device.
+        ToyButton {
+            objectName: "gameCenterButton"
+            visible: root.gameCenter.available
+            x: page.landscape ? Theme.mirrored(page.pageWidth - 15 - width, width, page.pageWidth) : Theme.mirrored(245, width, 390)
+            y: page.landscape ? 302 : 196
+            width: 130
+            height: page.landscape ? 38 : 34
+            radius: 10
+            fontSize: 15
+            text: qsTr("Game Center")
+            onClicked: root.gameCenter.showLeaderboard(root.profile.boardMode)
         }
 
         ToyButton {

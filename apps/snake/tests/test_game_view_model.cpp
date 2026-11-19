@@ -2,7 +2,9 @@
 #include "snake/sim/autoplayer.hpp"
 #include "snake/sim/direction.hpp"
 #include "snake/sim/mode.hpp"
+#include "snake/sim/scoring.hpp"
 #include "snake/sim/snapshot.hpp"
+#include "snake/sim/tally.hpp"
 #include "viewmodel/game_view_model.hpp"
 
 #include <catch2/catch_approx.hpp>
@@ -724,4 +726,225 @@ TEST_CASE("Enter sheds in Hot potato, and does nothing to a running game of anot
     classic.start();
     CHECK(classic.handleKey(Qt::Key_Return, false));
     CHECK(classic.state() == State::Running);
+}
+
+namespace
+{
+
+/// What the tick events of a game add up to, counted by the test and not by the tally.
+struct EventCounts
+{
+    std::uint16_t ate = 0;
+    std::uint16_t bonus = 0;
+    std::uint16_t potato = 0;
+    std::uint16_t teleported = 0;
+    std::uint16_t crashed = 0;
+    std::uint16_t exploded = 0;
+    std::uint16_t won = 0;
+};
+
+EventCounts count_events(const QSignalSpy& events)
+{
+    using Event = GameViewModel::Event;
+    EventCounts counts;
+    for (const auto& arguments : events)
+    {
+        switch (arguments.at(0).value<Event>())
+        {
+        case Event::Ate:
+            ++counts.ate;
+            break;
+        case Event::AteBonus:
+            ++counts.bonus;
+            break;
+        case Event::AtePotato:
+            ++counts.potato;
+            break;
+        case Event::Teleported:
+            ++counts.teleported;
+            break;
+        case Event::Crashed:
+            ++counts.crashed;
+            break;
+        case Event::Exploded:
+            ++counts.exploded;
+            break;
+        case Event::Won:
+            ++counts.won;
+            break;
+        case Event::Shed:
+            break;
+        }
+    }
+    return counts;
+}
+
+/// True when two cells are not next to each other.
+bool apart(snake::sim::Cell from, snake::sim::Cell to)
+{
+    const int dx = from.x > to.x ? from.x - to.x : to.x - from.x;
+    const int dy = from.y > to.y ? from.y - to.y : to.y - from.y;
+    return dx + dy != 1;
+}
+
+/// Plays the game in `mode` with the computer player steering, one tick for each call to advance(), until it ends or
+/// `limit` ticks have run. Returns whether the head ever moved to a cell that is not next to the one it left.
+bool play_with_autoplay(GameViewModel& game, Mode mode, int limit)
+{
+    game.setMode(mode);
+    game.start();
+    bool jumped = false;
+    for (int tick = 0; tick < limit && game.state() == State::Running; ++tick)
+    {
+        static_cast<void>(game.turn(snake::sim::autoplay(game.session().simulation())));
+        const snake::sim::Cell before = game.session().simulation().head();
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        jumped = jumped || apart(before, game.session().simulation().head());
+    }
+    return jumped;
+}
+
+} // namespace
+
+TEST_CASE("A new game has an empty tally", "[viewmodel][tally]")
+{
+    const GameViewModel game(counting_seeds());
+    snake::sim::Tally expected;
+    expected.start(game.session().simulation().head());
+    CHECK(game.tally() == expected);
+    CHECK(game.tally().ended_by() == snake::sim::Ending::NONE);
+}
+
+TEST_CASE("A game played with given seeds leaves the tally that its events add up to", "[viewmodel][tally]")
+{
+    using snake::sim::Ending;
+    for (const Mode mode : {Mode::Classic, Mode::Easy, Mode::Portals, Mode::HotPotato})
+    {
+        for (std::uint64_t seed = 1; seed <= 3; ++seed)
+        {
+            CAPTURE(static_cast<int>(mode), seed);
+            GameViewModel game(counting_seeds(seed));
+            QSignalSpy events(&game, &GameViewModel::tickEvent);
+            const bool jumped = play_with_autoplay(game, mode, 3000);
+            const EventCounts counts = count_events(events);
+            const snake::sim::Tally& tally = game.tally();
+            const snake::sim::Simulation& sim = game.session().simulation();
+
+            CHECK(tally.blueberries() == counts.ate + counts.won);
+            CHECK(tally.bonus_items() == counts.bonus);
+            CHECK(tally.bombs_eaten() == counts.potato);
+            CHECK(tally.portals_used() == counts.teleported);
+            CHECK(tally.sheds() == 0);
+            CHECK(tally.foods_eaten() == sim.foods_eaten());
+            CHECK(tally.foods_eaten() == tally.blueberries() + tally.bonus_items() + tally.bombs_eaten());
+            CHECK(tally.top_combo() >= (tally.blueberries() > 0 ? 1 : 0));
+            CHECK(tally.top_combo() <= snake::sim::Scoring::MAX_COMBO);
+            // Only the edge of a board that wraps lets the head jump, and a portal is the other jump.
+            CHECK(tally.wrapped() == (jumped && mode == Mode::Easy && tally.portals_used() == 0));
+            if (game.state() == State::GameOver)
+            {
+                CHECK(tally.ended_by() != Ending::NONE);
+                CHECK(counts.crashed + counts.exploded + counts.won == 1);
+            }
+            else
+            {
+                CHECK(tally.ended_by() == Ending::NONE);
+            }
+        }
+    }
+}
+
+TEST_CASE("The tally of a game of Easy shows that the snake wrapped and of Classic that a wall ended it",
+          "[viewmodel][tally]")
+{
+    using snake::sim::Ending;
+    bool wrapped = false;
+    for (std::uint64_t seed = 1; seed <= 20 && !wrapped; ++seed)
+    {
+        GameViewModel game(counting_seeds(seed));
+        play_with_autoplay(game, Mode::Easy, 3000);
+        wrapped = game.tally().wrapped();
+    }
+    CHECK(wrapped);
+
+    // A snake that is left to itself in Classic ends in the wall.
+    GameViewModel classic(counting_seeds());
+    classic.start();
+    for (int tick = 0; tick < 100 && classic.state() == State::Running; ++tick)
+    {
+        classic.advance((classic.session().tick_interval_ms() + 1) / 1000.0);
+    }
+    REQUIRE(classic.state() == State::GameOver);
+    CHECK(classic.tally().ended_by() == Ending::WALL);
+    CHECK_FALSE(classic.tally().wrapped());
+}
+
+TEST_CASE("A new game of any kind clears the tally", "[viewmodel][tally]")
+{
+    GameViewModel game(counting_seeds());
+    const auto empty = [&game]
+    {
+        snake::sim::Tally expected;
+        expected.start(game.session().simulation().head());
+        return expected;
+    };
+    const auto play = [&game]
+    {
+        game.start();
+        for (int tick = 0; tick < 3000 && game.state() == State::Running; ++tick)
+        {
+            static_cast<void>(game.turn(snake::sim::autoplay(game.session().simulation())));
+            game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+            if (game.tally().blueberries() >= 3)
+            {
+                break;
+            }
+        }
+        REQUIRE(game.tally().blueberries() >= 3);
+    };
+
+    play();
+    game.newGame();
+    CHECK(game.tally() == empty());
+
+    play();
+    game.restart();
+    CHECK(game.tally() == empty());
+    CHECK(game.state() == State::Running);
+
+    play();
+    game.setMode(Mode::Easy);
+    CHECK(game.tally() == empty());
+
+    // Setting the mode it already has changes nothing, the game in hand included.
+    play();
+    const snake::sim::Tally kept = game.tally();
+    game.setMode(Mode::Easy);
+    CHECK(game.tally() == kept);
+}
+
+TEST_CASE("A shed that happens is counted and one that does not is not", "[viewmodel][tally][shed]")
+{
+    bool tried = false;
+    for (std::uint64_t first = 1; first <= 20 && !tried; ++first)
+    {
+        GameViewModel game(counting_seeds(first));
+        if (!play_until_bomb(game))
+        {
+            continue;
+        }
+        tried = true;
+        CHECK(game.tally().bombs_eaten() == 1);
+        CHECK_FALSE(game.shed()); // the bomb is still in the head
+        CHECK(game.tally().sheds() == 0);
+
+        game.advance((game.session().tick_interval_ms() + 1) / 1000.0);
+        REQUIRE(game.canShed());
+        REQUIRE(game.shed());
+        CHECK(game.tally().sheds() == 1);
+        CHECK_FALSE(game.shed()); // nothing left to shed
+        CHECK(game.tally().sheds() == 1);
+        CHECK(game.tally().bombs_eaten() == 1);
+    }
+    CHECK(tried);
 }

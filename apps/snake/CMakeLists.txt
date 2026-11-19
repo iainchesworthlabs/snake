@@ -70,6 +70,7 @@ endfunction()
 # one, so the tests run the same screens against the same types.
 set(SNAKE_QML_FILES
     qml/AboutScreen.qml
+    qml/AchievementsScreen.qml
     qml/ArrowButton.qml
     qml/ConfirmDialog.qml
     qml/DashedFrame.qml
@@ -125,6 +126,8 @@ set(SNAKE_UI_SOURCES
     src/device/accelerometer.cpp
     src/device/accelerometer.hpp
     src/device/device.hpp
+    src/device/game_center.cpp
+    src/device/game_center.hpp
     src/device/gamepad.cpp
     src/device/gamepad.hpp
     src/device/haptics.cpp
@@ -154,12 +157,16 @@ set(SNAKE_UI_SOURCES
     src/theme/theme.cpp
     src/theme/theme.hpp
     src/theme/tokens.hpp
+    src/viewmodel/achievement_list_model.cpp
+    src/viewmodel/achievement_list_model.hpp
     src/viewmodel/effects_model.cpp
     src/viewmodel/effects_model.hpp
     src/viewmodel/game_view_model.cpp
     src/viewmodel/game_view_model.hpp
     src/viewmodel/gamepad_controller.cpp
     src/viewmodel/gamepad_controller.hpp
+    src/viewmodel/game_center_director.cpp
+    src/viewmodel/game_center_director.hpp
     src/viewmodel/haptics_director.cpp
     src/viewmodel/haptics_director.hpp
     src/viewmodel/input_controller.cpp
@@ -212,8 +219,9 @@ function(snake_add_ui_module target)
         target_link_libraries(${target} PRIVATE SDL3::SDL3)
     endif()
     if(IOS)
-        # The haptics are Objective-C++, with automatic reference counting.
+        # The haptics and Game Center are Objective-C++, with automatic reference counting. GameKit is Game Center's framework.
         set_source_files_properties(src/device/ios/device.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+        target_link_libraries(${target} PRIVATE "$<LINK_LIBRARY:FRAMEWORK,GameKit>")
     endif()
     target_link_libraries(${target}
         PRIVATE snake::audio snake::core snake::input snake::miniaudio snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)

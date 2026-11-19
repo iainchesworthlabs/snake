@@ -20,7 +20,7 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
-    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "settings", "about" or "notice". A game that starts
+    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "achievements", "settings", "about" or "notice". A game that starts
     // clears it.
     property string overlay
 
@@ -110,6 +110,16 @@ Window {
         game: gameModel
     }
 
+    // Game Center, for a phone whose player is signed in to it: sends the score of each game and the achievements the device holds,
+    // and opens its leaderboards and achievements.
+    GameCenterDirector {
+        id: gameCenterModel
+
+        objectName: "gameCenter"
+        game: gameModel
+        profile: profileModel
+    }
+
     ProfileViewModel {
         id: profileModel
 
@@ -157,6 +167,7 @@ Window {
             profileModel.boardMode = gameModel.mode;
             root.overlay = "leaderboard";
         }
+        onAchievementsRequested: root.overlay = "achievements"
         onSettingsRequested: root.overlay = "settings"
     }
 
@@ -237,6 +248,17 @@ Window {
         onClosed: root.overlay = "about"
     }
 
+    AchievementsScreen {
+        objectName: "achievementsScreen"
+        anchors.fill: parent
+        visible: root.overlay === "achievements"
+        focus: visible
+        game: gameModel
+        profile: profileModel
+        gameCenter: gameCenterModel
+        onClosed: root.overlay = ""
+    }
+
     LeaderboardScreen {
         objectName: "leaderboardScreen"
         anchors.fill: parent
@@ -244,6 +266,7 @@ Window {
         focus: visible
         game: gameModel
         profile: profileModel
+        gameCenter: gameCenterModel
         onClosed: {
             root.overlay = "";
             // Leaving after a game goes to the title, not back to the end screen of a score that is saved.

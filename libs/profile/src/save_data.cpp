@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "snake/profile/save_data.hpp"
 
+#include "snake/profile/achievements.hpp"
 #include "snake/profile/leaderboard.hpp"
 #include "snake/profile/player_name.hpp"
 #include "snake/profile/recent_names.hpp"
@@ -73,6 +74,9 @@ void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
                                         (settings.reduced_motion ? FLAG_REDUCED_MOTION : 0U)));
     writer.u8(settings.volume);
     writer.u32(data.unlocks.bits());
+    writer.u32(data.achievements.bits());
+    writer.u32(data.achievements.blueberries_eaten());
+    writer.u8(data.achievements.modes_finished());
 
     writer.u8(static_cast<std::uint8_t>(data.recent_names.size()));
     for (const PlayerName& name : data.recent_names.names())
@@ -93,9 +97,9 @@ void put_payload(sim::ByteWriter& writer, const SaveData& data) noexcept
     }
 }
 
-/// Reads the payload of a file of version 1, 2 or 3. Version 2 has the volume byte after the flags, and 3 has the
-/// leaderboards of the two modes that came after Easy and Classic. Returns nothing when a value is not allowed or the
-/// payload does not end where it should.
+/// Reads the payload of a file of version 1 to 4. Version 2 has the volume byte after the flags, 3 has the leaderboards
+/// of the two modes that came after Easy and Classic, and 4 has the achievement fields after the unlock bits. Returns
+/// nothing when a value is not allowed or the payload does not end where it should.
 std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::uint16_t version) noexcept
 {
     sim::ByteReader reader(payload);
@@ -107,8 +111,12 @@ std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::
     const std::uint8_t flags = reader.u8();
     const std::uint8_t volume = version >= 2 ? reader.u8() : VOLUME_MAX;
     const std::uint32_t unlock_bits = reader.u32();
+    const std::uint32_t achievement_bits = version >= 4 ? reader.u32() : 0;
+    const std::uint32_t blueberries = version >= 4 ? reader.u32() : 0;
+    const std::uint8_t modes_finished = version >= 4 ? reader.u8() : 0;
     if (controls >= CONTROL_SCHEME_COUNT || sensitivity >= TILT_SENSITIVITY_COUNT || (flags & ~KNOWN_FLAGS) != 0 ||
-        volume > VOLUME_MAX || !data.unlocks.restore(unlock_bits))
+        volume > VOLUME_MAX || !data.unlocks.restore(unlock_bits) ||
+        !data.achievements.restore(achievement_bits, blueberries, modes_finished))
     {
         return std::nullopt;
     }
@@ -119,6 +127,11 @@ std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::
     data.settings.music = (flags & FLAG_MUSIC) != 0;
     data.settings.reduced_motion = (flags & FLAG_REDUCED_MOTION) != 0;
     data.settings.volume = volume;
+    if (version < 4)
+    {
+        // A file from before the achievements has only its unlocks to go on.
+        static_cast<void>(data.achievements.sync_unlocks(data.unlocks));
+    }
 
     const std::uint8_t recent_count = reader.u8();
     if (recent_count > RecentNames::CAPACITY)
@@ -168,7 +181,7 @@ std::optional<SaveData> get_payload(std::span<const std::uint8_t> payload, std::
     return data;
 }
 
-/// Reads a whole file of version 1, 2 or 3, the marker and the version having been checked.
+/// Reads a whole file of version 1 to 4, the marker and the version having been checked.
 std::expected<SaveData, SaveError> decode_file(std::span<const std::uint8_t> bytes, std::uint16_t version) noexcept
 {
     if (bytes.size() < HEADER_SIZE)
@@ -253,6 +266,7 @@ std::expected<SaveData, SaveError> decode_save(std::span<const std::uint8_t> byt
     case 1:
     case 2:
     case 3:
+    case 4:
         return decode_file(bytes, version);
     default:
         return std::unexpected(SaveError::INVALID_DATA);

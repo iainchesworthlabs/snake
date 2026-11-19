@@ -47,7 +47,10 @@ Short answers.
 : In a file in the game's data folder on your device. See [Privacy](privacy.md).
 
 **Does the game send anything anywhere?**
-: No. It does not use the network.
+: Not from a computer. On an iPhone or iPad, if you are signed in to Game Center, it sends the score of each game and its mode, and which achievements you have earned on the device with how far along the two blueberry counts are, to Game Center, which is Apple's. It sends nothing else. If you are not signed in, it sends nothing. See [Privacy](privacy.md).
+
+**Whose achievements does Game Center show?**
+: Whoever is signed in to Game Center on that iPhone or iPad. The game keeps its achievements on the device, not for a person, so Game Center shows what was earned on the device under the player who is signed in to Game Center on it. If you earn an achievement while signed out or offline, the game sends it the next time it starts with you signed in.
 
 **How do I clear a leaderboard?**
 : Settings, Reset a leaderboard. It asks you to confirm.

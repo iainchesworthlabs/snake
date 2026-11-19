@@ -70,24 +70,28 @@ the Qt application's tokens. The title screen's attract mode plays an ordinary g
 to the food (a cell the tail is about to leave counts as free), refused when it would leave the snake less room than its
 length, and otherwise the safe step with the most room. It keeps no state and draws no random numbers, so it never
 touches the generator of a real game. Two autoplayed games are among the golden tests.
+A `Tally` counts what happens in one game for whoever drives it: the foods of each kind, the combo, the portals and sheds, whether the snake wrapped, and how the game ended. It is not part of the game's state, so it is in no snapshot, hash or replay; the driver starts it with the game and feeds it each tick's outcome.
 The game loop is a fixed timestep. The platform tells a `TickPacer` how much time has passed since the last frame, in
 microseconds, and asks it for each tick that is due, passing the session's current tick interval. The pacer reads no
 clock. It keeps at most 250 ms, so a stall (a dragged window, a slow frame) does not make the game race through the
 ticks it missed, and the simulation is unaffected by frame timing: a game is the same whatever the frames were.
 `libs/profile` is portable in the same way. It holds what a player keeps between runs: names, leaderboards, settings,
-unlocks and the versioned bytes they are saved as. It never reads or writes a file. The platform service keeps the
-bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each stores them its own
-way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
+unlocks, achievements and the versioned bytes they are saved as. It never reads or writes a file. The platform
+service keeps the bytes, so the desktop, the phones and the ESP32-P4 share the rules for names and ranking and each
+stores them its own way. It is separate from `libs/core` because `libs/core` has a logger that uses iostream and a mutex.
 
-The save file holds the settings, unlocks, recent names and leaderboards, at most 565 bytes. It starts with the marker
-`SNKS` and a version number, which stay in those places in every version, then the size of the rest, the data, and an
-FNV-1a checksum. `decode_save()` reads every version up to the current one and fills fields that a newer version added
-with their defaults, so an update never loses a player's scores. It returns an error value, never a partly filled
-save, for a file that is cut short, has bytes left over, fails its checksum or holds a value that is not allowed. A file
-written by a newer program is reported as `NEWER_VERSION`, and the program then leaves it alone instead of replacing it
-with an older save. The recorded games are separate files in the replay format, because they are up to 64 KB each and
-change at other times. The platform service stores the bytes: it writes a new file next to the old one and renames it
-into place, so a crash or a flat battery leaves the old save whole.
+The save file holds the settings, unlocks, achievements, recent names and leaderboards, at most 1,076 bytes. The
+achievements are the earned bits, the blueberries eaten in all (which stops at its largest value) and the modes a game
+has been finished in. The file starts with the marker `SNKS` and a version number, which stay in those places in every
+version, then the size of the rest, the data, and an FNV-1a checksum. `decode_save()` reads every version up to the
+current one and fills fields that a newer version added with their defaults (a file from before the achievements reads
+with none earned except the two that its unlock bits give), so an update never loses a player's scores. It
+returns an error value, never a partly filled save, for a file that is cut short, has bytes left over, fails its
+checksum or holds a value that is not allowed. A file written by a newer program is reported as `NEWER_VERSION`, and
+the program then leaves it alone instead of replacing it with an older save. The recorded games are separate files in
+the replay format, because they are up to 64 KB each and change at other times. The platform service stores the bytes:
+it writes a new file next to the old one and renames it into place, so a crash or a flat battery leaves the old save
+whole.
 `libs/audio` is portable in the same way, and makes the sound of the game from numbers. `note_frequency_q8()` gives the
 frequency of a MIDI note, times 256, in whole-number arithmetic. `Synth` has four effect voices and up to three music
 channels, each a square (with a duty), triangle or noise oscillator on a 32-bit phase; an effect is a list of `Segment`s,
@@ -133,7 +137,7 @@ The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## The application
 
-`GameViewModel` is what QML sees of the game. It owns a `sim::Session` and a `sim::TickPacer` and holds no rules. A
+`GameViewModel` is what QML sees of the game. It owns a `sim::Session`, a `sim::TickPacer` and a `sim::Tally` and holds no rules. A
 `FrameAnimation` in `Main.qml` runs in step with the display and calls `advance()` with the time each frame took; the
 view-model runs the ticks that are due, at the speed the game has reached, so the game plays the same whatever the
 frame rate. Key presses go to `handleKey()`, which maps the Qt key code to the library's key and either steers or
@@ -144,10 +148,27 @@ function the tests give. The state, score and mode are properties, and `boardCha
 
 `ProfileViewModel` is what QML sees of the player's record. It watches a `GameViewModel` and, when a game ends, notes
 the score against the best of the game's mode and against the unlock rules of `libs/profile`, which gives the game-over
-screen its figures (`newBest`, `pointsToBest`, `unlockedNow`). It owns the `profile::SaveData` in memory and a
-`ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
+screen its figures (`newBest`, `pointsToBest`, `unlockedNow`, `achievedNow`). It owns the `profile::SaveData` in memory
+and a `ModeListModel`, the four modes of the title screen with their names, what each one says under its name, and whether it
 is locked or open: Easy and Classic always are, and Portals and Hot potato open at 2,000 and 3,000 points in Classic, and
 can be chosen and played from then on. The best score of a mode is the top of its leaderboard.
+
+A finished game also earns achievements. `record_game` gives `profile::Achievements::note_game` the mode, the score,
+the game's `sim::Tally` (read from `GameViewModel::tally()`; a game recorded without one has an empty tally), the unlocks
+after the game and the best of the mode before it. What the call newly earned is `achievedNow`, the names in the order of
+`profile::Achievement`, which the game over screen shows as one line and `SoundDirector` answers with the new-best jingle
+(once, whether the game was a new best, earned an achievement, or both). The profile saves after every game, so what was
+earned lasts. `AchievementListModel` is the twelve achievements as rows (`number`, `name`, `description`, `earned` and
+`progress`, which is text such as "37 / 100" for the two blueberry counts and empty for the others), refreshed when a game
+is recorded and when a save file is loaded. The names and descriptions are translated; the numbers in them come from
+`Scoring` and the targets in `profile/achievements.hpp`, never from the text. The title's second `GameViewModel`, which
+plays the demo, is not watched by the profile and earns nothing.
+
+`AchievementsScreen` lists the twelve rows of that model, opened from the title by the Achievements button between Leaderboard and
+Settings. Upright the rows are one column of twelve; lying down they are two of six, the first six on the leading side. One row is
+always chosen (a tap, or the arrow keys, which a gamepad also sends), and the strip under the panel gives its description and
+whether it is earned. A row shows a tick when earned and a padlock when not, and its accessible name is the name, the
+description, whether it is earned and the progress, in one string.
 
 The new modes reach the screens through the events of `GameViewModel`: `AtePotato`, `Teleported`, `Shed` and `Exploded`
 join `Ate`, `AteBonus`, `Crashed` and `Won`, each with a sound (`Effect::POTATO`, `PORTAL`, `SHED`, `EXPLODE`), a show of
@@ -269,6 +290,19 @@ normal one, granted at install and never asked of the person, and the only permi
 `UIImpactFeedbackGenerator` (`device.mm`, Objective-C++ with automatic reference counting). Anywhere else it does nothing.
 `HapticsDirector` listens to `GameViewModel::tickEvent`: a tap for eating, a thud for a crash. Neither has run on a device.
 
+**Game Center.** `device::GameCenter` (`device/game_center.hpp`) is the interface to Apple's Game Center: `available()` (the player is
+signed in), `submit_score()`, `show_leaderboard()`, `report_achievement()` and `show_achievements()`, each of which does nothing
+when the player is not signed in, and none of which is tried again when it fails. `NoGameCenter` is every other device. The iOS one
+(`device/ios/device.mm`) uses GameKit; it has not been compiled or run on a device. `GameCenterDirector` is the only user of it,
+and has the `game` and the `profile` it watches. It sends the score of a finished game, and for achievements it reports what
+`ProfileViewModel::earnedNow()` says a game newly earned at 100 and each of the two blueberry counts that is not earned at its whole
+percentage (rounded down, and nothing at zero). Whenever Game Center becomes available (start-up with a signed-in player, or a later
+sign-in), and whenever the profile is set or loads a save file while it is, it reports everything the device holds, so that what was
+earned offline or before signing in gets there without a retry; reporting twice does no harm. The device is the record and Game
+Center is a copy, so nothing here changes what the device holds. `GameCenterDirector::achievement_id()` and `leaderboard_id()` are
+the identifiers entered in App Store Connect and never change; a test checks them against
+`apps/snake/packaging/ios/game-center/components.json`, which lists what the owner enters there.
+
 **Steering by gamepad.** A computer's gamepads are read through SDL3's gamepad subsystem and nothing else of SDL (the vcpkg port is
 built with no video, so no display library is needed; it is a static library, which on Windows is why the preset uses the
 `x64-windows-static-md` triplet). `device::GamepadSource` is the interface (`poll()` gives the events since the last call: a
@@ -344,8 +378,8 @@ private folder on Android and `Library/Application Support` in the bundle's cont
 Android's backup is off, so the scores stay on the device.
 
 The screens follow the state of the game, so there is almost no navigation to keep in step with it. The screens
-that are not states of the game, name entry, the leaderboard and the settings, are an `overlay` property of `Main.qml` (`""`,
-`"nameEntry"`, `"leaderboard"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game
+that are not states of the game, name entry, the leaderboard, the achievements and the settings, are an `overlay` property of `Main.qml` (`""`,
+`"nameEntry"`, `"leaderboard"`, `"achievements"`, `"settings"`, `"about"` or `"notice"`) shown over the title or the game over screen; a game that starts clears it. The game
 over screen offers Save score in place of Play again while a score waits for a name, and Menu lets that score go. The
 leaderboard's Back goes to the title (through `newGame()` when it was reached from the end of a game). `NameEntryScreen`
 keeps the keyboard on the screen itself, so letters and Space type into the name and the buttons on it answer touch only;
