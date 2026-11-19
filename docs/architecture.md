@@ -70,6 +70,7 @@ the Qt application's tokens. The title screen's attract mode plays an ordinary g
 to the food (a cell the tail is about to leave counts as free), refused when it would leave the snake less room than its
 length, and otherwise the safe step with the most room. It keeps no state and draws no random numbers, so it never
 touches the generator of a real game. Two autoplayed games are among the golden tests.
+A `Tally` counts what happens in one game for whoever drives it: the foods of each kind, the combo, the portals and sheds, whether the snake wrapped, and how the game ended. It is not part of the game's state, so it is in no snapshot, hash or replay; the driver starts it with the game and feeds it each tick's outcome.
 The game loop is a fixed timestep. The platform tells a `TickPacer` how much time has passed since the last frame, in
 microseconds, and asks it for each tick that is due, passing the session's current tick interval. The pacer reads no
 clock. It keeps at most 250 ms, so a stall (a dragged window, a slow frame) does not make the game race through the
@@ -133,7 +134,7 @@ The [roadmap](roadmap.md) lists the libraries that follow.
 
 ## The application
 
-`GameViewModel` is what QML sees of the game. It owns a `sim::Session` and a `sim::TickPacer` and holds no rules. A
+`GameViewModel` is what QML sees of the game. It owns a `sim::Session`, a `sim::TickPacer` and a `sim::Tally` and holds no rules. A
 `FrameAnimation` in `Main.qml` runs in step with the display and calls `advance()` with the time each frame took; the
 view-model runs the ticks that are due, at the speed the game has reached, so the game plays the same whatever the
 frame rate. Key presses go to `handleKey()`, which maps the Qt key code to the library's key and either steers or

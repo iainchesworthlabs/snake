@@ -3,6 +3,7 @@
 
 #include "snake/input/action.hpp"
 #include "snake/sim/session.hpp"
+#include "snake/sim/tally.hpp"
 #include "snake/sim/tick_pacer.hpp"
 
 #include <QtQml/qqmlregistration.h>
@@ -116,6 +117,13 @@ public:
         return m_Session;
     }
 
+    /// What has happened in the current game: what was eaten, whether the snake wrapped, how the game ended. It starts
+    /// again with every new session, so it is empty after newGame(), restart() and a change of mode.
+    [[nodiscard]] const sim::Tally& tally() const noexcept
+    {
+        return m_Tally;
+    }
+
     /// The cells of the body that the last shed dropped, for the effects to show: the bomb's first, then the rest
     /// towards the tail.
     [[nodiscard]] const std::vector<sim::Cell>& lastShed() const noexcept
@@ -175,10 +183,14 @@ private:
     /// The seed of the next game: the demo's own sequence while it plays itself, else from the seed source.
     [[nodiscard]] std::uint64_t next_seed();
 
+    /// Starts the tally afresh for the session that has just been made.
+    void restart_tally() noexcept;
+
     SeedSource m_Seeds;
     bool m_Autoplay = false;
     std::uint64_t m_DemoSeed = DEMO_SEED;
     sim::Session m_Session;
+    sim::Tally m_Tally;
     sim::TickPacer m_Pacer;
     std::vector<sim::Cell> m_LastShed;
 };
