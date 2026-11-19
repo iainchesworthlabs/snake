@@ -16,6 +16,9 @@ decisions behind it. It is kept up to date as steps land. The visual design is i
 1. **Release shape.** Releases come in steps up to 1.0. Pre-releases per platform stage: `0.2.0` desktop (Windows,
    macOS, Linux), `0.3.0` Android and iOS, `0.4.0` ESP32-P4, then `1.0.0` when every acceptance item in the
    requirements is ticked on every platform. The first final release also creates `main` and starts the docs deploy.
+   **Changed on 19 November 2026:** the owner decided that `1.0.0` is the first App Store version, so it is not held for
+   the acceptance list on every platform. Android has no release and the ESP32-P4 board has no download with it. The
+   acceptance items are still the measure for each platform, and the ones not yet ticked are not claimed anywhere.
 2. **ESP32-P4 front end.** LVGL (MIT licence) with Espressif's `esp_lvgl_port`. Qt Quick does not run on the chip.
    Qt for MCUs lists the ESP32-P4 as a Tier 3 platform, but it is sold under a commercial licence and the project is
    GPL-3.0-or-later in a public repository, so it is not used.
@@ -191,7 +194,9 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
 
 **Phase 6: 1.0**
 
-24. Tick the acceptance list on each platform, assemble the changelog, tag `v1.0.0`.
+24. Test the iPhone and iPad build in TestFlight, fix what is found, assemble the changelog, tag `v1.0.0` and submit that
+    build to the App Store (the plan is `docs/app-store.md`). Ticking the acceptance list on each platform no longer gates it
+    (decision 1).
 
 ## Tests and gates
 
