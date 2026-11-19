@@ -518,6 +518,34 @@ TEST_CASE("Tilt shows the indicator and a pause button, and swiping a swipe area
     CHECK(app.item("swipeArea")->isEnabled());
 }
 
+TEST_CASE("Swiping shows a sign under the board, clear of the board and the pause button, and no other way does",
+          "[screens][touch]")
+{
+    for (const auto controls : {ProfileViewModel::Controls::Tilt, ProfileViewModel::Controls::Swipe,
+                                ProfileViewModel::Controls::Dpad, ProfileViewModel::Controls::Joystick})
+    {
+        App app(true);
+        app.profile().setControls(controls);
+        app.start_classic();
+        CHECK(app.shows("swipeCue") == (controls == ProfileViewModel::Controls::Swipe));
+    }
+
+    App app(true);
+    app.profile().setControls(ProfileViewModel::Controls::Swipe);
+    app.start_classic();
+    const auto box_of = [&app](const char* name)
+    {
+        const QQuickItem* target = app.item(name);
+        return QRectF(target->mapToScene(QPointF(0, 0)), QSizeF(target->width(), target->height()));
+    };
+    const QRectF cue = box_of("swipeCue");
+    CHECK_FALSE(cue.intersects(box_of("board")));
+    CHECK_FALSE(cue.intersects(box_of("pauseButton")));
+    CHECK(cue.bottom() <= app.window().height());
+    CHECK(cue.left() >= 0.0);
+    CHECK(cue.right() <= app.window().width());
+}
+
 TEST_CASE("The d-pad makes room under the board and its arrows turn the snake", "[screens][touch]")
 {
     App app(true);

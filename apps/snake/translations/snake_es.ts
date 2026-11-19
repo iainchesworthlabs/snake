@@ -426,6 +426,13 @@
     </message>
 </context>
 <context>
+    <name>SwipeCue</name>
+    <message>
+        <source>Swipe</source>
+        <translation>Deslizar</translation>
+    </message>
+</context>
+<context>
     <name>TiltIndicator</name>
     <message>
         <source>Tilt</source>

@@ -84,6 +84,7 @@ set(SNAKE_QML_FILES
     qml/PixelNumber.qml
     qml/SettingsScreen.qml
     qml/ShadowText.qml
+    qml/SwipeCue.qml
     qml/TitleScreen.qml
     qml/TiltIndicator.qml
     qml/ToggleSwitch.qml

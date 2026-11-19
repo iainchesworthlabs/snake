@@ -1,0 +1,1 @@
+**A sign that swiping steers.** With swipe controls, four faint arrows now show under the board, so the player can tell at a glance which way of steering is on. A swipe still works anywhere on the screen.
