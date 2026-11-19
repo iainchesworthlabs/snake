@@ -2,26 +2,31 @@
 find_package(Qt6 6.8 REQUIRED COMPONENTS Quick LinguistTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
-# The bundled font, from the design package. The files are compiled into the executable as resources.
+# The bundled fonts. The files are compiled into the executable as resources. They are TrueType, not WOFF2, which only
+# some of Qt's font engines can read (the Qt of Windows cannot, nor the platforms that use Qt's own FreeType), and the
+# game would draw its text in whatever font the system has instead. Each family's licence travels with it: see the
+# About screen and the install rules below.
+# Pixelify Sans, the game's font, from the design package (docs/design/fonts/, whose WOFF2 files are for the website),
+# unpacked by tools/fonts/unpack_woff2.py. Its licence is in the design package.
 set(SNAKE_FONT_DIR "${PROJECT_SOURCE_DIR}/docs/design/fonts")
+set(SNAKE_NOTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts")
 set(SNAKE_FONT_FILES
-    pixelify-sans-latin-400-normal.woff2
-    pixelify-sans-latin-500-normal.woff2
-    pixelify-sans-latin-600-normal.woff2
-    pixelify-sans-latin-700-normal.woff2)
+    pixelify-sans-latin-400-normal.ttf
+    pixelify-sans-latin-500-normal.ttf
+    pixelify-sans-latin-600-normal.ttf
+    pixelify-sans-latin-700-normal.ttf)
 # The fonts for the scripts Pixelify Sans does not have, cut down to the characters of the translations by
 # tools/fonts/subset_fonts.py.
-set(SNAKE_NOTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/fonts")
 set(SNAKE_NOTO_FILES
-    noto-sans-jp-400.woff2
-    noto-sans-jp-700.woff2
-    noto-sans-sc-400.woff2
-    noto-sans-sc-700.woff2
-    noto-sans-hebrew-400.woff2
-    noto-sans-hebrew-700.woff2)
+    noto-sans-jp-400.ttf
+    noto-sans-jp-700.ttf
+    noto-sans-sc-400.ttf
+    noto-sans-sc-700.ttf
+    noto-sans-hebrew-400.ttf
+    noto-sans-hebrew-700.ttf)
 function(snake_add_font_resources target)
-    list(TRANSFORM SNAKE_FONT_FILES PREPEND "${SNAKE_FONT_DIR}/" OUTPUT_VARIABLE font_paths)
-    qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_FONT_DIR}" FILES ${font_paths})
+    list(TRANSFORM SNAKE_FONT_FILES PREPEND "${SNAKE_NOTO_DIR}/" OUTPUT_VARIABLE font_paths)
+    qt_add_resources(${target} fonts PREFIX /snake/fonts BASE "${SNAKE_NOTO_DIR}" FILES ${font_paths})
     list(TRANSFORM SNAKE_NOTO_FILES PREPEND "${SNAKE_NOTO_DIR}/" OUTPUT_VARIABLE noto_paths)
     qt_add_resources(${target} noto_fonts PREFIX /snake/fonts BASE "${SNAKE_NOTO_DIR}" FILES ${noto_paths})
 endfunction()

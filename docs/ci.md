@@ -106,7 +106,7 @@ Only real pictures go on the pages: the icon, and screenshots of the game itself
 the design mock and stay off (`STALE_PICTURES`). The screenshots are `docs/assets/img/snake-*.png`: the title, game and
 leaderboard screens in the computer layout (1100 by 700 pixels) and the phone layout (390 by 844 pixels). They were taken from
 a Windows build of the game, by rendering `Main.qml` off screen with the software renderer, as `apps/snake/tests/test_screens.cpp`
-does, with the game's own font (the woff2 files of `docs/design/fonts/` converted to ttf, because the prebuilt Qt used cannot
+does, with the game's own font (the TrueType files of `apps/snake/fonts/`; the prebuilt Qt used cannot
 read woff2) and made-up names on the leaderboard (MAYA, LEO, JUNO, KAI, POPPY, SAM). They were not taken on a phone or on Linux
 or macOS, and the pages say "the phone layout", not "an iPhone". To take them again, do the same at the same sizes, **look at
 each picture**, and update the alt text and the `width` and `height` in the markup (a unit test compares them with the files).
