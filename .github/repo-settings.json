@@ -1,6 +1,6 @@
 {
   "description": "Snake game on Qt 6 and C++23. Window and structure only; the game is not implemented.",
-  "homepage": "https://iainchesworthlabs.github.io/snake/",
+  "homepage": "https://iainchesworthlabs.com/snake/",
   "repository": {
     "has_issues": true,
     "has_wiki": false,
@@ -35,9 +35,6 @@
     "secret_scanning_push_protection": true,
     "private_vulnerability_reporting": true,
     "vulnerability_alerts": true
-  },
-  "pages": {
-    "build_type": "workflow"
   },
   "environments": {
     "release": {
