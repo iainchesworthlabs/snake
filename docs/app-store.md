@@ -15,7 +15,7 @@ claim in it is one the [privacy](privacy.md), [features](features.md) and [how t
 | Bundle identifier | `com.iainchesworthlabs.snake`. The app record is named **ICL Snake** (the name under the icon is Snake). |
 | Signing | App Store profile, Apple Distribution certificate and the App Store Connect API key are set as secrets. `SIGN_IOS_UPLOAD=true` and `SIGN_IOS_ADHOC=true` are set; upload wins. |
 | Last iOS build | Release workflow run 40599773635 (27 October 2026) built version 0.2.0, build 23, signed for the App Store, and had Apple validate it. Look in TestFlight to see whether it was uploaded. |
-| On a device | Nobody has run the game on an iPhone or iPad yet. The checks so far look inside the IPA. This is the first thing TestFlight is for. |
+| On a device | The owner is trying the TestFlight build on an iPhone 17 (19 November 2026) and plans to try it on an iPad. Until results are written into the test plan below, nothing about how it plays on a device is recorded. |
 | Version in the source | `0.2.0` in `CMakeLists.txt` and `vcpkg.json`. A `v1.0.0` tag stops at its first job until both say `1.0.0` and `CHANGELOG.md` has a `## [1.0.0]` section. |
 | Privacy and support pages | Live at `https://iainchesworthlabs.com/snake/privacy/` and `.../support/`. |
 
@@ -222,19 +222,14 @@ the notch or the home indicator, or a leaderboard that is lost.
 - [ ] The description, the keywords, the URLs and the copyright above are entered, and the three URLs open.
 - [ ] The age rating and App Privacy (Data Not Collected) are answered, and the review contact and notes are filled in.
 - [ ] Price and availability are set.
-- [ ] The licence question below is settled.
 - [ ] The release option is chosen: **manually release** is the safe one, so the site and the GitHub Release can be put right the day it goes live.
 
-## Open questions for the owner
+## Decisions and open questions
 
-- **1.0.0 and the acceptance list.** [The requirements](prd.md) and [the roadmap](roadmap.md) call 1.0.0 the release when
-  every acceptance item is ticked on all six platforms. None is ticked, Android has never been tried on a device and the
-  ESP32-P4 board has no tilt. If the owner means 1.0.0 to be the first App Store version, those documents and the
-  site's "pre-release" wording should say so in the same pull request as the version change; this page does not decide it.
-- **The licence.** The game is GPL-3.0-or-later, and Apple's App Store terms add restrictions on how a copy can be used
-  and passed on. The copyright holder can distribute their own work under those terms, but not other people's, and the
-  Qt libraries and any outside contributions have their own licences. This needs the owner's decision, and legal advice
-  if there is doubt, before the first submission. Nothing in the repository settles it.
+- **Decided on 19 November 2026:** 1.0.0 is the first App Store version, so it is not held for the acceptance list on every
+  platform (the roadmap says so, in the pull request that changes the version). Android has no release and the ESP32-P4
+  board has no download with it, and the pages must not say otherwise.
+- **Decided on 19 November 2026:** the owner is content with the licence (GPL-3.0-or-later) for the App Store.
 - **Support email.** Support is through GitHub issues only, which needs a GitHub account. Apple does not require an email,
   but a reviewer or a user who cannot sign in has no other route. The support page has an `OWNER DECISION` comment.
 - **The translations** are machine-made and unread by speakers of the languages ([i18n](i18n.md)). The store text says
