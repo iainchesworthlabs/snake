@@ -17,10 +17,10 @@ struct EightWayConfig
     /// ... and steering stops below this. It is at most `engage`; the gap keeps a thumb that wobbles near the edge
     /// steady.
     float release = 0.0F;
-    /// The smaller axis, as a fraction of the larger, at which the knob is read as pointing diagonally: 0.47 is 25
-    /// degrees off an axis, so the diagonal directions have 40 degrees each and the four straight ones 50.
+    /// The smaller axis, as a fraction of the larger, at which the knob is read as pointing diagonally: 0.65 is 33
+    /// degrees off an axis, so the diagonal directions have 24 degrees each and the four straight ones 66.
     float diagonal_enter = 0.0F;
-    /// ... and it goes back to a straight direction below this (20 degrees). The gap stops a thumb on the edge from
+    /// ... and it goes back to a straight direction below this (28 degrees). The gap stops a thumb on the edge from
     /// changing its mind.
     float diagonal_leave = 0.0F;
 };
@@ -71,8 +71,9 @@ private:
 };
 
 /// The joystick of the game: engages at 30 percent of the way and lets go at 20, which a thumb does without effort,
-/// with the diagonals as above.
+/// with the diagonals as above. The diagonal is narrow on purpose: a thumb that sweeps from one straight direction to the
+/// next crosses it, and a wide one turned the snake back the way it came before the thumb was through.
 inline constexpr EightWayConfig TOUCH_JOYSTICK = {
-    .engage = 0.30F, .release = 0.20F, .diagonal_enter = 0.47F, .diagonal_leave = 0.36F};
+    .engage = 0.30F, .release = 0.20F, .diagonal_enter = 0.65F, .diagonal_leave = 0.53F};
 
 } // namespace snake::input

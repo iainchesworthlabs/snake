@@ -295,7 +295,7 @@ game runs; the first finger down is followed and the rest are ignored), and the 
 The on-screen joystick (`JoystickPad`) is a plate with a knob that follows a thumb, clamped to its travel, and calls
 `joystickMoved(right, up)` with the knob's place as a fraction of that travel (`joystickReleased()` when the thumb lifts). An
 `EightWaySelector` (`TOUCH_JOYSTICK`: engage 0.30, release 0.20) reads it in eight ways: straight is that way, and a diagonal
-(25 degrees or more off an axis, 40 degrees wide) is a turn across the snake's own line, so north-east is up while the snake
+(33 degrees or more off an axis, 24 degrees wide) is a turn across the snake's own line, so north-east is up while the snake
 heads east and east while it heads north. The controller reads the knob when it moves and every frame, against the heading the
 snake will have after the turns that are waiting: a thumb held on a diagonal queues one turn per tick, a staircase, and a
 flick to the diagonal and back within a tick queues two, which is one row aside. The four choices (tilt, swipe, d-pad, joystick) are in the pause dialog; `ControlScheme::JOYSTICK` is 3

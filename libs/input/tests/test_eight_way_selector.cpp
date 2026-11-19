@@ -92,34 +92,52 @@ TEST_CASE("A flick to the diagonal and back is one row aside", "[eight-way]")
     CHECK(direction_of(point(selector, 0.8F, 0.0F, Direction::UP)) == Direction::RIGHT);
 }
 
-TEST_CASE("The diagonals are 40 degrees wide and the straight ones 50", "[eight-way]")
+TEST_CASE("The diagonals are 24 degrees wide and the straight ones 66", "[eight-way]")
 {
-    // Coming from a straight direction the diagonal starts at 25 degrees off the axis.
+    // Coming from a straight direction the diagonal starts at 33 degrees off the axis.
     EightWaySelector selector(TOUCH_JOYSTICK);
     CHECK_FALSE(point(selector, 0.8F, 20.0F, Direction::RIGHT)->diagonal);
-    CHECK_FALSE(point(selector, 0.8F, 24.0F, Direction::RIGHT)->diagonal);
-    CHECK(point(selector, 0.8F, 26.0F, Direction::RIGHT)->diagonal);
-    // From the other side it is the same: 65 degrees is 25 off the vertical axis, and a thumb that comes from straight
+    CHECK_FALSE(point(selector, 0.8F, 31.0F, Direction::RIGHT)->diagonal);
+    CHECK(point(selector, 0.8F, 35.0F, Direction::RIGHT)->diagonal);
+    // From the other side it is the same: 57 degrees is 33 off the vertical axis, and a thumb that comes from straight
     // up is straight until then.
     EightWaySelector from_up(TOUCH_JOYSTICK);
     CHECK_FALSE(point(from_up, 0.8F, 86.0F, Direction::RIGHT)->diagonal);
-    CHECK_FALSE(point(from_up, 0.8F, 68.0F, Direction::RIGHT)->diagonal);
-    CHECK(point(from_up, 0.8F, 64.0F, Direction::RIGHT)->diagonal);
-    // Having reached the diagonal, it holds a little longer on the way back: until 20 degrees off the axis, which
-    // is 70.
-    CHECK(point(from_up, 0.8F, 68.0F, Direction::RIGHT)->diagonal);
-    CHECK_FALSE(point(from_up, 0.8F, 72.0F, Direction::RIGHT)->diagonal);
+    CHECK_FALSE(point(from_up, 0.8F, 59.0F, Direction::RIGHT)->diagonal);
+    CHECK(point(from_up, 0.8F, 55.0F, Direction::RIGHT)->diagonal);
+    // Having reached the diagonal, it holds a little longer on the way back: until 28 degrees off the axis, which
+    // is 62.
+    CHECK(point(from_up, 0.8F, 60.0F, Direction::RIGHT)->diagonal);
+    CHECK_FALSE(point(from_up, 0.8F, 65.0F, Direction::RIGHT)->diagonal);
 }
 
 TEST_CASE("On the edge of a diagonal the choice holds until the thumb is clearly out", "[eight-way]")
 {
     EightWaySelector selector(TOUCH_JOYSTICK);
+    CHECK(point(selector, 0.8F, 38.0F, Direction::RIGHT)->diagonal);
+    // 30 degrees is under the 33 that starts a diagonal and over the 28 that ends it: it stays a diagonal.
     CHECK(point(selector, 0.8F, 30.0F, Direction::RIGHT)->diagonal);
-    // 22 degrees is under the 25 that starts a diagonal and over the 20 that ends it: it stays a diagonal.
-    CHECK(point(selector, 0.8F, 22.0F, Direction::RIGHT)->diagonal);
-    CHECK_FALSE(point(selector, 0.8F, 18.0F, Direction::RIGHT)->diagonal);
-    // Back at 22 it stays straight, until 25.
-    CHECK_FALSE(point(selector, 0.8F, 22.0F, Direction::RIGHT)->diagonal);
+    CHECK_FALSE(point(selector, 0.8F, 25.0F, Direction::RIGHT)->diagonal);
+    // Back at 30 it stays straight, until 33.
+    CHECK_FALSE(point(selector, 0.8F, 30.0F, Direction::RIGHT)->diagonal);
+}
+
+TEST_CASE("A sweep from one straight direction to the next does not turn the snake back", "[eight-way]")
+{
+    // The thumb goes from east to north through the diagonal. The snake, heading east, turns north in the diagonal; with
+    // the thumb still in it, the snake now heads north and the diagonal asks for east, the way it came. It must be a
+    // short stretch: from 33 degrees, held on the way through until 62, under a third of the sweep, where it used to be
+    // half (25 to 70).
+    EightWaySelector selector(TOUCH_JOYSTICK);
+    int degrees_in_diagonal = 0;
+    for (int degrees = 0; degrees <= 90; ++degrees)
+    {
+        if (point(selector, 0.8F, static_cast<float>(degrees), Direction::RIGHT)->diagonal)
+        {
+            ++degrees_in_diagonal;
+        }
+    }
+    CHECK(degrees_in_diagonal <= 30);
 }
 
 TEST_CASE("The knob engages at 30 percent and lets go under 20", "[eight-way]")
@@ -137,10 +155,10 @@ TEST_CASE("The knob engages at 30 percent and lets go under 20", "[eight-way]")
 TEST_CASE("Resetting forgets the thumb", "[eight-way]")
 {
     EightWaySelector selector(TOUCH_JOYSTICK);
-    CHECK(point(selector, 0.8F, 30.0F, Direction::RIGHT)->diagonal);
+    CHECK(point(selector, 0.8F, 38.0F, Direction::RIGHT)->diagonal);
     selector.reset();
-    // Fresh: 22 degrees is a straight direction again.
-    CHECK_FALSE(point(selector, 0.8F, 22.0F, Direction::RIGHT)->diagonal);
+    // Fresh: 30 degrees is a straight direction again.
+    CHECK_FALSE(point(selector, 0.8F, 30.0F, Direction::RIGHT)->diagonal);
     CHECK(selector.config().engage == TOUCH_JOYSTICK.engage);
 }
 
