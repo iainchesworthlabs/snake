@@ -211,13 +211,14 @@ def spark(layer: Layer, p: Palette, x: int, y: int) -> None:
     layer.pattern(x, y, [".#.", "###", ".#."], p.gold)
 
 
-def bomb(layer: Layer, p: Palette, x: int, y: int, d: int, fuse: bool = True) -> None:
-    """The bomb food: a cream ring, an ink ball with its shade and shine, a cream fuse and a gold spark above."""
+def bomb(layer: Layer, p: Palette, x: int, y: int, d: int, fuse: bool = True, *, fuse_left: bool = False) -> None:
+    """The bomb food: a cream ring, an ink ball with its shade and shine, a cream fuse and a gold spark above. The fuse
+    is right of the middle, or near the left edge with `fuse_left`."""
     layer.disc(x, y, d, p.cream)
     layer.disc(x + 1, y + 1, d - 2, p.ink, p.shadow)
     layer.rect(x + 2, y + 2, 2 if d >= 10 else 1, 2 if d >= 10 else 1, p.shine)
     if fuse:
-        fx = x + (d * 2) // 3
+        fx = x + 1 if fuse_left else x + (d * 2) // 3
         layer.rect(fx, y - 2, 1, 2, p.cream)
         spark(layer, p, fx - 1, y - 5)
 
@@ -261,11 +262,13 @@ def padlock_open(picture: Picture, x: int, y: int) -> None:
     picture.part(body)
 
 
-def snake_head(layer: Layer, p: Palette, x: int, y: int, heading: str, k: int = 1, tongue: bool = True) -> None:
+def snake_head(
+    layer: Layer, p: Palette, x: int, y: int, heading: str, k: int = 1, tongue: bool = True, *, short_tongue: bool = False
+) -> None:
     """The head of the snake, a 5 by 5 square of `k`-cell steps with its corners cut, facing `heading`.
 
     `x` and `y` are the top left of its box. The eyes are on the sides of the front half, as the board draws them, and
-    the forked tongue, 3 steps long, reaches out of the front."""
+    the forked tongue, 3 steps long (2 with `short_tongue`), reaches out of the front."""
     size = 5 * k
     template: dict[tuple[int, int], Colour] = {}
     for a in range(5):
@@ -287,12 +290,13 @@ def snake_head(layer: Layer, p: Palette, x: int, y: int, heading: str, k: int = 
             for j in range(k):
                 cells[(a * k + i, b * k + j)] = colour
     if tongue:
+        fork = 6 if short_tongue else 7
         for i in range(k):
             for j in range(k):
-                cells[(5 * k + i, 2 * k + j)] = p.pink
-                cells[(6 * k + i, 2 * k + j)] = p.pink
-                cells[(7 * k + i, 1 * k + j)] = p.pink
-                cells[(7 * k + i, 3 * k + j)] = p.pink
+                for step in range(5, fork):
+                    cells[(step * k + i, 2 * k + j)] = p.pink
+                cells[(fork * k + i, 1 * k + j)] = p.pink
+                cells[(fork * k + i, 3 * k + j)] = p.pink
     for (a, b), colour in cells.items():
         if heading == "right":
             u, v = a, b
@@ -476,18 +480,22 @@ def hotpotato(p: Palette) -> Picture:
 
 
 def shed(p: Palette) -> Picture:
-    """The live snake, head up, going away at the right; the dropped end, a bomb on a segment, left behind at the left.
-    The game just takes the dropped cells off the board, so the dropped end is drawn as it was, with nothing between."""
+    """One snake, a U on its side with the bend missing. Along the top the live snake goes to the right: a segment and
+    the head. Under it, three cells down, lies what was dropped, in the order the game drops it: the bomb, at the left
+    where the bend was, with its fuse rising in the corner, and then two segments of the tail."""
     picture = Picture(p)
 
     def live(layer: Layer) -> None:
-        snake_head(layer, p, 15, 4, "up")
-        segment(layer, p, 15, 9, 5, 1)
-        segment(layer, p, 15, 14, 5, 0)
+        segment(layer, p, 7, 0, 5, 1)
+        snake_head(layer, p, 12, 0, "right", short_tongue=True)
+
+    def tail(layer: Layer) -> None:
+        segment(layer, p, 9, 10, 5, 0)
+        segment(layer, p, 14, 10, 5, 1)
 
     picture.part(live)
-    picture.part(lambda layer: segment(layer, p, 3, 14, 5, 1))
-    picture.part(lambda layer: bomb(layer, p, 1, 5, 9))
+    picture.part(tail)
+    picture.part(lambda layer: bomb(layer, p, 1, 10, 7, fuse_left=True))
     return picture
 
 
