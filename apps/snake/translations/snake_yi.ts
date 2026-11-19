@@ -248,6 +248,10 @@
         <translation>די בעסטע 10 אויף דער מאַשין</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>נאָך קיין פּונקטן.</translation>
     </message>

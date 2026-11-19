@@ -248,6 +248,10 @@
         <translation>Los 10 mejores de este dispositivo</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>Aún no hay puntuaciones.</translation>
     </message>

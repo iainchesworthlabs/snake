@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "device/game_center.hpp"
 #include "device/gamepad.hpp"
 #include "device/haptics.hpp"
 #include "snake/input/sample_source.hpp"
@@ -28,6 +29,9 @@ void set_accelerometer_factory(AccelerometerFactory factory);
 
 /// The motor of the device, or a Haptics that does nothing. Never null.
 [[nodiscard]] std::unique_ptr<Haptics> make_haptics();
+
+/// Game Center, or a GameCenter that is never available. Never null.
+[[nodiscard]] std::unique_ptr<GameCenter> make_game_center();
 
 /// Holds the display in the orientation it is in now (true), so that tilting the phone to steer cannot turn the screen,
 /// or lets it follow the device again (false). A computer's window does not turn, so it does nothing there. Call it

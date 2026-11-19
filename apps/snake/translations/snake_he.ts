@@ -248,6 +248,10 @@
         <translation>10 המובילים במכשיר הזה</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>עדיין אין תוצאות.</translation>
     </message>

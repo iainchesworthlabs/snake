@@ -247,6 +247,10 @@
         <translation>このきかいのトップ10</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>まだスコアは ないよ。</translation>
     </message>

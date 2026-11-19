@@ -130,7 +130,9 @@ function(snake_configure_mobile_app target)
                 XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Manual"
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "Apple Distribution"
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${SNAKE_IOS_SIGNING_TEAM}"
-                XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${SNAKE_IOS_SIGNING_PROFILE}")
+                XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "${SNAKE_IOS_SIGNING_PROFILE}"
+                # Game Center. The profile must carry the same entitlement (Snake.entitlements says how).
+                XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${SNAKE_PACKAGING_DIR}/ios/Snake.entitlements")
         elseif(SNAKE_IOS_SIGNING_TEAM OR SNAKE_IOS_SIGNING_PROFILE)
             message(FATAL_ERROR "SNAKE_IOS_SIGNING_TEAM and SNAKE_IOS_SIGNING_PROFILE go together: one of them is set and the "
                 "other is empty. Give both for a signed build, or neither for an unsigned one (docs/building.md, iOS).")

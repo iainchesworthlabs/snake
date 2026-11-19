@@ -248,6 +248,10 @@
         <translation>Top 10 on this device</translation>
     </message>
     <message>
+        <source>Game Center</source>
+        <translation>Game Center</translation>
+    </message>
+    <message>
         <source>No scores yet.</source>
         <translation>No scores yet.</translation>
     </message>

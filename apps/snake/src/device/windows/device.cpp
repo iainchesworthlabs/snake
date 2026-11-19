@@ -29,6 +29,11 @@ std::unique_ptr<Haptics> make_haptics()
     return std::make_unique<NoHaptics>();
 }
 
+std::unique_ptr<GameCenter> make_game_center()
+{
+    return std::make_unique<NoGameCenter>();
+}
+
 void lock_orientation(bool /*locked*/) {}
 
 } // namespace snake::ui::device

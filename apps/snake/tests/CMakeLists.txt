@@ -16,6 +16,7 @@ add_executable(snake_viewmodel_tests
     test_profile_view_model.cpp
     test_qt_keys.cpp
     test_effects_model.cpp
+    test_game_center.cpp
     test_gamepad_controller.cpp
     test_haptics.cpp
     test_language_choice.cpp
@@ -36,6 +37,8 @@ add_executable(snake_viewmodel_tests
     ../src/board/effects.cpp
     ../src/board/effects.hpp
     ../src/device/accelerometer.cpp
+    ../src/device/game_center.cpp
+    ../src/device/game_center.hpp
     ../src/device/gamepad.cpp
     ../src/language/language_choice.cpp
     ../src/language/language_choice.hpp
@@ -47,6 +50,8 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
+    ../src/viewmodel/game_center_director.cpp
+    ../src/viewmodel/game_center_director.hpp
     ../src/viewmodel/gamepad_controller.cpp
     ../src/viewmodel/gamepad_controller.hpp
     ../src/viewmodel/haptics_director.cpp

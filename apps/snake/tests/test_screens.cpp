@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "about/about_info.hpp"
 #include "device/device.hpp"
+#include "device/game_center.hpp"
 #include "device/gamepad.hpp"
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
@@ -52,6 +53,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -2065,6 +2067,59 @@ TEST_CASE("The title, the settings and the leaderboard fit in every language", "
     }
 }
 
+namespace
+{
+
+/// A Game Center for the tests: signed in, and it remembers which leaderboard was shown. It is the program's default
+/// while the object lives.
+class SignedInGameCenter final : public snake::ui::device::GameCenter
+{
+public:
+    SignedInGameCenter()
+    {
+        snake::ui::device::set_default_game_center(this);
+    }
+    ~SignedInGameCenter() override
+    {
+        snake::ui::device::set_default_game_center(nullptr);
+    }
+    SignedInGameCenter(const SignedInGameCenter&) = delete;
+    SignedInGameCenter& operator=(const SignedInGameCenter&) = delete;
+
+    [[nodiscard]] bool available() const override
+    {
+        return true;
+    }
+    void submit_score(std::string_view, std::int64_t) override {}
+    void show_leaderboard(std::string_view leaderboard_id) override
+    {
+        shown = std::string(leaderboard_id);
+    }
+
+    std::string shown;
+};
+
+} // namespace
+
+TEST_CASE("The leaderboard has a Game Center button only for a player who is signed in", "[screens][game-center]")
+{
+    {
+        App app(true);
+        app.click("leaderboardButton");
+        REQUIRE(app.shows("leaderboardScreen"));
+        CHECK_FALSE(app.shows("gameCenterButton"));
+    }
+
+    SignedInGameCenter game_center;
+    App app(true);
+    app.click("leaderboardButton");
+    REQUIRE(app.shows("leaderboardScreen"));
+    CHECK(app.shows("gameCenterButton"));
+    app.click("hotPotatoTab");
+    app.click("gameCenterButton");
+    CHECK(game_center.shown == "com.iainchesworthlabs.snake.leaderboard.hotpotato");
+}
+
 TEST_CASE("The game screens fit in every language", "[screens][languages]")
 {
     for (const char* code : TESTED_LANGUAGES)
@@ -2603,6 +2658,31 @@ TEST_CASE("Lying down, the name entry shows the whole alphabet and Save without 
     CHECK(scene_rect(app, "standing1").bottom() < save.top());
     // The letters are big enough for a thumb.
     CHECK(scene_rect(app, "keyA").width() >= 36);
+}
+
+TEST_CASE("The Game Center button fits on the leaderboard in every language, upright and lying down",
+          "[screens][languages][landscape][game-center]")
+{
+    SignedInGameCenter game_center;
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        {
+            App app(true);
+            fill_the_profile(app);
+            app.click("leaderboardButton");
+            CHECK(app.shows("gameCenterButton"));
+            check_fit(app, "leaderboard with Game Center");
+        }
+        {
+            App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+            fill_the_profile(app);
+            app.click("leaderboardButton");
+            CHECK(app.shows("gameCenterButton"));
+            check_fit(app, "leaderboard with Game Center lying down");
+        }
+    }
 }
 
 TEST_CASE("The leaderboard, the settings, the game over and the name entry fit in every language lying down",
