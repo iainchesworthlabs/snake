@@ -17,7 +17,7 @@ decisions behind it. It is kept up to date as steps land. The visual design is i
    macOS, Linux), `0.3.0` Android and iOS, `0.4.0` ESP32-P4, then `1.0.0` when every acceptance item in the
    requirements is ticked on every platform. The first final release also creates `main` and starts the docs deploy.
    **Changed on 19 November 2026:** the owner decided that `1.0.0` is the first App Store version, so it is not held for
-   the acceptance list on every platform. Android has no release and the ESP32-P4 board has no download with it. The
+   the acceptance list on every platform. Android and the ESP32-P4 board are later work: Android has no release and the board has no download with it. The
    acceptance items are still the measure for each platform, and the ones not yet ticked are not claimed anywhere.
 2. **ESP32-P4 front end.** LVGL (MIT licence) with Espressif's `esp_lvgl_port`. Qt Quick does not run on the chip.
    Qt for MCUs lists the ESP32-P4 as a Tier 3 platform, but it is sold under a commercial licence and the project is
