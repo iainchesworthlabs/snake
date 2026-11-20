@@ -8,7 +8,7 @@ include(IclVcpkgRoot)
 icl_resolve_vcpkg("${CMAKE_CURRENT_SOURCE_DIR}" SNAKE)
 
 project(snake
-    VERSION 0.2.0
+    VERSION 1.0.0
     DESCRIPTION "Snake game on Qt 6 and C++23"
     HOMEPAGE_URL "https://github.com/iainchesworthlabs/snake"
     LANGUAGES CXX)
