@@ -24,14 +24,16 @@ points are within Apple's limits.
 - **Points.** Apple allows at most 100 points for each achievement and 1,000 in all. This set uses 300.
 - **Submission.** The first achievements for an app go in the same submission as an app version. Ones added later can be
   submitted on their own.
-- **Other languages.** Only English is here. The other languages are entered in App Store Connect and are not kept in
-  this repository yet.
+- **Other languages.** Only English is here. To add one, give an entry the game's code for the language (`fr`, `es`,
+  `de`, `ja`, `zh_CN` or `he`) beside `en`, with the same keys, and the script enters it under Apple's name for it.
 - **Leaderboards.** Each has its identifier, its reference name, its score format (`scoreFormat`), its sort order
   (`sort`: `DESC` puts the highest score first), which score counts (`submission`: `BEST_SCORE` or
   `MOST_RECENT_SCORE`) and its name in English. The words are Apple's own, from the App Store Connect API.
 
-## Entering them in App Store Connect
+## What is left for the owner
 
-The steps are in [`docs/app-store.md`](../../../../../docs/app-store.md), under "Game Center (in 1.0.0)", with a table
-of the twelve achievements, their identifiers, points and images. That page also has the store text and the notes for
-App Review that mention the achievements, and the rows of the TestFlight plan that test them.
+The workflow makes the leaderboards and the achievements. Turning on the Game Center capability, adding them to a
+version of the app and sending them for review are the owner's, and the steps are in
+[`docs/app-store.md`](../../../../../docs/app-store.md), under "Game Center (in 1.0.0)", with tables of the identifiers,
+points and images. That page also has the store text and the notes for App Review that mention the achievements, and the
+rows of the TestFlight plan that test them.
