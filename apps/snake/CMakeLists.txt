@@ -119,6 +119,8 @@ set(SNAKE_UI_SOURCES
     src/device/accelerometer.cpp
     src/device/accelerometer.hpp
     src/device/device.hpp
+    src/device/game_center.cpp
+    src/device/game_center.hpp
     src/device/gamepad.cpp
     src/device/gamepad.hpp
     src/device/haptics.cpp
@@ -154,6 +156,8 @@ set(SNAKE_UI_SOURCES
     src/viewmodel/game_view_model.hpp
     src/viewmodel/gamepad_controller.cpp
     src/viewmodel/gamepad_controller.hpp
+    src/viewmodel/game_center_director.cpp
+    src/viewmodel/game_center_director.hpp
     src/viewmodel/haptics_director.cpp
     src/viewmodel/haptics_director.hpp
     src/viewmodel/input_controller.cpp
@@ -205,9 +209,25 @@ function(snake_add_ui_module target)
         target_sources(${target} PRIVATE src/device/sdl_gamepad.cpp src/device/sdl_gamepad.hpp)
         target_link_libraries(${target} PRIVATE SDL3::SDL3)
     endif()
+    if(ICL_PLATFORM STREQUAL "linux")
+        # SDL's own file of C library calls (SDL_stdlib.c) calls these float functions, and glibc 2.43 gave some of them (the
+        # release workflow found atan2f, asinf, sqrtf, acosf and log10f) a new symbol version, so a program linked on a
+        # system with glibc 2.43 does not start on glibc 2.39. The linker sends the calls to
+        # src/device/linux/float_math.cpp, which works in double. The ones SDL calls that are not here (roundf, lroundf,
+        # fmodf, modff, scalbnf) are exact, and keep the C library's. The check-glibc-floor step of the release workflow is
+        # what fails if a call of this kind is added.
+        set(snake_wrapped_float_functions acosf asinf atanf atan2f cosf expf logf log10f powf sinf sqrtf tanf)
+        foreach(function IN LISTS snake_wrapped_float_functions)
+            target_link_options(${target} PRIVATE "LINKER:--wrap=${function}")
+        endforeach()
+        # The wrapped sqrtf is a square root in double, which the optimiser would turn back into a call of the sqrtf that
+        # is wrapped, for a negative number, unless the C library's error number is left alone.
+        set_source_files_properties(src/device/linux/float_math.cpp PROPERTIES COMPILE_OPTIONS -fno-math-errno)
+    endif()
     if(IOS)
-        # The haptics are Objective-C++, with automatic reference counting.
+        # The haptics and Game Center are Objective-C++, with automatic reference counting. GameKit is Game Center's framework.
         set_source_files_properties(src/device/ios/device.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+        target_link_libraries(${target} PRIVATE "$<LINK_LIBRARY:FRAMEWORK,GameKit>")
     endif()
     target_link_libraries(${target}
         PRIVATE snake::audio snake::core snake::input snake::miniaudio snake::profile snake::sim Qt6::Quick icl::warnings icl::hardening icl::coverage)

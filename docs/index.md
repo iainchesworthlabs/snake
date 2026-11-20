@@ -2,7 +2,7 @@
 template: marketing.html
 title: Snake
 title_tag: "Snake: a Snake game with four modes"
-description: "Steer the snake, eat the blueberries and get on the leaderboard. Four modes. Tilt, swipe, keys or a gamepad. No account, no network, no tracking."
+description: "Steer the snake, eat the blueberries and get on the leaderboard. Four modes. Tilt, swipe, keys or a gamepad. No account, no tracking, works offline."
 ---
 <section class="icl-hero icl-hero--app"><div class="icl-wrap"><div class="icl-hero__grid">
 <div>
@@ -18,7 +18,7 @@ description: "Steer the snake, eat the blueberries and get on the leaderboard. F
 <li><strong>iPhone and iPad</strong><span>Coming to the App Store, iOS 18 or later</span></li>
 <li><strong>ESP32-P4 board</strong><span>A hobby build, no download</span></li>
 </ul>
-<p class="icl-hero__meta">No account &middot; Works offline &middot; Stays on your device &middot; English and seven other languages</p>
+<p class="icl-hero__meta">No account &middot; Works offline &middot; Scores kept on your device &middot; English and seven other languages</p>
 </div>
 <div class="sk-shots">
 <figure class="sk-window"><img src="assets/img/snake-desktop-title.png" width="1100" height="700" alt="The title screen on a computer: the word Snake above a small board with a snake and a blueberry, a Play button and a Leaderboard button, and a card for each mode: Easy, which is chosen, then Classic, Portals and Hot potato."></figure>

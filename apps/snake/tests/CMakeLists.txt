@@ -16,6 +16,7 @@ add_executable(snake_viewmodel_tests
     test_profile_view_model.cpp
     test_qt_keys.cpp
     test_effects_model.cpp
+    test_game_center.cpp
     test_gamepad_controller.cpp
     test_haptics.cpp
     test_language_choice.cpp
@@ -36,6 +37,8 @@ add_executable(snake_viewmodel_tests
     ../src/board/effects.cpp
     ../src/board/effects.hpp
     ../src/device/accelerometer.cpp
+    ../src/device/game_center.cpp
+    ../src/device/game_center.hpp
     ../src/device/gamepad.cpp
     ../src/language/language_choice.cpp
     ../src/language/language_choice.hpp
@@ -45,6 +48,8 @@ add_executable(snake_viewmodel_tests
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
     ../src/viewmodel/game_view_model.hpp
+    ../src/viewmodel/game_center_director.cpp
+    ../src/viewmodel/game_center_director.hpp
     ../src/viewmodel/gamepad_controller.cpp
     ../src/viewmodel/gamepad_controller.hpp
     ../src/viewmodel/haptics_director.cpp
@@ -69,6 +74,11 @@ icl_platform_sources(snake_viewmodel_tests DIR "${CMAKE_CURRENT_SOURCE_DIR}/../s
 # A computer's gamepads come from SDL, which the test of them drives with a virtual one.
 find_package(SDL3 CONFIG REQUIRED)
 target_sources(snake_viewmodel_tests PRIVATE test_sdl_gamepad.cpp ../src/device/sdl_gamepad.cpp ../src/device/sdl_gamepad.hpp)
+if(ICL_PLATFORM STREQUAL "linux")
+    # The float functions that SDL's calls of the C library are sent to, so that the package needs no newer glibc.
+    target_sources(snake_viewmodel_tests PRIVATE test_float_math.cpp)
+    set_source_files_properties(../src/device/linux/float_math.cpp PROPERTIES COMPILE_OPTIONS -fno-math-errno)
+endif()
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
 target_link_libraries(snake_viewmodel_tests
     PRIVATE snake::audio snake::input snake::profile snake::sim SDL3::SDL3 Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)

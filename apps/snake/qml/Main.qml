@@ -100,6 +100,14 @@ Window {
         game: gameModel
     }
 
+    // Game Center, for a phone whose player is signed in to it: sends the score of each game, and opens its leaderboards.
+    GameCenterDirector {
+        id: gameCenterModel
+
+        objectName: "gameCenter"
+        game: gameModel
+    }
+
     ProfileViewModel {
         id: profileModel
 
@@ -234,6 +242,7 @@ Window {
         focus: visible
         game: gameModel
         profile: profileModel
+        gameCenter: gameCenterModel
         onClosed: {
             root.overlay = "";
             // Leaving after a game goes to the title, not back to the end screen of a score that is saved.
