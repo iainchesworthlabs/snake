@@ -25,8 +25,8 @@ claim in it is one the [privacy](privacy.md), [features](features.md) and [how t
 A tag builds, signs and uploads in one go, and builds are numbered by workflow run, so the same version can be uploaded
 as many times as needed. That decides the order: **test with builds from `develop`, then tag the commit that passed.**
 
-0. **Game Center** (steps 1 and 2 of "Game Center (in 1.0.0)" below, the portal and the profile) before the Game Center pull request merges,
-   or the signed build fails.
+0. **Game Center** (steps 1 and 2 of "Game Center (in 1.0.0)" below, the portal and the profile) before the next signed
+   build. The Game Center code is on `develop`, so a signed build fails until both are done.
 1. **Prepare 1.0.0** in a pull request: the version in `CMakeLists.txt` and `vcpkg.json`, and the changelog assembled
    (`python3 <icl-common-infra>/scripts/changelog_tool.py assemble --version 1.0.0 --date YYYY-MM-DD`). Set the date to
    the day the tag is pushed. Merge it.
@@ -224,7 +224,7 @@ Steps, in this order, because the second one gates the build:
 2. **Make the App Store provisioning profile again** for that App ID and set the repository secret
    `IOS_PROVISIONING_PROFILE_BASE64` to it (the steps are in `docs/ios-signing.md` of `icl-common-infra`). The signed build
    now carries the `com.apple.developer.game-center` entitlement, and an older profile without it stops the build when the
-   app is archived. **Merge the Game Center pull request only after this.**
+   app is archived. **The Game Center code is on `develop` already, so do this before the next signed build.**
 3. **App Store Connect:** the app, then Game Center, turn it on. Then make four **classic** leaderboards with exactly these
    identifiers, score format integer, sort high to low, and a name in English (add other languages if wanted):
 

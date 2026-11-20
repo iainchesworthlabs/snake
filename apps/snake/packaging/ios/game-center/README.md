@@ -8,7 +8,10 @@ more than once, and in English its name, its description before it is earned and
 enters it there by hand. The code never reads this file; a test checks that the identifiers in the code match it, and
 that the points are within Apple's limits.
 
-- **Images.** Each achievement also needs an image, 1024 by 1024 pixels. They do not exist yet.
+- **Images.** Each achievement also needs an image, 1024 by 1024 pixels. They are in `images/`, one for each
+  achievement, named for the last part of its identifier (`wrap.png` for `...achievement.wrap`).
+  `tools/game-center/make_images.py` draws them: to change a picture, change the script and run it again, because a test
+  compares the pictures here with what the script draws.
 - **Identifiers.** An identifier can never be changed once it is entered in App Store Connect. Change one here only
   before it has been entered there, and change it in `apps/snake/src/viewmodel/game_center_director.cpp` with it.
 - **Points.** Apple allows at most 100 points for each achievement and 1,000 in all. This set uses 300.
@@ -19,11 +22,8 @@ that the points are within Apple's limits.
 - **Leaderboards.** Only the identifier and a reference name are here. The score format and sort order are set in App
   Store Connect.
 
-## What to change in `docs/app-store.md`
+## Entering them in App Store Connect
 
-That file is on the branch `docs/app-store-release`, not on this one. When the two branches meet, three places in it
-need the achievements added:
-
-1. The description's sentence "the only thing it ever sends is your score".
-2. The notes for App Review.
-3. The Game Center section and its rows of the test plan.
+The steps are in [`docs/app-store.md`](../../../../../docs/app-store.md), under "Game Center (in 1.0.0)", with a table
+of the twelve achievements, their identifiers, points and images. That page also has the store text and the notes for
+App Review that mention the achievements, and the rows of the TestFlight plan that test them.
