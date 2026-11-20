@@ -102,10 +102,13 @@ FocusScope {
             }
         }
 
+        // The line between the tabs and the board. It is as tall as the Game Center button and its shadow with 10 above
+        // and below, whether the button is there or not, so that the board does not move when the player signs in.
         Text {
+            objectName: "boardCaption"
             visible: !page.landscape
             x: Theme.mirrored(15, width, 390)
-            y: 204
+            y: 214
             // Shares the line with the Game Center button when there is one, and shrinks to leave it room.
             width: root.gameCenter.available ? 220 : 360
             color: Theme.ink
@@ -119,7 +122,7 @@ FocusScope {
 
         Item {
             x: 15
-            y: page.landscape ? 100 : 236
+            y: page.landscape ? 100 : 254
             width: page.landscape ? page.pageWidth - 30 : 360
             height: board.height + 6
 
@@ -134,9 +137,11 @@ FocusScope {
             Rectangle {
                 id: board
 
+                objectName: "leaderboardPanel"
                 width: parent.width
                 // Upright the ten lines are one column; lying down they are two of five, the first five on the leading side.
-                readonly property int lineHeight: page.landscape ? 33 : 48
+                // Upright a line is 46 high, so that ten of them leave the line above the board its room.
+                readonly property int lineHeight: page.landscape ? 33 : 46
                 height: (page.landscape ? 5 : 10) * lineHeight + 20
                 radius: 18
                 color: Theme.surface
@@ -231,7 +236,7 @@ FocusScope {
             objectName: "gameCenterButton"
             visible: root.gameCenter.available
             x: page.landscape ? Theme.mirrored(page.pageWidth - 15 - width, width, page.pageWidth) : Theme.mirrored(245, width, 390)
-            y: page.landscape ? 302 : 196
+            y: page.landscape ? 302 : 206
             width: 130
             height: page.landscape ? 38 : 34
             radius: 10
@@ -246,7 +251,9 @@ FocusScope {
             objectName: "leaderboardPlayButton"
             x: page.landscape ? Theme.mirrored((page.pageWidth - width) / 2, width, page.pageWidth) : 15
             y: page.landscape ? 296 : 754
-            width: page.landscape ? 320 : 360
+            // Lying down it is in the middle, and on a narrow page it gives way to the Game Center button beside it, with
+            // room between them for the ring of the focus.
+            width: page.landscape ? (root.gameCenter.available ? Math.min(320, page.pageWidth - 2 * (15 + 130 + 20)) : 320) : 360
             height: page.landscape ? 50 : 56
             focus: true
             kind: "primary"

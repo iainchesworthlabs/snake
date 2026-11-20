@@ -2785,6 +2785,63 @@ TEST_CASE("The Game Center button fits on the leaderboard in every language, upr
     }
 }
 
+TEST_CASE("The Game Center button has room above and below it on the leaderboard", "[screens][game-center]")
+{
+    // A button's shadow shows this far under its face.
+    constexpr double DROP = 4.0;
+    constexpr double ROOM = 8.0;
+    double panel_top_signed_out = 0.0;
+    {
+        App app(true);
+        app.click("leaderboardButton");
+        REQUIRE(app.shows("leaderboardScreen"));
+        panel_top_signed_out = scene_rect(app, "leaderboardPanel").top();
+    }
+
+    SignedInGameCenter game_center;
+    App app(true);
+    app.click("leaderboardButton");
+    REQUIRE(app.shows("gameCenterButton"));
+    const QRectF tabs = scene_rect(app, "portalsTab").united(scene_rect(app, "hotPotatoTab"));
+    const QRectF button = scene_rect(app, "gameCenterButton");
+    const QRectF caption = scene_rect(app, "boardCaption");
+    const QRectF panel = scene_rect(app, "leaderboardPanel");
+    // The button is clear of the shadow of the tabs over it, and its own shadow is clear of the board under it.
+    CHECK(button.top() - (tabs.bottom() + DROP) >= ROOM);
+    CHECK(panel.top() - (button.bottom() + DROP) >= ROOM);
+    // The words beside it are on the same line, between the tabs and the board.
+    CHECK(caption.top() >= tabs.bottom() + DROP);
+    CHECK(caption.bottom() <= panel.top());
+    CHECK(caption.center().y() == Catch::Approx(button.center().y()).margin(4.0));
+    // The board is in the same place for a player who is not signed in, and it still ends above Play.
+    CHECK(panel.top() == Catch::Approx(panel_top_signed_out));
+    CHECK(panel.bottom() + 6.0 < scene_rect(app, "leaderboardPlayButton").top());
+}
+
+TEST_CASE("Lying down on a tablet, the Game Center button and Play do not touch", "[screens][landscape][game-center]")
+{
+    SignedInGameCenter game_center;
+    for (const char* code : {"en", "he"})
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        // A tablet on its side is the narrowest page there is lying down.
+        App app(true, 1024, 768);
+        app.click("leaderboardButton");
+        REQUIRE(app.shows("gameCenterButton"));
+        const QRectF button = scene_rect(app, "gameCenterButton");
+        const QRectF play = scene_rect(app, "leaderboardPlayButton");
+        const double gap =
+            button.center().x() > play.center().x() ? button.left() - play.right() : play.left() - button.right();
+        // The window shows the page larger than it is drawn; Play is 50 high on the page.
+        const double scale = play.height() / 50.0;
+        // The ring of the focus is 6 round Play, and is clear of the button too.
+        CHECK(gap / scale >= 6.0 + 8.0);
+        CHECK(play.center().x() == Catch::Approx(1024 / 2.0).margin(2.0));
+        check_fit(app, "leaderboard with Game Center on a tablet lying down");
+    }
+}
+
 TEST_CASE("The leaderboard, the settings, the game over and the name entry fit in every language lying down",
           "[screens][languages][landscape]")
 {
