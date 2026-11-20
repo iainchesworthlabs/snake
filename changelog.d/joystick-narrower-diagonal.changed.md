@@ -1,1 +1,0 @@
-**The joystick's diagonals are narrower.** The corner of the joystick now starts 33 degrees off a straight direction, not 25, so a thumb that sweeps from one straight direction to the next no longer turns the snake back the way it came. The four straight directions are wider and easier to hold.

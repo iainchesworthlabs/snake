@@ -1,1 +1,0 @@
-**The top of the leaderboard is no longer squashed.** The Game Center button sat hard against the mode tabs above it and the board below it. It now has room on both sides, and on a tablet lying down it no longer runs into Play.
