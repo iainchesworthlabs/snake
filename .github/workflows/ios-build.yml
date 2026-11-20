@@ -47,7 +47,7 @@ env:
 jobs:
   ios-build:
     name: iOS (device, unsigned compile)
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
     permissions:
       contents: read

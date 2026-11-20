@@ -17,10 +17,14 @@ Item {
     required property int gameMode
     required property bool chosen
 
+    // A page lying down is only 360 high and has four cards to hold: the compact card has smaller words and less
+    // room around them, so that four cards with two lines of detail each fit in every language.
+    property bool compact: false
+
     signal picked
 
     // The card is as tall as its words need: a language with long words sets the detail on two lines.
-    height: Math.max(60, words.height + 18)
+    height: Math.max(compact ? 52 : 60, words.height + (compact ? 12 : 18))
     activeFocusOnTab: selectable
     Accessible.role: Accessible.Button
     Accessible.name: name + ". " + detail
@@ -70,7 +74,7 @@ Item {
             Text {
                 width: parent.width
                 color: Theme.ink
-                font.pixelSize: 20
+                font.pixelSize: root.compact ? 18 : 20
                 font.weight: Font.Bold
                 fontSizeMode: Text.HorizontalFit
                 minimumPixelSize: 12
@@ -82,8 +86,11 @@ Item {
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 color: Theme.ink
-                font.pixelSize: 14
+                font.pixelSize: root.compact ? 13 : 14
                 font.weight: Font.Medium
+                // Scripts with tall lines (Japanese, Hebrew) are set to the line of the other languages when compact.
+                lineHeightMode: root.compact ? Text.FixedHeight : Text.ProportionalHeight
+                lineHeight: root.compact ? 16 : 1
                 text: root.detail
             }
         }

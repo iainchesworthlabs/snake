@@ -11,7 +11,8 @@ add_library(snake_sim
     src/scoring.cpp
     src/session.cpp
     src/snapshot.cpp
-    src/simulation.cpp)
+    src/simulation.cpp
+    src/tally.cpp)
 add_library(snake::sim ALIAS snake_sim)
 
 target_include_directories(snake_sim

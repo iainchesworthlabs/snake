@@ -55,12 +55,22 @@ struct Queue
 {
     std::deque<AccelSample> samples;
     std::uint32_t time = 0;
+    /// The source reads in the device's own axes, as iOS's does, and not in those of the screen.
+    bool device_frame = false;
+    /// With `device_frame`: the device is turned a quarter anticlockwise, so that the top of the screen is along the
+    /// sensor's +x, and the poses that follow are what the sensor reads then.
+    bool quarter_turned = false;
 
     void hold(float seconds, float right, float up, float hold_angle = HOLD)
     {
         for (int i = 0; i < static_cast<int>(seconds * 100.0F); ++i)
         {
-            samples.push_back(pose(hold_angle, right, up, time));
+            AccelSample sample = pose(hold_angle, right, up, time);
+            if (device_frame && quarter_turned)
+            {
+                sample = {.x = sample.y, .y = -sample.x, .z = sample.z, .time_us = sample.time_us};
+            }
+            samples.push_back(sample);
             time += INTERVAL_US;
         }
     }
@@ -80,6 +90,11 @@ public:
         const AccelSample sample = m_Queue->samples.front();
         m_Queue->samples.pop_front();
         return sample;
+    }
+
+    [[nodiscard]] bool in_device_frame() const noexcept override
+    {
+        return m_Queue->device_frame;
     }
 
 private:
@@ -192,6 +207,40 @@ TEST_CASE("A tilt inside the dead zone does nothing", "[input-controller][tilt]"
     CHECK(rig.input.tiltHeading() == Heading::None);
     CHECK_FALSE(rig.pending());
     CHECK(rig.input.tiltUp() == Catch::Approx(8.0).margin(1.0));
+}
+
+TEST_CASE("A sensor that reads in the device's own axes steers the same after the screen turns",
+          "[input-controller][tilt][orientation]")
+{
+    Rig rig;
+    rig.queue->device_frame = true;
+    rig.start_level();
+
+    // The player turns the phone a quarter and the screen turns with it: the window is in landscape, the game pauses
+    // (Main.qml), and the sensor reads the same poses in its own turned axes.
+    rig.queue->quarter_turned = true;
+    rig.input.setLandscape(true);
+    rig.game.pause();
+    rig.queue->hold(0.3F, 0.0F, 0.0F);
+    rig.input.update();
+    // Resuming calibrates, in the frame the screen is in now.
+    rig.input.resume();
+    rig.queue->hold(0.3F, 0.0F, 0.0F);
+    rig.input.update(InputController::CALIBRATION_SECONDS + 0.1);
+    REQUIRE(rig.game.state() == GameViewModel::State::Running);
+    CHECK_FALSE(rig.pending());
+
+    // The top edge of the screen down by 25 degrees is up, whichever way the phone is held.
+    rig.queue->hold(0.5F, 0.0F, 25.0F);
+    rig.input.update();
+    CHECK(rig.input.tiltHeading() == Heading::Up);
+    CHECK(rig.input.tiltUp() > 18.0);
+    CHECK(rig.input.tiltRight() == Catch::Approx(0.0).margin(1.0));
+
+    // The right edge of the screen down by 25 degrees is right.
+    rig.queue->hold(0.5F, 25.0F, 0.0F);
+    rig.input.update();
+    CHECK(rig.input.tiltHeading() == Heading::Right);
 }
 
 /// Counts the taps that the controller asks of the motor.

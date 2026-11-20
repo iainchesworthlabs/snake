@@ -11,7 +11,7 @@ every translation` says when that is.
 
 It needs fontTools and brotli (`pip install fonttools brotli`). The source fonts are the variable fonts of the Google
 Fonts project, downloaded on the first run into --sources (default: a "fonts-src" folder next to the output) and checked
-against the SHA-256 pinned below. Each is made into a Regular (400) and a Bold (700) font, subset, and written as WOFF2.
+against the SHA-256 pinned below. Each is made into a Regular (400) and a Bold (700) font, subset, and written as TrueType (.ttf).
 All of them are under the SIL Open Font License 1.1 (see apps/snake/fonts/LICENSE-noto-sans.txt).
 """
 
@@ -60,7 +60,8 @@ def characters_of(translations_dir: pathlib.Path, languages: list[str]) -> list[
         if not path.exists():
             continue
         for translation in ElementTree.parse(path).getroot().iter("translation"):
-            found.update(ord(c) for c in (translation.text or "") if ord(c) > 127)
+            # A string with plural forms keeps its text in one element for each form.
+            found.update(ord(c) for c in "".join(translation.itertext()) if ord(c) > 127)
     return sorted(found)
 
 
@@ -106,7 +107,7 @@ def main() -> None:
             static["head"].modified = modified
 
             options = subset.Options()
-            options.flavor = "woff2"
+            options.flavor = None
             options.layout_features = ["*"]
             options.name_IDs = ["*"]
             options.notdef_outline = True
@@ -115,8 +116,8 @@ def main() -> None:
             subsetter.populate(unicodes=[0x20, 0xA0, *characters])
             subsetter.subset(static)
 
-            target = args.out / f"{font['name']}-{label}.woff2"
-            static.flavor = "woff2"
+            target = args.out / f"{font['name']}-{label}.ttf"
+            static.flavor = None
             static.save(target)
             print(f"{target.name}: {len(characters)} characters, {target.stat().st_size} bytes")
 

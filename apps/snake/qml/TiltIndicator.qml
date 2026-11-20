@@ -83,7 +83,9 @@ Item {
         onTapped: root.taps += 1
     }
 
-    // Not translated. The sensor as it came (g; flat and face up reads z of 1), then the angles from where it was calibrated.
+    // Not translated. The sensor as it came (g; flat and face up reads z of 1), then the angles from where it was calibrated,
+    // then the orientation Qt takes the screen to be in and the size of the window (Qt::ScreenOrientation: 1 portrait, 2
+    // landscape, 4 upside-down portrait, 8 upside-down landscape), to see whether the readings are turned with the screen.
     Text {
         objectName: "tiltReadout"
         visible: root.readout
@@ -93,6 +95,6 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         color: Theme.ink
         font.pixelSize: 12
-        text: "x " + root.input.rawX.toFixed(2) + "  y " + root.input.rawY.toFixed(2) + "  z " + root.input.rawZ.toFixed(2) + "  n " + root.input.rawCount + "\n" + "right " + root.input.tiltRight.toFixed(1) + "\u00B0  up " + root.input.tiltUp.toFixed(1) + "\u00B0"
+        text: "x " + root.input.rawX.toFixed(2) + "  y " + root.input.rawY.toFixed(2) + "  z " + root.input.rawZ.toFixed(2) + "  n " + root.input.rawCount + "\n" + "right " + root.input.tiltRight.toFixed(1) + "\u00B0  up " + root.input.tiltUp.toFixed(1) + "\u00B0" + "\n" + "screen " + Screen.orientation + "  primary " + Screen.primaryOrientation + "  size " + Math.round(Screen.width) + "x" + Math.round(Screen.height)
     }
 }

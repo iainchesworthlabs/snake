@@ -11,6 +11,7 @@ FocusScope {
     required property ProfileViewModel profile
 
     signal leaderboardRequested
+    signal achievementsRequested
     signal settingsRequested
 
     // Each time the screen shows, the keyboard starts on its main button.
@@ -117,9 +118,11 @@ FocusScope {
 
         Column {
             x: page.landscape ? page.trailingX : 15
-            y: page.landscape ? 14 : 300
+            y: page.landscape ? 8 : 300
             width: page.landscape ? page.columnWidth : 360
-            spacing: 10
+            // Lying down the page is 360 high, and the four cards with two lines of detail each have to fit under the
+            // heading in every language, so the spaces are smaller and the cards are compact.
+            spacing: page.landscape ? 6 : 10
 
             Text {
                 width: parent.width
@@ -131,7 +134,7 @@ FocusScope {
 
             Column {
                 width: parent.width
-                spacing: 8
+                spacing: page.landscape ? 6 : 8
 
                 Repeater {
                     model: root.profile.modes
@@ -141,6 +144,7 @@ FocusScope {
 
                         objectName: "modeCard" + card.entry
                         width: parent.width
+                        compact: page.landscape
                         chosen: card.selectable && root.game.mode === card.gameMode
                         onPicked: root.game.mode = card.gameMode
                     }
@@ -153,7 +157,7 @@ FocusScope {
 
             objectName: "playButton"
             x: page.landscape ? page.leadingX : 15
-            y: page.landscape ? 224 : 686
+            y: page.landscape ? 224 : 678
             width: page.landscape ? page.columnWidth : 360
             height: page.landscape ? 56 : 62
             focus: true
@@ -168,17 +172,48 @@ FocusScope {
         ToyButton {
             objectName: "leaderboardButton"
             x: page.landscape ? Theme.mirrored(page.margin, width, page.pageWidth) : Theme.mirrored(15, width, 390)
-            y: page.landscape ? 296 : 762
-            width: page.landscape ? page.columnWidth - 56 : 300
+            y: page.landscape ? 300 : 762
+            width: page.landscape ? page.columnWidth - 112 : 240
             height: page.landscape ? 48 : 50
             text: qsTr("Leaderboard")
             onClicked: root.leaderboardRequested()
         }
 
         ToyButton {
+            objectName: "achievementsButton"
+            x: page.landscape ? Theme.mirrored(page.margin + page.columnWidth - 104, width, page.pageWidth) : Theme.mirrored(265, width, 390)
+            y: page.landscape ? 300 : 762
+            width: page.landscape ? 48 : 50
+            height: page.landscape ? 48 : 50
+            Accessible.name: qsTr("Achievements")
+            onClicked: root.achievementsRequested()
+
+            // A small cup: a bowl with a handle on each side, on a stem and a base.
+            Item {
+                anchors.centerIn: parent
+                width: 28
+                height: 22
+
+                Repeater {
+                    model: [[6, 0, 16, 10], [1, 2, 5, 3], [1, 5, 3, 3], [22, 2, 5, 3], [24, 5, 3, 3], [12, 10, 4, 6], [8, 16, 12, 3], [6, 19, 16, 3]]
+
+                    Rectangle {
+                        required property var modelData
+
+                        x: modelData[0]
+                        y: modelData[1]
+                        width: modelData[2]
+                        height: modelData[3]
+                        color: Theme.ink
+                    }
+                }
+            }
+        }
+
+        ToyButton {
             objectName: "settingsButton"
             x: page.landscape ? Theme.mirrored(page.margin + page.columnWidth - 48, width, page.pageWidth) : Theme.mirrored(325, width, 390)
-            y: page.landscape ? 296 : 762
+            y: page.landscape ? 300 : 762
             width: page.landscape ? 48 : 50
             height: page.landscape ? 48 : 50
             Accessible.name: qsTr("Settings")

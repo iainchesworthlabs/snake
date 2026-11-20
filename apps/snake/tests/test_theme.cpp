@@ -188,7 +188,8 @@ QSet<char32_t> characters_of(const QString& language)
     {
         if (xml.readNext() == QXmlStreamReader::StartElement && xml.name() == u"translation")
         {
-            for (const char32_t character : xml.readElementText().toStdU32String())
+            // A string with plural forms holds one element for each, and each one counts.
+            for (const char32_t character : xml.readElementText(QXmlStreamReader::IncludeChildElements).toStdU32String())
             {
                 found.insert(character);
             }

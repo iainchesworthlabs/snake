@@ -46,7 +46,7 @@ libs/input/      portable library: tilt processor (calibrate, dead zone, thresho
                  swipe recogniser, key and gamepad maps, sample-source interface. The direction buffer is in sim.
 libs/audio/      portable library: synthesised sound effects and music (voices, envelopes, note tables, sequencer).
 libs/profile/    portable library: player names, leaderboard ranking, recent names, settings model, unlocks,
-                 versioned persistence schema. It reads and writes bytes and never a file.
+                 achievements, versioned persistence schema. It reads and writes bytes and never a file.
 libs/core/       logger, timing loop, window settings (Qt-free, not portable: it uses iostream and a mutex).
 apps/snake/      Qt Quick front end: theme from tokens, board item, screens, view-models, platform services
                  (storage, sensors, audio output, haptics, lifecycle) under src/platform/<os>/.
@@ -255,8 +255,10 @@ full matrix first (`gh workflow run ci.yml --ref <branch>`). Size: S under a day
     button of a gamepad or the Shed button on the screen) drops the bomb and every part behind it at once and frees their cells; it does
     nothing while the bomb is still in the head, because that would drop the whole snake. Shedding late keeps more of
     the snake. The speed starts at 160 ms and gets 3 ms shorter for each food, down to 80 ms.
-24. The save file has a leaderboard for each of the four modes (version 3; a version 1 or 2 file reads with the two new
-    boards empty), and a replay holds a shed as an input of its own (the byte 4 where a turn has 0 to 3).
+24. The save file has a leaderboard for each of the four modes and the achievements (version 4; a version 1 or 2 file
+    reads with the two new boards empty, and a version 1, 2 or 3 file reads with nothing earned but the achievements
+    for the modes its unlock bits show are open), and a replay holds a shed as an input of its own (the byte 4 where a
+    turn has 0 to 3).
 
 ## Risks
 

@@ -9,7 +9,8 @@
 #
 #   * Info.plist is valid, names the identifier, the executable, the version, the
 #     icon set and a launch screen, says it is an iPhone/iPad program, and holds
-#     no usage text for a permission (the game asks for none);
+#     no usage text for a permission (the game asks for none), and shows the app was
+#     built with the iOS 27 SDK or a later one (DTSDKName);
 #   * the compiled asset catalogue (the icon) is in the bundle;
 #   * the executable is for arm64 and links nothing outside the system: Qt is
 #     static on iOS, so a link to a Qt framework or to a path on the build
@@ -71,13 +72,17 @@ done
 [ "$(key CFBundleIconName)" = "AppIcon" ] || fail "CFBundleIconName is '$(key CFBundleIconName)'"
 [ -n "$(key UILaunchScreen)" ] || fail "Info.plist has no UILaunchScreen (iOS would run the program in a legacy window)"
 [ "$(key DTPlatformName)" = "iphoneos" ] || fail "DTPlatformName is '$(key DTPlatformName)'; this is not a device build"
+sdk="$(key DTSDKName)"
+sdk_major="${sdk#iphoneos}"; sdk_major="${sdk_major%%.*}"
+case "$sdk_major" in ''|*[!0-9]*) fail "DTSDKName is '$sdk', not an iOS SDK" ;; esac
+[ "$sdk_major" -ge 27 ] || fail "DTSDKName is '$sdk': the app must be built with the iOS 27 SDK or later (Xcode 27 or later)"
 [ -n "$(key MinimumOSVersion)" ] || fail "Info.plist has no MinimumOSVersion"
 if [ -n "$version" ]; then
   [ "$(key CFBundleShortVersionString)" = "$version" ] || fail "CFBundleShortVersionString is '$(key CFBundleShortVersionString)', expected $version"
 fi
 [ "$(key ITSAppUsesNonExemptEncryption)" = "false" ] || fail "ITSAppUsesNonExemptEncryption is '$(key ITSAppUsesNonExemptEncryption)': TestFlight would ask about encryption for every build"
 [ -n "$(key CFBundleVersion)" ] || fail "Info.plist has no CFBundleVersion (the build number)"
-echo "    Info.plist: identifier, executable, version $(key CFBundleShortVersionString) build $(key CFBundleVersion), icon, launch screen, no permission text, iOS $(key MinimumOSVersion) or later"
+echo "    Info.plist: identifier, executable, version $(key CFBundleShortVersionString) build $(key CFBundleVersion), icon, launch screen, no permission text, built with $sdk, iOS $(key MinimumOSVersion) or later"
 
 for required in \
     "$app/snake" \

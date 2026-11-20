@@ -255,6 +255,17 @@ FocusScope {
         input: root.input
     }
 
+    // Swiping has nothing to touch, so under the board a faint sign says it is the way of steering. Upright it is level with
+    // the pause button, in the middle.
+    SwipeCue {
+        id: swipeCue
+
+        objectName: "swipeCue"
+        visible: root.input.controls === InputController.Scheme.Swipe
+        x: root.landscape ? root.controlsCentre - width / 2 : (root.width - width) / 2
+        y: root.landscape ? (root.height - height) / 2 : root.height - root.safeBottom - 24 - 56 / 2 - height / 2
+    }
+
     TiltIndicator {
         objectName: "tiltIndicator"
         visible: root.input.controls === InputController.Scheme.Tilt

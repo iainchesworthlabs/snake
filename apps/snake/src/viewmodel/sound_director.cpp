@@ -177,7 +177,8 @@ void SoundDirector::on_state_changed()
 
 void SoundDirector::on_result_changed()
 {
-    if (m_Profile->newBest())
+    // One sound for a game that did either, or both: the player hears that something was won, not how many things.
+    if (m_Profile->newBest() || !m_Profile->achievedNow().isEmpty())
     {
         play(audio::Effect::NEW_BEST);
     }

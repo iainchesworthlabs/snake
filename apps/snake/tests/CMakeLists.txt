@@ -44,6 +44,8 @@ add_executable(snake_viewmodel_tests
     ../src/language/language_choice.hpp
     ../src/device/haptics.cpp
     ../src/device/haptics.hpp
+    ../src/viewmodel/achievement_list_model.cpp
+    ../src/viewmodel/achievement_list_model.hpp
     ../src/viewmodel/effects_model.cpp
     ../src/viewmodel/effects_model.hpp
     ../src/viewmodel/game_view_model.cpp
@@ -80,6 +82,9 @@ if(ICL_PLATFORM STREQUAL "linux")
     set_source_files_properties(../src/device/linux/float_math.cpp PROPERTIES COMPILE_OPTIONS -fno-math-errno)
 endif()
 target_include_directories(snake_viewmodel_tests PRIVATE ../src)
+# The test of the Game Center identifiers reads the file that lists what the owner enters in App Store Connect.
+target_compile_definitions(snake_viewmodel_tests PRIVATE
+    SNAKE_GAME_CENTER_COMPONENTS="${PROJECT_SOURCE_DIR}/apps/snake/packaging/ios/game-center/components.json")
 target_link_libraries(snake_viewmodel_tests
     PRIVATE snake::audio snake::input snake::profile snake::sim SDL3::SDL3 Qt6::Gui Qt6::Qml Qt6::Test Catch2::Catch2 icl::warnings icl::coverage)
 icl_relax_generated_warnings(snake_viewmodel_tests)

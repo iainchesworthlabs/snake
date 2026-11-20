@@ -26,6 +26,16 @@ FocusScope {
         return "";
     }
 
+    // What the game earned, in one line: the name of the achievement, or how many when there are several.
+    readonly property string achieved: {
+        const names = profile.achievedNow;
+        if (names.length === 0)
+            return "";
+        if (names.length === 1)
+            return qsTr("Achievement: %1").arg(names[0]);
+        return qsTr("%n achievements", "", names.length);
+    }
+
     // The main button is the one that saves a score that made the top 10, and Play again otherwise. The keyboard
     // starts on it each time the screen shows and when the score turns out to qualify.
     function focusMainButton() {
@@ -81,6 +91,7 @@ FocusScope {
         }
 
         Item {
+            objectName: "resultPanel"
             x: page.landscape ? page.sideX : 15
             y: page.landscape ? 62 : 502
             width: page.landscape ? page.sideWidth : 360
@@ -97,8 +108,16 @@ FocusScope {
             Rectangle {
                 id: panel
 
+                // The panel holds a score, a best and up to four lines of words (a verdict, two modes opened and the
+                // achievements), and has to clear the button under it in every language: the padding and the gaps
+                // are small, and the lines are one height whatever the script, which makes a line of Japanese as tall
+                // as one of English.
+                readonly property real padding: page.landscape ? 10 : 12
+                readonly property real gap: page.landscape ? 3 : 4
+                readonly property real lineHeight: page.landscape ? 19 : 20
+
                 width: parent.width
-                height: panelColumn.height + 36
+                height: panelColumn.height + 2 * padding
                 radius: 18
                 color: Theme.surface
                 border.width: 4
@@ -108,13 +127,13 @@ FocusScope {
                     id: panelColumn
 
                     x: 18
-                    y: 18
+                    y: panel.padding
                     width: parent.width - 36
-                    spacing: 12
+                    spacing: panel.gap
 
                     Item {
                         width: parent.width
-                        height: scoreColumn.height
+                        height: scoreColumn.height + panel.gap
 
                         Column {
                             id: scoreColumn
@@ -172,6 +191,8 @@ FocusScope {
                         visible: text !== ""
                         width: parent.width
                         wrapMode: Text.WordWrap
+                        lineHeightMode: Text.FixedHeight
+                        lineHeight: panel.lineHeight
                         color: Theme.ink
                         font.pixelSize: 17
                         font.weight: Font.DemiBold
@@ -183,10 +204,31 @@ FocusScope {
                         visible: text !== ""
                         width: parent.width
                         wrapMode: Text.WordWrap
+                        lineHeightMode: Text.FixedHeight
+                        lineHeight: panel.lineHeight
                         color: Theme.ink
                         font.pixelSize: 17
                         font.weight: Font.Bold
                         text: root.profile.unlockedNow.map(name => qsTr("%1 unlocked!").arg(name)).join("\n")
+                    }
+
+                    // One line that is set smaller to fit and never wraps: the panel has no room for a second.
+                    Text {
+                        objectName: "achieved"
+                        visible: text !== ""
+                        width: parent.width
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPixelSize: 9
+                        maximumLineCount: 1
+                        lineHeightMode: Text.FixedHeight
+                        lineHeight: panel.lineHeight
+                        color: Theme.ink
+                        font.pixelSize: 17
+                        font.weight: Font.Bold
+                        text: root.achieved
+
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: text
                     }
                 }
             }

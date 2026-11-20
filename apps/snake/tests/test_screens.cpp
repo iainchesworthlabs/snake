@@ -6,14 +6,17 @@
 #include "platform/motion_preference.hpp"
 #include "platform/sound_sink.hpp"
 #include "platform/touch_screen.hpp"
+#include "played_tally.hpp"
 #include "scripted_gamepad.hpp"
 #include "snake/audio/tunes.hpp"
 #include "snake/input/sample_source.hpp"
+#include "snake/profile/achievements.hpp"
 #include "snake/sim/autoplayer.hpp"
 #include "snake/sim/mode.hpp"
 #include "snake/source_info.hpp"
 #include "snake/version.hpp"
 #include "theme/tokens.hpp"
+#include "viewmodel/achievement_list_model.hpp"
 #include "viewmodel/effects_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/gamepad_controller.hpp"
@@ -25,6 +28,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <QAccessible>
 #include <QByteArray>
 #include <QColor>
 #include <QGuiApplication>
@@ -43,7 +47,9 @@
 #include <QTranslator>
 #include <QVariantMap>
 #include <Qt>
+#include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -344,6 +350,26 @@ TEST_CASE("The title screen has the wordmark on the yellow of the design", "[scr
     CHECK(image.pixel(app.face_of("playButton")) == rgb_of(tokens::INK));
 }
 
+TEST_CASE("The focus ring of Play clears the mode cards above it and the buttons below it", "[screens]")
+{
+    App app;
+    REQUIRE(app.focus_name() == "playButton");
+    const QQuickItem* play = app.item("playButton");
+    const double drop = play->property("drop").toDouble();
+    // The ring of the focus is 6 outside the face on every side and also takes in the drop of the shadow.
+    const QRectF ring(play->mapToScene(QPointF(-6, -6)), QSizeF(play->width() + 12, play->height() + 12 + drop));
+    constexpr double clearance = 8.0;
+
+    const QQuickItem* leaderboard = app.item("leaderboardButton");
+    const QQuickItem* settings = app.item("settingsButton");
+    CHECK(leaderboard->mapToScene(QPointF(0, 0)).y() - ring.bottom() >= clearance);
+    CHECK(settings->mapToScene(QPointF(0, 0)).y() - ring.bottom() >= clearance);
+
+    const QQuickItem* last_card = app.item("modeCard3");
+    const double card_bottom = last_card->mapToScene(QPointF(0, last_card->height())).y();
+    CHECK(ring.top() - card_bottom >= clearance);
+}
+
 TEST_CASE("The title screen lists the four modes, two to play and two locked", "[screens][modes]")
 {
     const UsLocale locale;
@@ -498,6 +524,34 @@ TEST_CASE("Tilt shows the indicator and a pause button, and swiping a swipe area
     app.game().resume();
     CHECK_FALSE(app.shows("tiltIndicator"));
     CHECK(app.item("swipeArea")->isEnabled());
+}
+
+TEST_CASE("Swiping shows a sign under the board, clear of the board and the pause button, and no other way does",
+          "[screens][touch]")
+{
+    for (const auto controls : {ProfileViewModel::Controls::Tilt, ProfileViewModel::Controls::Swipe,
+                                ProfileViewModel::Controls::Dpad, ProfileViewModel::Controls::Joystick})
+    {
+        App app(true);
+        app.profile().setControls(controls);
+        app.start_classic();
+        CHECK(app.shows("swipeCue") == (controls == ProfileViewModel::Controls::Swipe));
+    }
+
+    App app(true);
+    app.profile().setControls(ProfileViewModel::Controls::Swipe);
+    app.start_classic();
+    const auto box_of = [&app](const char* name)
+    {
+        const QQuickItem* target = app.item(name);
+        return QRectF(target->mapToScene(QPointF(0, 0)), QSizeF(target->width(), target->height()));
+    };
+    const QRectF cue = box_of("swipeCue");
+    CHECK_FALSE(cue.intersects(box_of("board")));
+    CHECK_FALSE(cue.intersects(box_of("pauseButton")));
+    CHECK(cue.bottom() <= app.window().height());
+    CHECK(cue.left() >= 0.0);
+    CHECK(cue.right() <= app.window().width());
 }
 
 TEST_CASE("The d-pad makes room under the board and its arrows turn the snake", "[screens][touch]")
@@ -819,6 +873,63 @@ TEST_CASE("The game over screen announces a new best, a matched best and a mode 
     app.profile().record_game(Mode::CLASSIC, 5000);
     CHECK(app.text_of("verdict") == "You matched your best.");
     CHECK_FALSE(app.item("unlocked")->isVisible());
+}
+
+TEST_CASE("The game over screen names an achievement, counts several and hides the line when there are none",
+          "[screens][gameover][achievements]")
+{
+    using snake::test::Played;
+    using snake::test::tally_of;
+    App app;
+    app.start_classic();
+    app.crash();
+
+    // A game that earned nothing: the line is not there, and nothing is left to read.
+    app.profile().record_game(Mode::CLASSIC, 10);
+    CHECK(app.profile().achievedNow().isEmpty());
+    CHECK_FALSE(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved").isEmpty());
+
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.bonus = true}));
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved") == "Achievement: Bonus item");
+    // It has a name and a role for a screen reader: it is text, and the name is what it says.
+    QAccessible::setActive(true);
+    const QAccessibleInterface* accessible = QAccessible::queryAccessibleInterface(app.item("achieved"));
+    REQUIRE(accessible != nullptr);
+    CHECK(accessible->text(QAccessible::Name) == "Achievement: Bonus item");
+    CHECK(accessible->role() == QAccessible::StaticText);
+
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.portal = true, .shed = true}));
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.text_of("achieved") == "2 achievements");
+
+    // The next game earns nothing new and the line goes.
+    app.profile().record_game(Mode::CLASSIC, 10, tally_of(Played{.portal = true, .shed = true}));
+    CHECK_FALSE(app.item("achieved")->isVisible());
+}
+
+TEST_CASE("The attract game on the title earns nothing", "[screens][attract][achievements]")
+{
+    App app;
+    GameViewModel& demo = app.demo();
+    // The demo plays on its own; it is let run through many ticks and games of its own.
+    for (int i = 0; i < 6000; ++i)
+    {
+        demo.advance(0.05);
+        if (demo.state() == State::GameOver)
+        {
+            demo.restart();
+        }
+    }
+    CHECK(demo.session().simulation().ticks() > 0);
+    // Nothing of what the demo did reached the profile.
+    CHECK(app.profile().data().achievements.none());
+    CHECK(app.profile().data().achievements.blueberries_eaten() == 0);
+    CHECK(app.profile().data().achievements.modes_finished() == 0);
+    CHECK(app.profile().achievedNow().isEmpty());
+    CHECK(app.profile().data().leaderboards.of(Mode::EASY).empty());
+    CHECK(app.profile().best() == "000000");
 }
 
 TEST_CASE("A mode that opened no longer shows as locked on the title screen", "[screens][modes]")
@@ -1640,12 +1751,19 @@ TEST_CASE("The burst of a food is drawn on the board and goes", "[screens][effec
     app.start_classic();
     const QImage before = app.render();
     const int leaf_before = count_pixels(before, rgb_of(tokens::LEAF));
+    // The game runs on while the test waits for each picture, and the board draws the snake between its cells, so the
+    // edge of the snake can put a pixel or two more or less of leaf green into one picture than into the other. The burst
+    // is a dozen pixels or so, well clear of that.
+    constexpr int DRAWING_NOISE = 2;
 
     emit app.game().tickEvent(GameViewModel::Event::Ate);
     CHECK(app.effects().active());
+    // The specks fly from the first step on; the picture is taken after one, so that it does not depend on whether the
+    // frame animation has had a frame in the wait for the picture.
+    app.effects().advance(1.0 / 60.0);
     const QImage during = app.render();
     // The specks are in the colours of the food, and the leaf green is one of them.
-    CHECK(count_pixels(during, rgb_of(tokens::LEAF)) > leaf_before);
+    CHECK(count_pixels(during, rgb_of(tokens::LEAF)) > leaf_before + DRAWING_NOISE);
 
     // Time passes and the burst is over.
     for (int i = 0; i < 120 && app.effects().active(); ++i)
@@ -1653,7 +1771,7 @@ TEST_CASE("The burst of a food is drawn on the board and goes", "[screens][effec
         app.effects().advance(1.0 / 60.0);
     }
     CHECK_FALSE(app.effects().active());
-    CHECK(count_pixels(app.render(), rgb_of(tokens::LEAF)) == leaf_before);
+    CHECK(std::abs(count_pixels(app.render(), rgb_of(tokens::LEAF)) - leaf_before) <= DRAWING_NOISE);
 }
 
 TEST_CASE("The frame animation moves the effects on", "[screens][effects]")
@@ -1985,8 +2103,14 @@ public:
     {
         shown = std::string(leaderboard_id);
     }
+    void report_achievement(std::string_view, double) override {}
+    void show_achievements() override
+    {
+        ++achievements_shown;
+    }
 
     std::string shown;
+    int achievements_shown = 0;
 };
 
 } // namespace
@@ -2428,6 +2552,100 @@ TEST_CASE("The title, the game and the pause dialog fit in every language lying 
     }
 }
 
+namespace
+{
+
+/// Complaints about the four mode cards of the title and the words in them: a card or a word that is not inside the
+/// page, a card that is too small to touch, cards that overlap, a word that runs out of its card. Empty when all is
+/// well.
+QStringList card_misfits(App& app, const QRectF& page)
+{
+    static_cast<void>(app.render());
+    constexpr double SLACK = 0.5;
+    constexpr double MINIMUM_TOUCH = 44.0;
+    QStringList complaints;
+    QRectF previous;
+    for (int card = 0; card < 4; ++card)
+    {
+        const std::string name = "modeCard" + std::to_string(card);
+        const QQuickItem* item = app.item(name.c_str());
+        const QRectF box = item->mapRectToScene(QRectF(0, 0, item->width(), item->height()));
+        const QString label = QString::fromStdString(name);
+        if (!page.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(box))
+        {
+            complaints << QString("%1 is not on the page (%2 to %3 down, the page is %4 high)")
+                              .arg(label)
+                              .arg(box.top())
+                              .arg(box.bottom())
+                              .arg(page.height());
+        }
+        if (box.height() < MINIMUM_TOUCH)
+        {
+            complaints << QString("%1 is only %2 high to touch").arg(label).arg(box.height());
+        }
+        if (card > 0 && box.top() < previous.bottom() - SLACK)
+        {
+            complaints << QString("%1 overlaps the card above it").arg(label);
+        }
+        previous = box;
+
+        std::vector<QQuickItem*> texts;
+        collect_texts(const_cast<QQuickItem*>(item), texts);
+        REQUIRE(texts.size() >= 2);
+        for (QQuickItem* text : texts)
+        {
+            const QRectF where = text->mapRectToScene(QRectF(0, 0, text->width(), text->height()));
+            const QString words = text->property("text").toString();
+            if (!page.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(where))
+            {
+                complaints << QString("\"%1\" of %2 is not on the page (%3 to %4 down)")
+                                  .arg(words, label)
+                                  .arg(where.top())
+                                  .arg(where.bottom());
+            }
+            if (!box.adjusted(-SLACK, -SLACK, SLACK, SLACK).contains(where))
+            {
+                complaints << QString("\"%1\" of %2 runs out of its card").arg(words, label);
+            }
+        }
+    }
+    return complaints;
+}
+
+} // namespace
+
+TEST_CASE("The four mode cards of the title are on the page in every language, lying down and upright",
+          "[screens][languages][landscape]")
+{
+    struct Size
+    {
+        int width;
+        int height;
+    };
+    // An iPad lying down is 4:3, which gives the narrowest page there is; 900 wide is the widest; upright is the phone.
+    for (const Size size : {Size{600, 360}, Size{900, 360}, Size{390, 844}})
+    {
+        for (const char* code : TESTED_LANGUAGES)
+        {
+            // The words of a locked mode are not the words of one that is open.
+            for (const bool earned : {false, true})
+            {
+                INFO("language " << code << ", " << size.width << " by " << size.height
+                                 << (earned ? ", modes earned" : ""));
+                const InLanguage language(code);
+                App app(true, size.width, size.height);
+                if (earned)
+                {
+                    fill_the_profile(app);
+                }
+                const QStringList bad = card_misfits(app, QRectF(0, 0, size.width, size.height));
+                INFO(bad.join("; ").toStdString());
+                CHECK(bad.isEmpty());
+            }
+        }
+    }
+}
+
 TEST_CASE("Lying down, the leaderboard is two columns of five lines", "[screens][landscape]")
 {
     App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
@@ -2572,6 +2790,63 @@ TEST_CASE("The Game Center button fits on the leaderboard in every language, upr
             CHECK(app.shows("gameCenterButton"));
             check_fit(app, "leaderboard with Game Center lying down");
         }
+    }
+}
+
+TEST_CASE("The Game Center button has room above and below it on the leaderboard", "[screens][game-center]")
+{
+    // A button's shadow shows this far under its face.
+    constexpr double DROP = 4.0;
+    constexpr double ROOM = 8.0;
+    double panel_top_signed_out = 0.0;
+    {
+        App app(true);
+        app.click("leaderboardButton");
+        REQUIRE(app.shows("leaderboardScreen"));
+        panel_top_signed_out = scene_rect(app, "leaderboardPanel").top();
+    }
+
+    SignedInGameCenter game_center;
+    App app(true);
+    app.click("leaderboardButton");
+    REQUIRE(app.shows("gameCenterButton"));
+    const QRectF tabs = scene_rect(app, "portalsTab").united(scene_rect(app, "hotPotatoTab"));
+    const QRectF button = scene_rect(app, "gameCenterButton");
+    const QRectF caption = scene_rect(app, "boardCaption");
+    const QRectF panel = scene_rect(app, "leaderboardPanel");
+    // The button is clear of the shadow of the tabs over it, and its own shadow is clear of the board under it.
+    CHECK(button.top() - (tabs.bottom() + DROP) >= ROOM);
+    CHECK(panel.top() - (button.bottom() + DROP) >= ROOM);
+    // The words beside it are on the same line, between the tabs and the board.
+    CHECK(caption.top() >= tabs.bottom() + DROP);
+    CHECK(caption.bottom() <= panel.top());
+    CHECK(caption.center().y() == Catch::Approx(button.center().y()).margin(4.0));
+    // The board is in the same place for a player who is not signed in, and it still ends above Play.
+    CHECK(panel.top() == Catch::Approx(panel_top_signed_out));
+    CHECK(panel.bottom() + 6.0 < scene_rect(app, "leaderboardPlayButton").top());
+}
+
+TEST_CASE("Lying down on a tablet, the Game Center button and Play do not touch", "[screens][landscape][game-center]")
+{
+    SignedInGameCenter game_center;
+    for (const char* code : {"en", "he"})
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        // A tablet on its side is the narrowest page there is lying down.
+        App app(true, 1024, 768);
+        app.click("leaderboardButton");
+        REQUIRE(app.shows("gameCenterButton"));
+        const QRectF button = scene_rect(app, "gameCenterButton");
+        const QRectF play = scene_rect(app, "leaderboardPlayButton");
+        const double gap =
+            button.center().x() > play.center().x() ? button.left() - play.right() : play.left() - button.right();
+        // The window shows the page larger than it is drawn; Play is 50 high on the page.
+        const double scale = play.height() / 50.0;
+        // The ring of the focus is 6 round Play, and is clear of the button too.
+        CHECK(gap / scale >= 6.0 + 8.0);
+        CHECK(play.center().x() == Catch::Approx(1024 / 2.0).margin(2.0));
+        check_fit(app, "leaderboard with Game Center on a tablet lying down");
     }
 }
 
@@ -2895,4 +3170,840 @@ TEST_CASE("The key hints fit in every language", "[screens][hints][languages]")
         app.pad({GamepadEvent{GamepadEvent::Kind::CONNECTED}});
         check_fit(app, "hot potato with hints");
     }
+}
+
+namespace
+{
+
+/// The bottom of the panel on the game over screen stays above the top of every button under it, and the line of
+/// achievements is one line that fits in the panel.
+void check_the_panel_clears_the_buttons(App& app)
+{
+    const QRectF panel = scene_rect(app, "resultPanel");
+    const QRectF line = scene_rect(app, "achieved");
+    CHECK(app.item("achieved")->isVisible());
+    CHECK(app.item("achieved")->property("lineCount").toInt() == 1);
+    CHECK(app.item("achieved")->property("contentWidth").toDouble() <= app.item("achieved")->width() + 0.5);
+    CHECK(line.bottom() <= panel.bottom());
+    for (const char* name : {"saveScoreButton", "playAgainButton", "menuButton"})
+    {
+        if (app.item(name)->isVisible())
+        {
+            INFO("button " << name << ": panel bottom " << panel.bottom() << ", button top "
+                           << scene_rect(app, name).top());
+            CHECK(panel.bottom() < scene_rect(app, name).top());
+        }
+    }
+}
+
+/// A game over with everything on the panel at once: a new best, both modes opening and several achievements.
+void check_the_fullest_game_over(App& app)
+{
+    app.start_classic();
+    app.crash();
+    // A score of 3,000 in Classic on a new profile is a best, opens Portals and Hot potato, and with a tally of
+    // everything a game can do earns several achievements.
+    app.profile().record_game(Mode::CLASSIC, 3000, snake::test::full_tally());
+    REQUIRE(app.profile().newBest());
+    REQUIRE(app.profile().unlockedNow().size() == 2);
+    REQUIRE(app.profile().achievedNow().size() > 1);
+    check_fit(app, "game over");
+    check_the_panel_clears_the_buttons(app);
+}
+
+} // namespace
+
+TEST_CASE("The game over panel with a new best, two modes opened and several achievements clears the buttons in every "
+          "language",
+          "[screens][languages][gameover][achievements]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true);
+        check_the_fullest_game_over(app);
+    }
+}
+
+TEST_CASE("The game over panel with a new best, two modes opened and several achievements clears the buttons in every "
+          "language lying down",
+          "[screens][languages][gameover][achievements][landscape]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+        check_the_fullest_game_over(app);
+    }
+}
+
+TEST_CASE("The game over line for each achievement alone fits in every language, upright and lying down",
+          "[screens][languages][gameover][achievements]")
+{
+    using snake::test::Played;
+    using snake::test::tally_of;
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        for (const bool lying : {false, true})
+        {
+            INFO("language " << code << (lying ? ", lying down" : ", upright"));
+            const InLanguage language(code);
+            App app(true, lying ? LANDSCAPE_WIDTH : PAGE_WIDTH, lying ? LANDSCAPE_HEIGHT : PAGE_HEIGHT);
+            app.start_classic();
+            app.crash();
+
+            // Each game earns exactly one achievement, in an order that leaves the next one still to earn.
+            struct Step
+            {
+                Mode mode;
+                std::uint32_t score;
+                Played played;
+                snake::profile::Achievement earned;
+            };
+            using snake::profile::Achievement;
+            app.profile().record_game(Mode::EASY, 100);
+            app.save_score_as("MUM");
+            const std::vector<Step> steps{
+                {Mode::EASY, 200, {}, Achievement::BEST},
+                {Mode::EASY, 1, {.wrap = true}, Achievement::WRAP},
+                {Mode::EASY, 1, {.bonus = true}, Achievement::BONUS},
+                {Mode::EASY, 1, {.blueberries = 1, .combo = 5}, Achievement::COMBO},
+                {Mode::EASY, 1, {.foods = 40}, Achievement::SPEED},
+                {Mode::EASY, 1, {.portal = true}, Achievement::PORTAL},
+                {Mode::EASY, 1, {.shed = true}, Achievement::SHED},
+                {Mode::CLASSIC, 1, {}, Achievement::BERRIES_100},
+                {Mode::CLASSIC, 1, {}, Achievement::BERRIES_1000},
+                {Mode::CLASSIC, 2000, {}, Achievement::PORTALS},
+                {Mode::CLASSIC, 3000, {}, Achievement::HOT_POTATO},
+                {Mode::PORTALS, 1, {}, Achievement::ALL_MODES},
+            };
+            for (const Step& step : steps)
+            {
+                const QString name = snake::ui::AchievementListModel::name_of(step.earned);
+                INFO("achievement " << name.toStdString());
+                if (step.mode == Mode::PORTALS)
+                {
+                    // The last mode that has not had a game: Hot potato, then the one that finishes the set.
+                    app.profile().record_game(Mode::HOT_POTATO, 1);
+                }
+                Played played = step.played;
+                // The counted ones are earned by the blueberries still missing, whatever the first game ate.
+                const std::uint32_t eaten = app.profile().data().achievements.blueberries_eaten();
+                if (step.earned == Achievement::BERRIES_100)
+                {
+                    played.blueberries = static_cast<std::uint16_t>(snake::profile::BERRIES_100_TARGET - eaten);
+                }
+                if (step.earned == Achievement::BERRIES_1000)
+                {
+                    played.blueberries = static_cast<std::uint16_t>(snake::profile::BERRIES_1000_TARGET - eaten);
+                }
+                app.profile().record_game(step.mode, step.score, tally_of(played));
+                REQUIRE(app.profile().achievedNow() == QStringList{name});
+                check_fit(app, "game over");
+                CHECK(app.text_of("achieved").contains(name));
+                check_the_panel_clears_the_buttons(app);
+            }
+        }
+    }
+}
+
+namespace
+{
+
+using snake::test::Played;
+using snake::test::tally_of;
+using snake::ui::AchievementListModel;
+
+constexpr int ACHIEVEMENTS = 12;
+
+/// The first item below `root` with this name that is showing, or nothing.
+QQuickItem* showing_child(QQuickItem* root, const char* name)
+{
+    if (!root->isVisible())
+    {
+        return nullptr;
+    }
+    if (root->objectName() == name)
+    {
+        return root;
+    }
+    for (QQuickItem* child : root->childItems())
+    {
+        if (QQuickItem* found = showing_child(child, name))
+        {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
+/// How many items below `root`, itself included, have this name and are showing.
+int count_showing(const QQuickItem* root, const char* name)
+{
+    if (!root->isVisible())
+    {
+        return 0;
+    }
+    int count = root->objectName() == name ? 1 : 0;
+    for (const QQuickItem* child : root->childItems())
+    {
+        count += count_showing(child, name);
+    }
+    return count;
+}
+
+QByteArray row_name(int number)
+{
+    return QString("achievement%1").arg(number).toLatin1();
+}
+
+QQuickItem* achievement_row(App& app, int number)
+{
+    return app.item(row_name(number).constData());
+}
+
+QRectF rect_in_scene(const QQuickItem* item)
+{
+    return item->mapRectToScene(QRectF(0, 0, item->width(), item->height()));
+}
+
+/// The row that is chosen, or -1.
+int chosen_row(App& app)
+{
+    int found = -1;
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        if (achievement_row(app, number)->property("chosen").toBool())
+        {
+            CHECK(found == -1);
+            found = number;
+        }
+    }
+    return found;
+}
+
+QString achievement_text(const AchievementListModel& list, int number, AchievementListModel::Role role)
+{
+    return list.data(list.index(number), role).toString();
+}
+
+/// The colour of the tile of a row, read from the pixels of the window just inside its outline and clear of the tick
+/// or the padlock.
+QRgb tile_colour(App& app, const QImage& image, int number)
+{
+    const QQuickItem* tile = showing_child(achievement_row(app, number), "achievementTile");
+    REQUIRE(tile != nullptr);
+    return image.pixel(tile->mapToScene(QPointF(6, 6)).toPoint());
+}
+
+/// Opens the achievements screen from the title.
+void open_achievements(App& app)
+{
+    app.click("achievementsButton");
+    REQUIRE(app.shows("achievementsScreen"));
+}
+
+} // namespace
+
+TEST_CASE("The title has an Achievements button that opens the list, and Back closes it", "[screens][achievements]")
+{
+    QAccessible::setActive(true);
+    App app;
+    const QAccessibleInterface* accessible = QAccessible::queryAccessibleInterface(app.item("achievementsButton"));
+    REQUIRE(accessible != nullptr);
+    CHECK(accessible->text(QAccessible::Name) == "Achievements");
+    CHECK(accessible->role() == QAccessible::Button);
+    CHECK_FALSE(app.shows("achievementsScreen"));
+
+    app.click("achievementsButton");
+    CHECK(app.shows("achievementsScreen"));
+    CHECK_FALSE(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("leaderboardScreen"));
+    CHECK(app.focus_name() == "achievementList");
+
+    app.click("achievementsBackButton");
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("achievementsScreen"));
+    CHECK(app.focus_name() == "playButton");
+}
+
+TEST_CASE("Escape closes the achievements", "[screens][achievements]")
+{
+    App app;
+    open_achievements(app);
+    app.press(Qt::Key_Escape);
+    CHECK(app.shows("titleScreen"));
+    CHECK_FALSE(app.shows("achievementsScreen"));
+    CHECK(app.focus_name() == "playButton");
+}
+
+TEST_CASE("The keyboard reaches the Achievements button between Leaderboard and Settings and opens the list",
+          "[screens][achievements]")
+{
+    App app;
+    REQUIRE(app.focus_name() == "playButton");
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "leaderboardButton");
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "achievementsButton");
+    app.press(Qt::Key_Down);
+    CHECK(app.focus_name() == "settingsButton");
+    app.press(Qt::Key_Up);
+    REQUIRE(app.focus_name() == "achievementsButton");
+    app.press(Qt::Key_Return);
+    CHECK(app.shows("achievementsScreen"));
+    CHECK(app.focus_name() == "achievementList");
+}
+
+TEST_CASE("A gamepad opens the achievements, moves the choice and closes them again",
+          "[screens][achievements][gamepad]")
+{
+    App app;
+    app.pad({pad_down(GamepadButton::DPAD_DOWN), pad_up(GamepadButton::DPAD_DOWN)});
+    app.pad({pad_down(GamepadButton::DPAD_DOWN), pad_up(GamepadButton::DPAD_DOWN)});
+    REQUIRE(app.focus_name() == "achievementsButton");
+    app.pad({pad_down(GamepadButton::SOUTH), pad_up(GamepadButton::SOUTH)});
+    REQUIRE(app.shows("achievementsScreen"));
+    app.pad({pad_down(GamepadButton::DPAD_DOWN), pad_up(GamepadButton::DPAD_DOWN)});
+    CHECK(chosen_row(app) == 1);
+    // The east button is Escape.
+    app.pad({pad_down(GamepadButton::EAST), pad_up(GamepadButton::EAST)});
+    CHECK(app.shows("titleScreen"));
+}
+
+TEST_CASE("The achievements screen is a pane with a list of twelve rows, each named in full", "[screens][achievements]")
+{
+    QAccessible::setActive(true);
+    const UsLocale locale;
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 100, tally_of(Played{.blueberries = 37, .bonus = true}));
+    open_achievements(app);
+
+    const QAccessibleInterface* screen = QAccessible::queryAccessibleInterface(app.item("achievementsScreen"));
+    REQUIRE(screen != nullptr);
+    CHECK(screen->role() == QAccessible::Pane);
+    CHECK(screen->text(QAccessible::Name) == "Achievements");
+    const QAccessibleInterface* list = QAccessible::queryAccessibleInterface(app.item("achievementList"));
+    REQUIRE(list != nullptr);
+    CHECK(list->role() == QAccessible::List);
+
+    const AchievementListModel& model = *app.profile().achievements();
+    REQUIRE(model.rowCount() == ACHIEVEMENTS);
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        INFO("row " << number);
+        QQuickItem* row = achievement_row(app, number);
+        CHECK(row->isVisible());
+        const QAccessibleInterface* accessible = QAccessible::queryAccessibleInterface(row);
+        REQUIRE(accessible != nullptr);
+        CHECK(accessible->role() == QAccessible::ListItem);
+        const bool earned = model.data(model.index(number), AchievementListModel::EarnedRole).toBool();
+        QString expected = achievement_text(model, number, AchievementListModel::NameRole) + ". " +
+                           achievement_text(model, number, AchievementListModel::DescriptionRole) + " " +
+                           (earned ? "Earned." : "Not earned yet.");
+        const QString progress = achievement_text(model, number, AchievementListModel::ProgressRole);
+        if (!progress.isEmpty())
+        {
+            expected += " " + progress;
+        }
+        CHECK(accessible->text(QAccessible::Name) == expected);
+    }
+    CHECK(QAccessible::queryAccessibleInterface(achievement_row(app, 1))->text(QAccessible::Name) ==
+          "Bonus item. Eat a bonus item before it goes. Earned.");
+    CHECK(QAccessible::queryAccessibleInterface(achievement_row(app, 5))->text(QAccessible::Name) ==
+          "100 blueberries. Eat 100 blueberries, over as many games as it takes. Not earned yet. 37 / 100");
+}
+
+TEST_CASE("The achievements screen has twelve rows, each with a tile and a name", "[screens][achievements]")
+{
+    App app;
+    open_achievements(app);
+    const AchievementListModel& model = *app.profile().achievements();
+    int tiles = 0;
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        INFO("row " << number);
+        QQuickItem* row = achievement_row(app, number);
+        CHECK(row->property("number").toInt() == number);
+        const bool has_tile = showing_child(row, "achievementTile") != nullptr;
+        CHECK(has_tile);
+        tiles += has_tile ? 1 : 0;
+        const QQuickItem* name = showing_child(row, "achievementName");
+        REQUIRE(name != nullptr);
+        CHECK(name->property("text").toString() == achievement_text(model, number, AchievementListModel::NameRole));
+    }
+    CHECK(tiles == ACHIEVEMENTS);
+    CHECK(count_showing(app.item("achievementList"), "achievementTile") == ACHIEVEMENTS);
+}
+
+TEST_CASE("An earned row has a tick on a coral tile and a row not earned has a padlock on a cream one",
+          "[screens][achievements]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 100, tally_of(Played{.bonus = true}));
+    REQUIRE(app.profile().achievedNow() == QStringList{"Bonus item"});
+    open_achievements(app);
+    const QImage image = app.render();
+
+    // The shape of the tile says it, as well as the colour.
+    QQuickItem* earned = achievement_row(app, 1);
+    CHECK(showing_child(earned, "achievementTick") != nullptr);
+    CHECK(showing_child(earned, "achievementPadlock") == nullptr);
+    QQuickItem* locked = achievement_row(app, 0);
+    CHECK(showing_child(locked, "achievementTick") == nullptr);
+    CHECK(showing_child(locked, "achievementPadlock") != nullptr);
+
+    CHECK(tile_colour(app, image, 1) == rgb_of(tokens::ACCENT));
+    CHECK(tile_colour(app, image, 0) == rgb_of(tokens::SURFACE));
+    for (int number = 2; number < ACHIEVEMENTS; ++number)
+    {
+        INFO("row " << number);
+        CHECK(showing_child(achievement_row(app, number), "achievementPadlock") != nullptr);
+        CHECK(tile_colour(app, image, number) == rgb_of(tokens::SURFACE));
+    }
+
+    // The ink of the glyph is in the tile, whichever glyph it is, and the two glyphs are different pictures.
+    const auto ink_pixels = [&](int number)
+    {
+        const QRectF where = rect_in_scene(showing_child(achievement_row(app, number), "achievementTile"));
+        int count = 0;
+        for (int y = static_cast<int>(where.top()) + 4; y < static_cast<int>(where.bottom()) - 4; ++y)
+        {
+            for (int x = static_cast<int>(where.left()) + 4; x < static_cast<int>(where.right()) - 4; ++x)
+            {
+                count += image.pixel(x, y) == rgb_of(tokens::INK) ? 1 : 0;
+            }
+        }
+        return count;
+    };
+    CHECK(ink_pixels(1) > 40);
+    CHECK(ink_pixels(0) > 40);
+    CHECK(ink_pixels(1) != ink_pixels(0));
+}
+
+TEST_CASE("A row earned while the list shows changes at once", "[screens][achievements]")
+{
+    App app;
+    open_achievements(app);
+    CHECK(showing_child(achievement_row(app, 8), "achievementPadlock") != nullptr);
+    CHECK(showing_child(achievement_row(app, 8), "achievementTick") == nullptr);
+    // The list refreshes when a game is recorded.
+    app.profile().record_game(Mode::CLASSIC, 100, tally_of(Played{.portal = true}));
+    CHECK(showing_child(achievement_row(app, 8), "achievementTick") != nullptr);
+    CHECK(showing_child(achievement_row(app, 8), "achievementPadlock") == nullptr);
+}
+
+TEST_CASE("The progress shows on the two counted rows and on no other", "[screens][achievements]")
+{
+    const UsLocale locale;
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 100, tally_of(Played{.blueberries = 37}));
+    open_achievements(app);
+    int shown = 0;
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        INFO("row " << number);
+        const QQuickItem* progress = showing_child(achievement_row(app, number), "achievementProgress");
+        if (number == 5 || number == 6)
+        {
+            REQUIRE(progress != nullptr);
+            CHECK(progress->property("text").toString() == (number == 5 ? "37 / 100" : "37 / 1,000"));
+            ++shown;
+        }
+        else
+        {
+            CHECK(progress == nullptr);
+        }
+    }
+    CHECK(shown == 2);
+}
+
+TEST_CASE("The first row is chosen when the screen opens, and the arrow keys move the choice and the strip follows",
+          "[screens][achievements]")
+{
+    App app;
+    app.profile().record_game(Mode::CLASSIC, 100, tally_of(Played{.bonus = true}));
+    open_achievements(app);
+    const AchievementListModel& model = *app.profile().achievements();
+    const auto strip_follows = [&](int number)
+    {
+        INFO("row " << number);
+        CHECK(app.text_of("achievementDescription") ==
+              achievement_text(model, number, AchievementListModel::DescriptionRole));
+        CHECK(app.text_of("achievementStatus") == (number == 1 ? "Earned" : "Not earned yet"));
+    };
+
+    CHECK(chosen_row(app) == 0);
+    strip_follows(0);
+    app.press(Qt::Key_Down);
+    CHECK(chosen_row(app) == 1);
+    strip_follows(1);
+    app.press(Qt::Key_Down);
+    CHECK(chosen_row(app) == 2);
+    strip_follows(2);
+    app.press(Qt::Key_Up);
+    app.press(Qt::Key_Up);
+    CHECK(chosen_row(app) == 0);
+    // Upright the other arrows do nothing, and the ends hold.
+    app.press(Qt::Key_Up);
+    CHECK(chosen_row(app) == 0);
+    app.press(Qt::Key_Right);
+    app.press(Qt::Key_Left);
+    CHECK(chosen_row(app) == 0);
+    for (int count = 0; count < 20; ++count)
+    {
+        app.press(Qt::Key_Down);
+    }
+    CHECK(chosen_row(app) == 11);
+    strip_follows(11);
+
+    // The chosen row has an outline as well as its colour: ink at its edge, and the colour of the page inside. A row
+    // that is not chosen has neither.
+    const QImage image = app.render();
+    const QRectF chosen = rect_in_scene(achievement_row(app, 11));
+    CHECK(image.pixel(QPoint(static_cast<int>(chosen.left()) + 1, static_cast<int>(chosen.center().y()))) ==
+          rgb_of(tokens::INK));
+    CHECK(image.pixel(QPoint(static_cast<int>(chosen.center().x()), static_cast<int>(chosen.top()) + 6)) ==
+          rgb_of(tokens::BACKGROUND));
+    const QRectF other = rect_in_scene(achievement_row(app, 3));
+    CHECK(image.pixel(QPoint(static_cast<int>(other.left()) + 1, static_cast<int>(other.center().y()))) ==
+          rgb_of(tokens::SURFACE));
+    CHECK(image.pixel(QPoint(static_cast<int>(other.center().x()), static_cast<int>(other.top()) + 6)) ==
+          rgb_of(tokens::SURFACE));
+}
+
+TEST_CASE("A tap chooses a row, and the screen starts on the first row each time it shows", "[screens][achievements]")
+{
+    App app;
+    open_achievements(app);
+    app.click("achievement7");
+    CHECK(chosen_row(app) == 7);
+    CHECK(app.focus_name() == "achievementList");
+    CHECK(app.text_of("achievementDescription") ==
+          achievement_text(*app.profile().achievements(), 7, AchievementListModel::DescriptionRole));
+    // The arrows go on from the row that was tapped.
+    app.press(Qt::Key_Down);
+    CHECK(chosen_row(app) == 8);
+
+    app.press(Qt::Key_Escape);
+    open_achievements(app);
+    CHECK(chosen_row(app) == 0);
+    CHECK(app.focus_name() == "achievementList");
+}
+
+TEST_CASE("Lying down, the achievements are two columns of six, the first six on the leading side",
+          "[screens][achievements][landscape]")
+{
+    App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    open_achievements(app);
+    const QRectF window(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        CHECK(window.contains(scene_rect(app, row_name(number).constData())));
+    }
+    // The first six run down the leading side and the next six down the other.
+    CHECK(scene_rect(app, "achievement0").left() == Catch::Approx(scene_rect(app, "achievement5").left()));
+    CHECK(scene_rect(app, "achievement0").left() < scene_rect(app, "achievement6").left());
+    CHECK(scene_rect(app, "achievement0").top() == Catch::Approx(scene_rect(app, "achievement6").top()));
+    CHECK(scene_rect(app, "achievement5").right() <= scene_rect(app, "achievement6").left());
+    CHECK(scene_rect(app, "achievement5").bottom() <= scene_rect(app, "achievementDetail").top());
+    CHECK(window.contains(scene_rect(app, "achievementsBackButton")));
+
+    // The arrows go down a column in order and across to the other column.
+    CHECK(chosen_row(app) == 0);
+    app.press(Qt::Key_Right);
+    CHECK(chosen_row(app) == 6);
+    app.press(Qt::Key_Down);
+    CHECK(chosen_row(app) == 7);
+    app.press(Qt::Key_Right);
+    CHECK(chosen_row(app) == 7);
+    app.press(Qt::Key_Left);
+    CHECK(chosen_row(app) == 1);
+    app.press(Qt::Key_Left);
+    CHECK(chosen_row(app) == 1);
+    app.click("achievement10");
+    CHECK(chosen_row(app) == 10);
+}
+
+TEST_CASE("In a language read from the right the achievements mirror, upright and lying down",
+          "[screens][achievements][rtl]")
+{
+    for (const char* code : {"he", "yi"})
+    {
+        INFO("language " << code);
+        const InLanguage language(code);
+        {
+            App app;
+            open_achievements(app);
+            CHECK(centre_x(app, "achievementsBackButton") > PAGE_WIDTH / 2.0);
+            // The tile is at the start of the row, which is the right, and the count of a counted row on the left.
+            QQuickItem* counted = achievement_row(app, 5);
+            const QRectF row = rect_in_scene(counted);
+            const QRectF tile = rect_in_scene(showing_child(counted, "achievementTile"));
+            const QRectF count = rect_in_scene(showing_child(counted, "achievementProgress"));
+            const QRectF name = rect_in_scene(showing_child(counted, "achievementName"));
+            CHECK(tile.center().x() > row.center().x());
+            CHECK(count.center().x() < row.center().x());
+            CHECK(name.right() <= tile.left() + 0.5);
+            CHECK(name.left() >= count.right() - 0.5);
+        }
+        {
+            App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+            open_achievements(app);
+            // The first six are on the right.
+            CHECK(scene_rect(app, "achievement0").center().x() > scene_rect(app, "achievement6").center().x());
+            CHECK(scene_rect(app, "achievement0").center().x() > LANDSCAPE_WIDTH / 2.0);
+            // The arrow towards the other column is the left one.
+            app.press(Qt::Key_Left);
+            CHECK(chosen_row(app) == 6);
+            app.press(Qt::Key_Right);
+            CHECK(chosen_row(app) == 0);
+        }
+    }
+}
+
+namespace
+{
+
+/// What has to hold on the achievements screen, with a row chosen: nothing overlaps and nothing leaves the page.
+void check_the_achievements_fit(App& app, const char* label)
+{
+    static_cast<void>(app.render());
+    const QRectF page(0, 0, app.window().width(), app.window().height());
+    const QRectF panel = rect_in_scene(app.item("achievementsPanel"));
+    const QRectF detail = rect_in_scene(app.item("achievementDetail"));
+    INFO("screen " << label);
+    CHECK(page.contains(panel));
+    CHECK(page.contains(detail));
+    CHECK(panel.bottom() <= detail.top());
+    CHECK(page.contains(rect_in_scene(app.item("achievementsBackButton"))));
+
+    std::vector<QRectF> rows;
+    for (int number = 0; number < ACHIEVEMENTS; ++number)
+    {
+        INFO("row " << number);
+        QQuickItem* row = achievement_row(app, number);
+        const QRectF where = rect_in_scene(row);
+        CHECK(panel.contains(where));
+        for (const QRectF& before : rows)
+        {
+            CHECK_FALSE(before.intersects(where));
+        }
+        rows.push_back(where);
+
+        const QQuickItem* tile = showing_child(row, "achievementTile");
+        REQUIRE(tile != nullptr);
+        CHECK(where.contains(rect_in_scene(tile)));
+        const QQuickItem* name = showing_child(row, "achievementName");
+        REQUIRE(name != nullptr);
+        // The name is set smaller when it is too long: it is never wider than its space, and the space is in the row.
+        CHECK(name->property("contentWidth").toDouble() <= name->width() + 0.5);
+        CHECK(where.contains(rect_in_scene(name)));
+        CHECK(name->property("contentHeight").toDouble() <= name->height() + 0.5);
+        CHECK_FALSE(rect_in_scene(name).intersects(rect_in_scene(tile)));
+        if (const QQuickItem* progress = showing_child(row, "achievementProgress"))
+        {
+            CHECK(progress->property("contentWidth").toDouble() <= progress->width() + 0.5);
+            CHECK(where.contains(rect_in_scene(progress)));
+            CHECK_FALSE(rect_in_scene(progress).intersects(rect_in_scene(name)));
+            CHECK_FALSE(rect_in_scene(progress).intersects(rect_in_scene(tile)));
+        }
+    }
+
+    // The strip shows the whole of the description of the chosen row, in one or two lines lying down.
+    const QQuickItem* description = app.item("achievementDescription");
+    const QQuickItem* status = app.item("achievementStatus");
+    CHECK(detail.contains(rect_in_scene(description)));
+    CHECK(detail.contains(rect_in_scene(status)));
+    CHECK(description->property("contentHeight").toDouble() <= description->height() + 0.5);
+    CHECK(description->property("contentWidth").toDouble() <= description->width() + 0.5);
+    CHECK(status->property("contentWidth").toDouble() <= status->width() + 0.5);
+    CHECK_FALSE(rect_in_scene(description).intersects(rect_in_scene(status)));
+}
+
+} // namespace
+
+TEST_CASE("The achievements have a Game Center button only for a signed in player, and it opens Game Center's list",
+          "[screens][achievements][game-center]")
+{
+    {
+        App app(true);
+        open_achievements(app);
+        CHECK_FALSE(app.shows("achievementsGameCenterButton"));
+    }
+
+    SignedInGameCenter game_center;
+    App app(true);
+    open_achievements(app);
+    REQUIRE(app.shows("achievementsGameCenterButton"));
+    CHECK(game_center.achievements_shown == 0);
+    app.click("achievementsGameCenterButton");
+    CHECK(game_center.achievements_shown == 1);
+    // The list on the device is still there.
+    CHECK(app.shows("achievementsScreen"));
+}
+
+TEST_CASE("The Game Center button is at the trailing end of the heading and clear of it, in every language, upright "
+          "and lying down",
+          "[screens][achievements][languages][landscape][game-center]")
+{
+    struct Size
+    {
+        int width;
+        int height;
+        const char* label;
+    };
+    SignedInGameCenter game_center;
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        const bool mirrored = std::string_view(code) == "he" || std::string_view(code) == "yi";
+        for (const Size size :
+             {Size{PAGE_WIDTH, PAGE_HEIGHT, "upright"}, Size{600, 360, "600 wide"}, Size{900, 360, "900 wide"}})
+        {
+            INFO("language " << code << ", " << size.label);
+            const InLanguage language(code);
+            App app(true, size.width, size.height);
+            fill_the_profile(app);
+            open_achievements(app);
+            REQUIRE(app.shows("achievementsGameCenterButton"));
+            check_fit(app, "achievements with Game Center");
+            check_the_achievements_fit(app, size.label);
+
+            const QRectF page(0, 0, app.window().width(), app.window().height());
+            const QRectF heading = scene_rect(app, "achievementsHeading");
+            const QRectF button = scene_rect(app, "achievementsGameCenterButton");
+            const QRectF back = scene_rect(app, "achievementsBackButton");
+            const QRectF panel = rect_in_scene(app.item("achievementsPanel"));
+            CHECK(page.contains(button));
+            CHECK(page.contains(heading));
+            CHECK_FALSE(heading.intersects(button));
+            CHECK_FALSE(heading.intersects(back));
+            CHECK_FALSE(button.intersects(back));
+            CHECK(button.bottom() <= panel.top());
+            // The heading follows the Back button, and the Game Center button is at the other end.
+            if (mirrored)
+            {
+                CHECK(button.right() < heading.left());
+            }
+            else
+            {
+                CHECK(button.left() > heading.right());
+            }
+        }
+    }
+}
+
+TEST_CASE("The achievements fit in every language, upright and lying down at 600 and 900 wide",
+          "[screens][achievements][languages][landscape]")
+{
+    struct Size
+    {
+        int width;
+        int height;
+        const char* label;
+    };
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        for (const Size size :
+             {Size{PAGE_WIDTH, PAGE_HEIGHT, "upright"}, Size{600, 360, "600 wide"}, Size{900, 360, "900 wide"}})
+        {
+            INFO("language " << code << ", " << size.label);
+            const InLanguage language(code);
+            App app(true, size.width, size.height);
+            fill_the_profile(app);
+            // The counts are at their longest, and some rows are earned and some are not.
+            app.profile().record_game(Mode::CLASSIC, 3100, tally_of(Played{.blueberries = 999, .bonus = true}));
+            open_achievements(app);
+            check_fit(app, "achievements");
+            // Each row in turn is chosen, so that every description is on show.
+            for (int number = 0; number < ACHIEVEMENTS; ++number)
+            {
+                INFO("chosen row " << number);
+                REQUIRE(chosen_row(app) == number);
+                check_the_achievements_fit(app, size.label);
+                if (number < ACHIEVEMENTS - 1)
+                {
+                    app.press(Qt::Key_Down);
+                }
+            }
+        }
+    }
+}
+
+namespace
+{
+
+/// The three buttons of the title's last row lie on the page and do not touch each other.
+void check_the_title_last_row(App& app, const QRectF& window, bool mirrored)
+{
+    const QRectF leaderboard = scene_rect(app, "leaderboardButton");
+    const QRectF achievements = scene_rect(app, "achievementsButton");
+    const QRectF settings = scene_rect(app, "settingsButton");
+    CHECK(window.contains(leaderboard));
+    CHECK(window.contains(achievements));
+    CHECK(window.contains(settings));
+    CHECK_FALSE(leaderboard.intersects(achievements));
+    CHECK_FALSE(achievements.intersects(settings));
+    CHECK_FALSE(leaderboard.intersects(settings));
+    // The two small ones are squares of one size, and the row is level.
+    CHECK(achievements.width() == Catch::Approx(settings.width()));
+    CHECK(achievements.height() == Catch::Approx(settings.height()));
+    CHECK(achievements.top() == Catch::Approx(settings.top()));
+    CHECK(leaderboard.top() == Catch::Approx(settings.top()));
+    if (mirrored)
+    {
+        CHECK(achievements.right() <= leaderboard.left());
+        CHECK(settings.right() <= achievements.left());
+    }
+    else
+    {
+        CHECK(leaderboard.right() <= achievements.left());
+        CHECK(achievements.right() <= settings.left());
+    }
+    // None of them touches Play above it.
+    CHECK(scene_rect(app, "playButton").bottom() <= std::min({leaderboard.top(), achievements.top(), settings.top()}));
+}
+
+} // namespace
+
+TEST_CASE("The title's last row has three buttons that fit the page in every language, upright and lying down",
+          "[screens][achievements][languages][landscape]")
+{
+    for (const char* code : TESTED_LANGUAGES)
+    {
+        const bool mirrored = std::string(code) == "he" || std::string(code) == "yi";
+        {
+            INFO("language " << code << ", upright");
+            const InLanguage language(code);
+            App app(true);
+            check_the_title_last_row(app, QRectF(0, 0, PAGE_WIDTH, PAGE_HEIGHT), mirrored);
+            check_fit(app, "title");
+        }
+        {
+            INFO("language " << code << ", lying down");
+            const InLanguage language(code);
+            App app(true, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT);
+            check_the_title_last_row(app, QRectF(0, 0, LANDSCAPE_WIDTH, LANDSCAPE_HEIGHT), mirrored);
+            check_fit(app, "title");
+        }
+        {
+            INFO("language " << code << ", lying down, 600 wide");
+            const InLanguage language(code);
+            App app(true, 600, 360);
+            check_the_title_last_row(app, QRectF(0, 0, 600, 360), mirrored);
+        }
+    }
+}
+
+TEST_CASE("The title's last row in English is Leaderboard, Achievements and Settings from left to right",
+          "[screens][achievements]")
+{
+    App app;
+    CHECK(centre_x(app, "leaderboardButton") < centre_x(app, "achievementsButton"));
+    CHECK(centre_x(app, "achievementsButton") < centre_x(app, "settingsButton"));
+    // The Leaderboard button has narrowed to make room.
+    CHECK(scene_rect(app, "leaderboardButton").width() == Catch::Approx(240.0));
+    CHECK(scene_rect(app, "achievementsButton").width() == Catch::Approx(50.0));
 }
