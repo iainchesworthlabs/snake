@@ -54,8 +54,9 @@ is not reliable enough to stand behind a green tick.
 
 Signing is the owner's. These two workflows use no secret.
 
-**The signed iPhone and iPad build** is the `ios` job of `release.yml`, and it is the only place a secret is used for iOS. It
-is off until the owner sets a repository variable: `SIGN_IOS_UPLOAD=true` for **TestFlight**, or `SIGN_IOS_ADHOC=true` for an
+**The signed iPhone and iPad build** is the `ios` job of `release.yml`. It and the `Game Center` workflow (below) are the
+only places a secret is used for iOS. It is off until the owner sets a repository variable: `SIGN_IOS_UPLOAD=true` for
+**TestFlight**, or `SIGN_IOS_ADHOC=true` for an
 ad-hoc IPA. It imports the Apple Distribution certificate and this repository's provisioning profile with
 `import-ios-signing`, configures with `SNAKE_IOS_SIGNING_TEAM`, `SNAKE_IOS_SIGNING_PROFILE` (both read out of the profile; see
 `mobile.cmake` for why the application target alone is signed) and `SNAKE_IOS_BUILD_NUMBER` (the number of the run), archives
@@ -66,6 +67,42 @@ from). A run on a branch (`gh workflow run release.yml --ref <branch>`) publishe
 artifact `ios-adhoc` for 7 days and goes to the release only if `IOS_IPA_ON_RELEASE` is `true`; it carries the UDIDs of the
 devices, and neither place is private in a public repository. How to install is in
 [Installing on an iPhone or iPad](ios-install.md). The Android upload key is a later step.
+
+### Game Center
+
+`game-center.yml` keeps Game Center in App Store Connect the same as
+`apps/snake/packaging/ios/game-center/components.json`: the four leaderboards and the twelve achievements, with their
+names, descriptions and images. The file is the record, and `tools/game-center/sync_app_store_connect.py` does the work
+with the App Store Connect API key the signed build uses (`APPSTORE_API_KEY_ID`, `APPSTORE_API_ISSUER_ID`,
+`APPSTORE_API_PRIVATE_KEY`). It needs Python 3 and `openssl`, which the runner has, and nothing else. It is **not** a
+required check, for the reason above.
+
+| When | What runs |
+|---|---|
+| A pull request that changes the file, an image or the script | **Check the file and the images.** No secret is used. |
+| A push to `develop` that changes one of them | The check, then **Say what would change**: it asks Apple what is there and writes the difference in the summary of the run. If there is one, **Make the changes** waits in the `release` environment, and runs when the owner approves it. |
+| `gh workflow run game-center.yml` | The check and **Say what would change**. Nothing is changed. |
+| `gh workflow run game-center.yml -f apply=true`, on `develop` | As a push: the changes are made when the owner approves. |
+
+What the script does with a difference:
+
+- **A leaderboard or an achievement that is missing** is made, with its first version, its words and its image.
+- **Points, a reference name, a score format** and the like are changed on the component.
+- **Words or an image** are kept in numbered versions. A version that has not been sent to Apple is changed in place. A
+  version that is live cannot be changed, so the script starts the next one; the owner sends it for review with a version
+  of the app. A version that is with Apple (waiting, in review, accepted, pending release) is left alone, and the run
+  says so.
+- **Something in App Store Connect that the file does not have** is named and left alone.
+
+What it never does: delete or archive anything, change an identifier (Apple does not allow it), add a component to a
+version of the app, submit one for review or release one. Those stay with the owner, in App Store Connect.
+
+It follows version 2 of the Game Center part of the App Store Connect API; version 1 is deprecated. The tests
+(`tools/tests/test_game_center_sync.py`) run it against a stand-in for App Store Connect, so they need no key and reach
+nobody. **It has not yet been run against Apple.** Make the first run a dry run (`gh workflow run game-center.yml`) and
+read its summary before approving anything. To try it on a computer with a key of your own:
+`python3 tools/game-center/sync_app_store_connect.py` says what would change, and `--validate` checks the file without
+a key.
 
 ## The Snake pages
 

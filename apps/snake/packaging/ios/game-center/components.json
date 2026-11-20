@@ -1,9 +1,37 @@
 {
   "leaderboards": [
-    { "id": "com.iainchesworthlabs.snake.leaderboard.easy", "referenceName": "Easy" },
-    { "id": "com.iainchesworthlabs.snake.leaderboard.classic", "referenceName": "Classic" },
-    { "id": "com.iainchesworthlabs.snake.leaderboard.portals", "referenceName": "Portals" },
-    { "id": "com.iainchesworthlabs.snake.leaderboard.hotpotato", "referenceName": "Hot potato" }
+    {
+      "id": "com.iainchesworthlabs.snake.leaderboard.easy",
+      "referenceName": "Easy",
+      "scoreFormat": "INTEGER",
+      "sort": "DESC",
+      "submission": "BEST_SCORE",
+      "en": { "name": "Easy" }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.leaderboard.classic",
+      "referenceName": "Classic",
+      "scoreFormat": "INTEGER",
+      "sort": "DESC",
+      "submission": "BEST_SCORE",
+      "en": { "name": "Classic" }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.leaderboard.portals",
+      "referenceName": "Portals",
+      "scoreFormat": "INTEGER",
+      "sort": "DESC",
+      "submission": "BEST_SCORE",
+      "en": { "name": "Portals" }
+    },
+    {
+      "id": "com.iainchesworthlabs.snake.leaderboard.hotpotato",
+      "referenceName": "Hot potato",
+      "scoreFormat": "INTEGER",
+      "sort": "DESC",
+      "submission": "BEST_SCORE",
+      "en": { "name": "Hot potato" }
+    }
   ],
   "achievements": [
     {

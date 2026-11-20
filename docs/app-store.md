@@ -225,8 +225,22 @@ Steps, in this order, because the second one gates the build:
    `IOS_PROVISIONING_PROFILE_BASE64` to it (the steps are in `docs/ios-signing.md` of `icl-common-infra`). The signed build
    now carries the `com.apple.developer.game-center` entitlement, and an older profile without it stops the build when the
    app is archived. **The Game Center code is on `develop` already, so do this before the next signed build.**
-3. **App Store Connect:** the app, then Game Center, turn it on. Then make four **classic** leaderboards with exactly these
-   identifiers, score format integer, sort high to low, and a name in English (add other languages if wanted):
+3. **Leaderboards and achievements: the `Game Center` workflow makes them.** They are not entered by hand.
+   `apps/snake/packaging/ios/game-center/components.json` is the record, and the workflow makes App Store Connect the
+   same ([Continuous integration](ci.md), "Game Center"). It turns Game Center on for the app if it is off.
+
+   1. See what it would do: `gh workflow run game-center.yml`. This changes nothing. Read the summary of the run.
+   2. Make the changes: `gh workflow run game-center.yml -f apply=true`, and approve the run in the `release`
+      environment. A change to the file that merges to `develop` asks for the same approval by itself.
+   3. In App Store Connect, look at what it made, then add the four leaderboards and the twelve achievements to the 1.0
+      version. **The first achievements of an app go to review with an app version**, as the leaderboards do; ones added
+      after 1.0.0 can be submitted on their own. The workflow never does this step, and never submits anything.
+
+   **The workflow has not been run against Apple yet.** Its first run may stop at a request Apple refuses; it says
+   why, and what it made before that stays made, so a second run carries on. If it cannot be made to work in time, the
+   tables below and `components.json` have everything to enter by hand.
+
+   The four leaderboards, each **classic**, score format integer, sorted high to low, best score:
 
    | Mode | Leaderboard ID |
    |---|---|
@@ -235,14 +249,8 @@ Steps, in this order, because the second one gates the build:
    | Portals | `com.iainchesworthlabs.snake.leaderboard.portals` |
    | Hot potato | `com.iainchesworthlabs.snake.leaderboard.hotpotato` |
 
-   An identifier that differs by one letter sends scores nowhere and shows nothing. App Store Connect has you add the
-   leaderboards to the version you submit, and a leaderboard goes live with it; test with a sandbox Game Center account
-   before then (the TestFlight plan below has the rows).
-4. **App Store Connect, the twelve achievements:** the app, then Game Center, then Achievements. Everything to enter is in
-   `apps/snake/packaging/ios/game-center/components.json`, and the README beside it says what each field is. For each
-   achievement enter the identifier and the reference name, the points, **Hidden: No**, **Achievable more than once: No**,
-   and in English the name, the description before it is earned and the description after; then upload its image,
-   `apps/snake/packaging/ios/game-center/images/<image>.png` (1024 by 1024, no transparency).
+   The twelve achievements, each shown before it is earned and earned once, with its image
+   `apps/snake/packaging/ios/game-center/images/<image>.png` (1024 by 1024, no transparency):
 
    | Name | Achievement ID | Points | Image |
    |---|---|---|---|
@@ -260,12 +268,13 @@ Steps, in this order, because the second one gates the build:
    | All four modes | `com.iainchesworthlabs.snake.achievement.allmodes` | 30 | `allmodes` |
 
    The points come to 300; Apple allows 100 for one achievement and 1,000 for an app. **An identifier cannot be changed
-   once it is saved**, and one that differs by a letter from the game's is never earned in Game Center, so paste them. The
-   descriptions are in `components.json` and not repeated here, so that there is one copy. English is enough for Apple;
-   the game's own names and descriptions in the other seven languages are in `apps/snake/translations` (machine-made) if
-   the owner wants to add them. **The first achievements of an app go to review with an app version:** add all twelve to
-   the 1.0 version before submitting, as with the leaderboards. Ones added after 1.0.0 can be submitted on their own.
-5. **App Privacy and the privacy page:** see above and [Privacy](privacy.md), which now says what is sent.
+   once it is made**, and one that differs by a letter from the game's sends scores nowhere or is never earned, which is
+   one reason they are made from the file and not typed. The names and descriptions are in `components.json` and not
+   repeated here, so that there is one copy. English is enough for Apple. To add a language, add it to an entry of
+   `components.json` under the game's code for it, as `en` is, and the workflow enters it; the game's own words in the
+   other languages are in `apps/snake/translations` (machine-made). Test with a sandbox Game Center account before the
+   version goes live (the TestFlight plan below has the rows).
+4. **App Privacy and the privacy page:** see above and [Privacy](privacy.md), which now says what is sent.
 
 There is no multiplayer, no Game Center challenge or activity, and no Game Center access point; the player is asked to
 sign in by Game Center itself when the game starts, and the game sees only that they did. A score sent while offline is
