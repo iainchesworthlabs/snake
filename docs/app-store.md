@@ -7,14 +7,12 @@ Store Connect (the text is here to copy), what to check in TestFlight, and what 
 
 Nothing here has been entered in App Store Connect. The text is drafted from the game as it is on `develop`, and every
 claim in it is one the [privacy](privacy.md), [features](features.md) and [how to play](how-to-play.md) pages already make.
-**The achievements are the exception:** they are not on `develop` yet (the first row below), and what this page says about
-them is true of the game only once that work has merged.
 
 ## Where things stand
 
 | | State |
 |---|---|
-| Achievements | Twelve are built, with the Achievements screen, the copy to Game Center and the twelve images, on a branch that has not merged to `develop` (20 November 2026). The tests pass on Windows. The iOS code that reports them to Game Center has never been compiled, and nothing of them has been seen on a device. |
+| Achievements | Twelve are on `develop` since 20 November 2026, with the Achievements screen, the copy to Game Center and the twelve images. The checks of that pull request passed: the Linux builds, the sanitiser build, coverage, and an unsigned compile for iOS. Nothing of them has been seen on a device, and none is entered in App Store Connect. |
 | Bundle identifier | `com.iainchesworthlabs.snake`. The app record is named **ICL Snake** (the name under the icon is Snake). |
 | Signing | App Store profile, Apple Distribution certificate and the App Store Connect API key are set as secrets. `SIGN_IOS_UPLOAD=true` and `SIGN_IOS_ADHOC=true` are set; upload wins. |
 | Last iOS build | Release workflow run 40599773635 (27 October 2026) built version 0.2.0, build 23, signed for the App Store, and had Apple validate it. Look in TestFlight to see whether it was uploaded. |
@@ -217,8 +215,8 @@ The game also has twelve achievements. The device is the record: they are earned
 the Achievements screen on every platform, with or without Game Center. For a player who is signed in, the game reports
 each one earned to Game Center, and for the two blueberry counts a percentage on the way; Game Center shows its own
 banner the first time, and a Game Center button on the Achievements screen opens Game Center's list. What was earned
-while signed out or offline is reported the next time the game starts with a player signed in. That code is not on
-`develop` yet ("Where things stand").
+while signed out or offline is reported the next time the game starts with a player signed in. The code is in the pull
+request "Integrate the fixes and the achievements for 1.0.0".
 
 Steps, in this order, because the second one gates the build:
 
