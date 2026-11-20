@@ -49,6 +49,7 @@
 #include <Qt>
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -1750,12 +1751,19 @@ TEST_CASE("The burst of a food is drawn on the board and goes", "[screens][effec
     app.start_classic();
     const QImage before = app.render();
     const int leaf_before = count_pixels(before, rgb_of(tokens::LEAF));
+    // The game runs on while the test waits for each picture, and the board draws the snake between its cells, so the
+    // edge of the snake can put a pixel or two more or less of leaf green into one picture than into the other. The burst
+    // is a dozen pixels or so, well clear of that.
+    constexpr int DRAWING_NOISE = 2;
 
     emit app.game().tickEvent(GameViewModel::Event::Ate);
     CHECK(app.effects().active());
+    // The specks fly from the first step on; the picture is taken after one, so that it does not depend on whether the
+    // frame animation has had a frame in the wait for the picture.
+    app.effects().advance(1.0 / 60.0);
     const QImage during = app.render();
     // The specks are in the colours of the food, and the leaf green is one of them.
-    CHECK(count_pixels(during, rgb_of(tokens::LEAF)) > leaf_before);
+    CHECK(count_pixels(during, rgb_of(tokens::LEAF)) > leaf_before + DRAWING_NOISE);
 
     // Time passes and the burst is over.
     for (int i = 0; i < 120 && app.effects().active(); ++i)
@@ -1763,7 +1771,7 @@ TEST_CASE("The burst of a food is drawn on the board and goes", "[screens][effec
         app.effects().advance(1.0 / 60.0);
     }
     CHECK_FALSE(app.effects().active());
-    CHECK(count_pixels(app.render(), rgb_of(tokens::LEAF)) == leaf_before);
+    CHECK(std::abs(count_pixels(app.render(), rgb_of(tokens::LEAF)) - leaf_before) <= DRAWING_NOISE);
 }
 
 TEST_CASE("The frame animation moves the effects on", "[screens][effects]")
