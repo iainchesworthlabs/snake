@@ -1,0 +1,114 @@
+name: Game Center
+
+# Keeps Game Center in App Store Connect the same as apps/snake/packaging/ios/game-center/components.json: the
+# leaderboards and the achievements, with their names, descriptions and images (tools/game-center/sync_app_store_connect.py).
+#
+# - A pull request that changes the file, an image or the script: the file and the images are checked. No secret is used.
+# - A push to develop that changes one of them: "Say what would change" asks Apple what is there and writes the
+#   difference in the summary of the run. If there is one, "Make the changes" waits in the `release` environment for
+#   the owner, and makes the changes when the owner approves.
+# - By hand: `gh workflow run game-center.yml` says what would change and changes nothing; `-f apply=true` on develop
+#   asks to make the changes, and waits for the owner in the same way.
+#
+# It never deletes or archives, never changes an identifier, and never adds a component to a version of the app or
+# sends one for review: those are the owner's, in App Store Connect.
+#
+# Not a required check: it runs only when something it reads changes, and a required check that a path filter keeps
+# from running never reports.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/snake/packaging/ios/game-center/**"
+      - "tools/game-center/sync_app_store_connect.py"
+      - ".github/workflows/game-center.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "apps/snake/packaging/ios/game-center/**"
+      - "tools/game-center/sync_app_store_connect.py"
+      - ".github/workflows/game-center.yml"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Make the changes, once the owner approves. Off says what would change and changes nothing.
+        type: boolean
+        default: false
+
+permissions: {}
+
+# One run at a time, and none cut short: a run that is making changes must finish.
+concurrency:
+  group: game-center
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the file and the images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check components.json and the images
+        run: python3 tools/game-center/sync_app_store_connect.py --validate
+
+  plan:
+    name: Say what would change
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      changes: ${{ steps.plan.outputs.changes }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The key is read, and nothing is written: without --apply the script only asks Apple what is there.
+      - name: Compare App Store Connect with the file
+        id: plan
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: >-
+          python3 tools/game-center/sync_app_store_connect.py
+          --summary "$GITHUB_STEP_SUMMARY" --output "$GITHUB_OUTPUT"
+
+  apply:
+    name: Make the changes
+    # Only from develop, only when there is something to change, and only after the owner approves the environment.
+    if: >-
+      github.ref == 'refs/heads/develop' && needs.plan.outputs.changes != '0' &&
+      (github.event_name == 'push' || inputs.apply)
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Make App Store Connect the same as the file
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: >-
+          python3 tools/game-center/sync_app_store_connect.py --apply
+          --summary "$GITHUB_STEP_SUMMARY"

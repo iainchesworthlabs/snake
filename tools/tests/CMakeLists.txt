@@ -19,3 +19,13 @@ if(Python3_Interpreter_FOUND)
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     set_tests_properties(tools.game_center_images PROPERTIES LABELS unit)
 endif()
+
+# The script that keeps Game Center in App Store Connect the same as components.json
+# (tools/game-center/sync_app_store_connect.py), run against a stand-in for App Store Connect: what a dry run says, what
+# an apply makes, that a second run changes nothing, and that nothing is deleted. It uses no key and reaches nobody.
+if(Python3_Interpreter_FOUND)
+    add_test(NAME tools.game_center_sync
+        COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s tools/tests -p test_game_center_sync.py
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    set_tests_properties(tools.game_center_sync PROPERTIES LABELS unit)
+endif()
