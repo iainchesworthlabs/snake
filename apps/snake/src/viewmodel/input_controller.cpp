@@ -76,6 +76,11 @@ public:
         return sample;
     }
 
+    [[nodiscard]] bool in_device_frame() const noexcept override
+    {
+        return m_Inner->in_device_frame();
+    }
+
     [[nodiscard]] input::AccelSample last() const noexcept
     {
         return m_Last;
@@ -100,6 +105,26 @@ InputController::InputController(std::unique_ptr<input::SampleSource> source, QO
         auto recording = std::make_unique<RecordingSource>(std::move(source));
         m_Recording = recording.get();
         m_Source = std::move(recording);
+        m_Frame = std::make_unique<input::ScreenFrameSource>(*m_Source);
+    }
+}
+
+void InputController::setLandscape(bool landscape)
+{
+    if (landscape == m_Landscape)
+    {
+        return;
+    }
+    m_Landscape = landscape;
+    screenTurned();
+    emit landscapeChanged();
+}
+
+void InputController::screenTurned()
+{
+    if (m_Frame != nullptr)
+    {
+        m_Frame->latch(m_Landscape);
     }
 }
 
@@ -231,6 +256,8 @@ void InputController::startCalibration()
     }
     m_CalibrationElapsed = 0.0;
     m_CalibrationProgress = 0.0;
+    // However the screen came to be as it is, the pose is taken in the frame it is drawn in now.
+    screenTurned();
     if (!m_Calibrating)
     {
         m_Calibrating = true;
@@ -300,7 +327,7 @@ void InputController::update(double seconds)
         return;
     }
     // The readings are taken in whatever the game is doing, so the filter is up to date when a game begins.
-    const input::TiltReading reading = m_Tilt.drain(*m_Source);
+    const input::TiltReading reading = m_Tilt.drain(*m_Frame);
     if (m_Recording != nullptr && m_Recording->count() != m_RawCount)
     {
         m_RawCount = m_Recording->count();

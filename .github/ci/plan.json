@@ -4,7 +4,7 @@
                ".github/rulesets/**", ".github/repo-settings.json", ".github/labels.json",
                "REUSE.toml", ".editorconfig", "LICENSES/**", "tools/fonts/**", "tools/docs/**"],
   "build": ["libs/**", "apps/**", "tests/**", "CMakeLists.txt", "CMakePresets.json", "vcpkg.json", "cmake/**",
-            "tools/coverage-floors.json", "tools/preprocessor-*", "tools/tests/**"],
+            "tools/coverage-floors.json", "tools/preprocessor-*", "tools/tests/**", "tools/game-center/**"],
   "gui": [],
   "machinery": [".github/workflows/**", ".github/ci/**", ".github/toolchain-versions.json", "tools/ci/**"]
 }

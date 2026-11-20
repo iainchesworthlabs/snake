@@ -10,3 +10,12 @@ if(Python3_Interpreter_FOUND)
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     set_tests_properties(tools.site_checks PROPERTIES LABELS unit)
 endif()
+
+# The Game Center achievement images (tools/game-center/make_images.py): each file is the size, colour type and resolution
+# App Store Connect asks for, the script gives the same bytes twice, and the committed images are the ones it draws.
+if(Python3_Interpreter_FOUND)
+    add_test(NAME tools.game_center_images
+        COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s tools/tests -p test_game_center_images.py
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    set_tests_properties(tools.game_center_images PROPERTIES LABELS unit)
+endif()

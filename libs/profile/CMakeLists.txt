@@ -5,6 +5,7 @@
 # uses no exceptions, RTTI, iostream or clock, and allocates nothing, so the ESP32-P4 can link it. Where the bytes are
 # kept is the business of the platform service. Exceptions and RTTI are switched off for its sources.
 add_library(snake_profile
+    src/achievements.cpp
     src/leaderboard.cpp
     src/player_name.cpp
     src/recent_names.cpp

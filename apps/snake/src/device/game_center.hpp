@@ -9,9 +9,9 @@
 namespace snake::ui::device
 {
 
-/// Apple's Game Center, for the leaderboards that the players of one Apple account share. Only an iPhone or iPad has
-/// it; every other device uses a GameCenter that does nothing, and the game's own leaderboards, kept on the device, are
-/// the same with or without it.
+/// Apple's Game Center, for the leaderboards and achievements that the players of one Apple account share. Only an
+/// iPhone or iPad has it; every other device uses a GameCenter that does nothing, and the game's own leaderboards and
+/// achievements, kept on the device, are the same with or without it.
 class GameCenter
 {
 public:
@@ -32,6 +32,16 @@ public:
     /// Shows Game Center's own screen for the leaderboard over the game. Nothing happens when the player is not signed
     /// in.
     virtual void show_leaderboard(std::string_view leaderboard_id) = 0;
+
+    /// Reports how far the player is towards the achievement with the identifier from App Store Connect: 100 when it is
+    /// earned, and below that for one that is counted. Nothing happens when the player is not signed in. A report that
+    /// cannot be sent (no connection) is not tried again; the one that goes out the next time Game Center becomes
+    /// available covers it. Reporting the same thing twice is harmless.
+    virtual void report_achievement(std::string_view achievement_id, double percent) = 0;
+
+    /// Shows Game Center's own screen for the achievements over the game. Nothing happens when the player is not
+    /// signed in.
+    virtual void show_achievements() = 0;
 
     /// Calls `callback` (on the thread of the user interface) when available() may have changed: the player signed in
     /// or out. An empty function stops the calls.
@@ -63,6 +73,8 @@ public:
     }
     void submit_score(std::string_view /*leaderboard_id*/, std::int64_t /*score*/) override {}
     void show_leaderboard(std::string_view /*leaderboard_id*/) override {}
+    void report_achievement(std::string_view /*achievement_id*/, double /*percent*/) override {}
+    void show_achievements() override {}
 };
 
 /// The Game Center the game uses: the one the program set, or none, in which case there is no Game Center. Set it

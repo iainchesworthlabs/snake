@@ -16,16 +16,16 @@ namespace
 {
 
 constexpr std::array<const char*, 10> FONT_FILES = {
-    ":/snake/fonts/pixelify-sans-latin-400-normal.woff2",
-    ":/snake/fonts/pixelify-sans-latin-500-normal.woff2",
-    ":/snake/fonts/pixelify-sans-latin-600-normal.woff2",
-    ":/snake/fonts/pixelify-sans-latin-700-normal.woff2",
-    ":/snake/fonts/noto-sans-jp-400.woff2",
-    ":/snake/fonts/noto-sans-jp-700.woff2",
-    ":/snake/fonts/noto-sans-sc-400.woff2",
-    ":/snake/fonts/noto-sans-sc-700.woff2",
-    ":/snake/fonts/noto-sans-hebrew-400.woff2",
-    ":/snake/fonts/noto-sans-hebrew-700.woff2",
+    ":/snake/fonts/pixelify-sans-latin-400-normal.ttf",
+    ":/snake/fonts/pixelify-sans-latin-500-normal.ttf",
+    ":/snake/fonts/pixelify-sans-latin-600-normal.ttf",
+    ":/snake/fonts/pixelify-sans-latin-700-normal.ttf",
+    ":/snake/fonts/noto-sans-jp-400.ttf",
+    ":/snake/fonts/noto-sans-jp-700.ttf",
+    ":/snake/fonts/noto-sans-sc-400.ttf",
+    ":/snake/fonts/noto-sans-sc-700.ttf",
+    ":/snake/fonts/noto-sans-hebrew-400.ttf",
+    ":/snake/fonts/noto-sans-hebrew-700.ttf",
 };
 
 QColor colour_of(std::uint32_t rgb)

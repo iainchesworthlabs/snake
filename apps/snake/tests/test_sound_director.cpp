@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "platform/sound_sink.hpp"
+#include "played_tally.hpp"
 #include "snake/audio/tunes.hpp"
 #include "snake/sim/simulation.hpp"
 #include "viewmodel/game_view_model.hpp"
@@ -257,6 +258,38 @@ TEST_CASE("A new best has its jingle and a worse game does not", "[sound]")
     REQUIRE(rig.profile.saveScore());
     rig.sink.take();
     rig.profile.record_game(snake::sim::Mode::CLASSIC, 100);
+    CHECK(rig.sink.take().isEmpty());
+}
+
+TEST_CASE("An achievement has the jingle of a new best, once, whether or not the game is a new best", "[sound]")
+{
+    using snake::test::Played;
+    using snake::test::tally_of;
+    Rig rig;
+    rig.sink.take();
+
+    // An achievement and no new best: a score of nothing is never a best.
+    rig.profile.record_game(snake::sim::Mode::CLASSIC, 0, tally_of(Played{.bonus = true}));
+    REQUIRE_FALSE(rig.profile.newBest());
+    REQUIRE_FALSE(rig.profile.achievedNow().isEmpty());
+    CHECK(rig.sink.take() == QStringList{effect(Effect::NEW_BEST)});
+
+    // Both at once: one jingle, not two.
+    rig.profile.record_game(snake::sim::Mode::CLASSIC, 300, tally_of(Played{.portal = true, .shed = true}));
+    REQUIRE(rig.profile.newBest());
+    REQUIRE(rig.profile.achievedNow().size() == 2);
+    CHECK(rig.sink.take() == QStringList{effect(Effect::NEW_BEST)});
+
+    // Neither: the same bonus item earns nothing a second time, and 100 does not beat the best.
+    for (const QChar letter : QString("MUM"))
+    {
+        rig.profile.typeCharacter(QString(letter));
+    }
+    REQUIRE(rig.profile.saveScore());
+    rig.sink.take();
+    rig.profile.record_game(snake::sim::Mode::CLASSIC, 100, tally_of(Played{.bonus = true}));
+    REQUIRE_FALSE(rig.profile.newBest());
+    REQUIRE(rig.profile.achievedNow().isEmpty());
     CHECK(rig.sink.take().isEmpty());
 }
 

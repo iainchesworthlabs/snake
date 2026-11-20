@@ -167,6 +167,37 @@ public:
         controller.gameCenterDelegate = delegate;
         present_when_possible(controller, 0);
     }
+
+    void report_achievement(std::string_view achievement_id, double percent) override
+    {
+        if (!available())
+        {
+            return;
+        }
+        GKAchievement* achievement = [[GKAchievement alloc] initWithIdentifier:to_string(achievement_id)];
+        achievement.percentComplete = percent;
+        // Game Center's own banner says it, and only the first time: it does not repeat for an achievement that is
+        // already earned.
+        achievement.showsCompletionBanner = YES;
+        [GKAchievement reportAchievements:@[ achievement ]
+                    withCompletionHandler:^(NSError* /*error*/){
+                        // A report that could not be sent is dropped: the next start with a signed-in player sends
+                        // everything the device holds.
+                    }];
+    }
+
+    void show_achievements() override
+    {
+        if (!available())
+        {
+            return;
+        }
+        static SnakeGameCenterDelegate* const delegate = [[SnakeGameCenterDelegate alloc] init];
+        GKGameCenterViewController* controller =
+            [[GKGameCenterViewController alloc] initWithState:GKGameCenterViewControllerStateAchievements];
+        controller.gameCenterDelegate = delegate;
+        present_when_possible(controller, 0);
+    }
 };
 
 /// What the application's delegate answers when UIKit asks which orientations a window may be in. It is the whole

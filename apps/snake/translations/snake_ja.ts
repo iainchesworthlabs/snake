@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>たっせい</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>もどる</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>できた</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>まだ できてない</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -80,6 +99,16 @@
     <message>
         <source>You matched your best.</source>
         <translation>ベストと おなじ てんすう！</translation>
+    </message>
+    <message>
+        <source>Achievement: %1</source>
+        <translation>たっせい: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n この たっせい</numerusform>
+        </translation>
     </message>
     <message>
         <source>Game over</source>
@@ -430,6 +459,13 @@
     </message>
 </context>
 <context>
+    <name>SwipeCue</name>
+    <message>
+        <source>Swipe</source>
+        <translation>スワイプ</translation>
+    </message>
+</context>
+<context>
     <name>TiltIndicator</name>
     <message>
         <source>Tilt</source>
@@ -455,6 +491,10 @@
         <translation>ランキング</translation>
     </message>
     <message>
+        <source>Achievements</source>
+        <translation>たっせい</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>せってい</translation>
     </message>
@@ -464,6 +504,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 / %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>かべを ぬける</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>ボーナス</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>さいだいコンボ</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>あたらしい きろく</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>さいこうそく</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>ブルーベリー %L1こ</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>ポータル かいほう</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>ポータルを とおる</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>ホットポテト かいほう</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>まにあって すてた</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>4つの モード</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>かんたんで ボードの はしから でて、はんたいがわから もどろう。</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>きえる まえに ボーナスを たべよう。</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>%L1てんの ブルーベリーを たべよう。</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>モードの ランキングの いちばんを こえよう。</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>へびが いちばん はやくなるまで たべよう。</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>ブルーベリーを %L1こ たべよう。なんかいの ゲームでも いいよ。</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>ポータルの モードを あけよう。</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>ポータルに はいって、ペアの ポータルから でよう。</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>ホットポテトの モードを あけよう。</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>ばくだんが ばくはつする まえに、すてるで すてよう。</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>4つの モードで ゲームを おわらせよう。</translation>
     </message>
 </context>
 <context>

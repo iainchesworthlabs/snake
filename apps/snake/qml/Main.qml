@@ -20,7 +20,7 @@ Window {
     title: qsTr("Snake")
     color: Theme.background
 
-    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "settings", "about" or "notice". A game that starts
+    // The screen shown over the title or the game over screen: "", "nameEntry", "leaderboard", "achievements", "settings", "about" or "notice". A game that starts
     // clears it.
     property string overlay
 
@@ -41,6 +41,8 @@ Window {
         game: gameModel
         profile: profileModel
         touchDevice: root.touchDevice
+        // A phone's sensor may read in the device's own axes, whichever way the screen is drawn: tilt is turned to the screen.
+        landscape: root.lyingDown
     }
 
     // A gamepad plays the game by sending this window the keys the keyboard has: the d-pad and the left stick for the arrows,
@@ -65,6 +67,14 @@ Window {
     // new and the tilt was calibrated for the old one, and resuming calibrates it again.
     readonly property bool lyingDown: width > height
     onLyingDownChanged: {
+        if (touchDevice && gameModel.state === GameViewModel.State.Running)
+            gameModel.pause();
+    }
+
+    // The screen turned a half, from one landscape to the other: the window is the same shape, but the readings of tilt
+    // are turned the other way. The system says so, and the game waits for the player and calibrates again on resuming.
+    Screen.onOrientationChanged: {
+        inputModel.screenTurned();
         if (touchDevice && gameModel.state === GameViewModel.State.Running)
             gameModel.pause();
     }
@@ -100,12 +110,14 @@ Window {
         game: gameModel
     }
 
-    // Game Center, for a phone whose player is signed in to it: sends the score of each game, and opens its leaderboards.
+    // Game Center, for a phone whose player is signed in to it: sends the score of each game and the achievements the device holds,
+    // and opens its leaderboards and achievements.
     GameCenterDirector {
         id: gameCenterModel
 
         objectName: "gameCenter"
         game: gameModel
+        profile: profileModel
     }
 
     ProfileViewModel {
@@ -155,6 +167,7 @@ Window {
             profileModel.boardMode = gameModel.mode;
             root.overlay = "leaderboard";
         }
+        onAchievementsRequested: root.overlay = "achievements"
         onSettingsRequested: root.overlay = "settings"
     }
 
@@ -233,6 +246,17 @@ Window {
         title: root.noticeTitle
         body: root.noticeBody
         onClosed: root.overlay = "about"
+    }
+
+    AchievementsScreen {
+        objectName: "achievementsScreen"
+        anchors.fill: parent
+        visible: root.overlay === "achievements"
+        focus: visible
+        game: gameModel
+        profile: profileModel
+        gameCenter: gameCenterModel
+        onClosed: root.overlay = ""
     }
 
     LeaderboardScreen {

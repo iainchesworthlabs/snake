@@ -49,6 +49,25 @@
     </message>
 </context>
 <context>
+    <name>AchievementsScreen</name>
+    <message>
+        <source>Achievements</source>
+        <translation>Succès</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Retour</translation>
+    </message>
+    <message>
+        <source>Earned</source>
+        <translation>Obtenu</translation>
+    </message>
+    <message>
+        <source>Not earned yet</source>
+        <translation>Pas encore obtenu</translation>
+    </message>
+</context>
+<context>
     <name>DPad</name>
     <message>
         <source>Up</source>
@@ -80,6 +99,17 @@
     <message>
         <source>You matched your best.</source>
         <translation>Tu as égalé ton record.</translation>
+    </message>
+    <message>
+        <source>Achievement: %1</source>
+        <translation>Succès : %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n achievements</source>
+        <translation>
+            <numerusform>%n succès</numerusform>
+            <numerusform>%n succès</numerusform>
+        </translation>
     </message>
     <message>
         <source>Game over</source>
@@ -430,6 +460,13 @@
     </message>
 </context>
 <context>
+    <name>SwipeCue</name>
+    <message>
+        <source>Swipe</source>
+        <translation>Glisser</translation>
+    </message>
+</context>
+<context>
     <name>TiltIndicator</name>
     <message>
         <source>Tilt</source>
@@ -455,6 +492,10 @@
         <translation>Classement</translation>
     </message>
     <message>
+        <source>Achievements</source>
+        <translation>Succès</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation>Réglages</translation>
     </message>
@@ -464,6 +505,97 @@
     <message>
         <source>%1 of %2</source>
         <translation>%1 sur %2</translation>
+    </message>
+</context>
+<context>
+    <name>snake::ui::AchievementListModel</name>
+    <message>
+        <source>Through the wall</source>
+        <translation>Traverser le mur</translation>
+    </message>
+    <message>
+        <source>Bonus item</source>
+        <translation>Objet bonus</translation>
+    </message>
+    <message>
+        <source>Top combo</source>
+        <translation>Combo maximal</translation>
+    </message>
+    <message>
+        <source>New best</source>
+        <translation>Nouveau record</translation>
+    </message>
+    <message>
+        <source>Top speed</source>
+        <translation>Vitesse maximale</translation>
+    </message>
+    <message>
+        <source>%L1 blueberries</source>
+        <translation>%L1 myrtilles</translation>
+    </message>
+    <message>
+        <source>Portals open</source>
+        <translation>Portails ouverts</translation>
+    </message>
+    <message>
+        <source>Through a portal</source>
+        <translation>Par un portail</translation>
+    </message>
+    <message>
+        <source>Hot potato open</source>
+        <translation>Patate chaude ouverte</translation>
+    </message>
+    <message>
+        <source>Shed in time</source>
+        <translation>Largué à temps</translation>
+    </message>
+    <message>
+        <source>All four modes</source>
+        <translation>Les quatre modes</translation>
+    </message>
+    <message>
+        <source>Leave one side of the board in Easy and come back on the other.</source>
+        <translation>Sors d&apos;un côté du plateau en mode Facile et reviens par l&apos;autre.</translation>
+    </message>
+    <message>
+        <source>Eat a bonus item before it goes.</source>
+        <translation>Mange un objet bonus avant qu&apos;il disparaisse.</translation>
+    </message>
+    <message>
+        <source>Eat a blueberry worth %L1 points.</source>
+        <translation>Mange une myrtille qui vaut %L1 points.</translation>
+    </message>
+    <message>
+        <source>Beat the top score on a mode&apos;s leaderboard.</source>
+        <translation>Bats le meilleur score du classement d&apos;un mode.</translation>
+    </message>
+    <message>
+        <source>Eat until the snake is as fast as it gets.</source>
+        <translation>Mange jusqu&apos;à ce que le serpent soit aussi rapide que possible.</translation>
+    </message>
+    <message>
+        <source>Eat %L1 blueberries, over as many games as it takes.</source>
+        <translation>Mange %L1 myrtilles, en autant de parties qu&apos;il faut.</translation>
+    </message>
+    <message>
+        <source>Open the Portals mode.</source>
+        <translation>Ouvre le mode Portails.</translation>
+    </message>
+    <message>
+        <source>Go into a portal and come out of its twin.</source>
+        <translation>Entre dans un portail et ressors par son jumeau.</translation>
+    </message>
+    <message>
+        <source>Open the Hot potato mode.</source>
+        <translation>Ouvre le mode Patate chaude.</translation>
+    </message>
+    <message>
+        <source>Drop a bomb with Shed before it goes off.</source>
+        <translation>Largue une bombe avec Larguer avant qu&apos;elle n&apos;explose.</translation>
+    </message>
+    <message>
+        <source>Finish a game in each of the four modes.</source>
+        <translation>Termine une partie dans chacun des quatre modes.</translation>
     </message>
 </context>
 <context>

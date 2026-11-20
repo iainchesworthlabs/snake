@@ -5,6 +5,7 @@ add_executable(snake_input_tests
     test_gamepad_map.cpp
     test_joystick_steering.cpp
     test_key_map.cpp
+    test_screen_frame.cpp
     test_swipe_recogniser.cpp
     test_tilt_processor.cpp
     test_trace_source.cpp)

@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "platform/motion_preference.hpp"
+#include "played_tally.hpp"
+#include "snake/profile/achievements.hpp"
 #include "snake/profile/settings.hpp"
 #include "snake/profile/unlocks.hpp"
 #include "snake/sim/mode.hpp"
+#include "snake/sim/scoring.hpp"
+#include "snake/sim/tally.hpp"
+#include "viewmodel/achievement_list_model.hpp"
 #include "viewmodel/game_view_model.hpp"
 #include "viewmodel/leaderboard_model.hpp"
 #include "viewmodel/mode_list_model.hpp"
@@ -24,10 +29,16 @@
 #include <QVariant>
 #include <QVariantList>
 #include <QVariantMap>
+#include <array>
 #include <cstdint>
 #include <utility>
 
 using snake::sim::Mode;
+using snake::profile::Achievement;
+using snake::test::full_tally;
+using snake::test::Played;
+using snake::test::tally_of;
+using snake::ui::AchievementListModel;
 using snake::ui::GameViewModel;
 using snake::ui::ModeListModel;
 using snake::ui::ProfileViewModel;
@@ -971,4 +982,253 @@ TEST_CASE("Asking to recalibrate tilt tells whoever reads the tilt", "[profile][
 TEST_CASE("Without a GUI application the system asks for no reduced motion", "[profile][settings]")
 {
     CHECK_FALSE(snake::ui::system_prefers_reduced_motion());
+}
+
+namespace
+{
+
+QVariant row(const AchievementListModel& model, Achievement achievement, AchievementListModel::Role role)
+{
+    return model.data(model.index(static_cast<int>(achievement)), role);
+}
+
+// A version 3 file, the one the library's tests pin: Easy and Classic scores, Portals open, no achievements.
+constexpr std::array<std::uint8_t, 99> SAVE_FILE_V3{
+    0x53, 0x4E, 0x4B, 0x53, 0x03, 0x00, 0x53, 0x00, 0x01, 0x0B, 0x06, 0x01, 0x00, 0x00, 0x00, 0x02, 0x04,
+    0x49, 0x41, 0x49, 0x4E, 0x09, 0x4D, 0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0x02, 0x04, 0x49,
+    0x41, 0x49, 0x4E, 0xCE, 0x04, 0x00, 0x00, 0x80, 0xC1, 0xFA, 0x68, 0x00, 0x00, 0x00, 0x00, 0x09, 0x4D,
+    0x41, 0x52, 0x59, 0x20, 0x4A, 0x41, 0x4E, 0x45, 0xC2, 0x01, 0x00, 0x00, 0x40, 0xBA, 0xF6, 0x68, 0x00,
+    0x00, 0x00, 0x00, 0x01, 0x04, 0x49, 0x41, 0x49, 0x4E, 0x92, 0x09, 0x00, 0x00, 0x20, 0x4E, 0xFB, 0x68,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87, 0xFC, 0x29, 0x96, 0x44, 0x80, 0xD0, 0x5C,
+};
+
+} // namespace
+
+TEST_CASE("The achievement list has the twelve achievements in order, none earned", "[achievements]")
+{
+    const UsLocale locale;
+    ProfileViewModel profile;
+    const AchievementListModel& list = *profile.achievements();
+    REQUIRE(list.rowCount() == 12);
+    CHECK(list.rowCount(list.index(0)) == 0);
+    CHECK(list.roleNames().size() == 5);
+    for (int number = 0; number < 12; ++number)
+    {
+        const auto achievement = static_cast<Achievement>(number);
+        CHECK(row(list, achievement, AchievementListModel::NumberRole).toInt() == number);
+        CHECK_FALSE(row(list, achievement, AchievementListModel::EarnedRole).toBool());
+        CHECK_FALSE(row(list, achievement, AchievementListModel::NameRole).toString().isEmpty());
+        CHECK_FALSE(row(list, achievement, AchievementListModel::DescriptionRole).toString().isEmpty());
+    }
+
+    CHECK(row(list, Achievement::WRAP, AchievementListModel::NameRole).toString() == "Through the wall");
+    CHECK(row(list, Achievement::WRAP, AchievementListModel::DescriptionRole).toString() ==
+          "Leave one side of the board in Easy and come back on the other.");
+    CHECK(row(list, Achievement::COMBO, AchievementListModel::DescriptionRole).toString() ==
+          "Eat a blueberry worth 50 points.");
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::NameRole).toString() == "100 blueberries");
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::NameRole).toString() == "1,000 blueberries");
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::DescriptionRole).toString() ==
+          "Eat 1,000 blueberries, over as many games as it takes.");
+    CHECK(row(list, Achievement::ALL_MODES, AchievementListModel::NameRole).toString() == "All four modes");
+    CHECK(row(list, Achievement::HOT_POTATO, AchievementListModel::DescriptionRole).toString() ==
+          "Open the Hot potato mode.");
+}
+
+TEST_CASE("The numbers in the achievement texts come from the rules", "[achievements]")
+{
+    const UsLocale locale;
+    ProfileViewModel profile;
+    const AchievementListModel& list = *profile.achievements();
+    const QLocale us;
+    CHECK(row(list, Achievement::COMBO, AchievementListModel::DescriptionRole)
+              .toString()
+              .contains(us.toString(snake::sim::Scoring::FOOD_POINTS * snake::sim::Scoring::MAX_COMBO)));
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::NameRole)
+              .toString()
+              .contains(us.toString(snake::profile::BERRIES_100_TARGET)));
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::NameRole)
+              .toString()
+              .contains(us.toString(snake::profile::BERRIES_1000_TARGET)));
+}
+
+TEST_CASE("An unknown row or role of the achievement list gives nothing", "[achievements]")
+{
+    ProfileViewModel profile;
+    const AchievementListModel& list = *profile.achievements();
+    CHECK_FALSE(list.data(QModelIndex{}, AchievementListModel::NameRole).isValid());
+    CHECK_FALSE(list.data(list.index(12), AchievementListModel::NameRole).isValid());
+    CHECK_FALSE(list.data(list.index(0), Qt::DisplayRole).isValid());
+}
+
+TEST_CASE("A game whose tally meets a rule earns it, says so once and keeps it", "[achievements]")
+{
+    ProfileViewModel profile;
+    const AchievementListModel& list = *profile.achievements();
+    QSignalSpy result(&profile, &ProfileViewModel::resultChanged);
+    QSignalSpy changed(profile.achievements(), &AchievementListModel::dataChanged);
+    CHECK(profile.achievedNow().isEmpty());
+
+    const auto bonus = tally_of(Played{.bonus = true});
+    profile.record_game(Mode::CLASSIC, 100, bonus);
+    CHECK(profile.achievedNow() == QStringList{"Bonus item"});
+    CHECK(result.count() == 1);
+    CHECK(changed.count() == 1);
+    CHECK(row(list, Achievement::BONUS, AchievementListModel::EarnedRole).toBool());
+    CHECK_FALSE(row(list, Achievement::PORTAL, AchievementListModel::EarnedRole).toBool());
+    CHECK(profile.data().achievements.has(Achievement::BONUS));
+
+    // The next identical game earns nothing new, and the list still has it.
+    profile.record_game(Mode::CLASSIC, 100, bonus);
+    CHECK(profile.achievedNow().isEmpty());
+    CHECK(result.count() == 2);
+    CHECK(row(list, Achievement::BONUS, AchievementListModel::EarnedRole).toBool());
+}
+
+TEST_CASE("What a game earned is named in the order of the list", "[achievements]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::CLASSIC, 100, tally_of(Played{.bonus = true, .portal = true, .shed = true}));
+    CHECK(profile.achievedNow() == QStringList{"Bonus item", "Through a portal", "Shed in time"});
+}
+
+TEST_CASE("A game with an empty tally earns only what the score and the unlocks give", "[achievements]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::CLASSIC, 100);
+    CHECK(profile.achievedNow().isEmpty());
+    CHECK(profile.data().achievements.none());
+
+    // A score that opens Portals earns the achievement for it, and so does the next one for Hot potato.
+    profile.record_game(Mode::CLASSIC, 2000);
+    CHECK(profile.achievedNow() == QStringList{"Portals open"});
+    profile.record_game(Mode::CLASSIC, 3000);
+    CHECK(profile.achievedNow() == QStringList{"Hot potato open"});
+}
+
+TEST_CASE("A score that beats a saved best earns New best, and the first game does not", "[achievements]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::EASY, 100);
+    CHECK(profile.newBest());
+    CHECK(profile.achievedNow().isEmpty());
+    save_as(profile, "MUM");
+
+    profile.record_game(Mode::EASY, 200);
+    CHECK(profile.achievedNow() == QStringList{"New best"});
+}
+
+TEST_CASE("A game of each mode earns All four modes", "[achievements]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::EASY, 1);
+    profile.record_game(Mode::CLASSIC, 1);
+    profile.record_game(Mode::PORTALS, 1);
+    CHECK_FALSE(profile.data().achievements.has(Achievement::ALL_MODES));
+    profile.record_game(Mode::HOT_POTATO, 1);
+    CHECK(profile.achievedNow() == QStringList{"All four modes"});
+}
+
+TEST_CASE("The blueberries of every game are counted, and the list shows how far they have come", "[achievements]")
+{
+    const UsLocale locale;
+    ProfileViewModel profile;
+    const AchievementListModel& list = *profile.achievements();
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::ProgressRole).toString() == "0 / 100");
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::ProgressRole).toString() == "0 / 1,000");
+    // The others have no count to show.
+    CHECK(row(list, Achievement::WRAP, AchievementListModel::ProgressRole).toString().isEmpty());
+    CHECK(row(list, Achievement::ALL_MODES, AchievementListModel::ProgressRole).toString().isEmpty());
+
+    profile.record_game(Mode::CLASSIC, 100, tally_of(Played{.blueberries = 37}));
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::ProgressRole).toString() == "37 / 100");
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::ProgressRole).toString() == "37 / 1,000");
+    CHECK_FALSE(row(list, Achievement::BERRIES_100, AchievementListModel::EarnedRole).toBool());
+
+    profile.record_game(Mode::CLASSIC, 100, tally_of(Played{.blueberries = 63}));
+    CHECK(profile.achievedNow() == QStringList{"100 blueberries"});
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::EarnedRole).toBool());
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::ProgressRole).toString() == "100 / 100");
+    CHECK(row(list, Achievement::BERRIES_1000, AchievementListModel::ProgressRole).toString() == "100 / 1,000");
+}
+
+TEST_CASE("What a game earned is written to the save file and read back", "[achievements][save]")
+{
+    const UsLocale locale;
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile;
+        profile.setSaveFile(path);
+        profile.record_game(Mode::CLASSIC, 100, tally_of(Played{.blueberries = 40, .bonus = true}));
+        REQUIRE(profile.achievedNow() == QStringList{"Bonus item"});
+    }
+    ProfileViewModel again;
+    again.setSaveFile(path);
+    CHECK(again.data().achievements.has(Achievement::BONUS));
+    CHECK(again.data().achievements.blueberries_eaten() == 40);
+    const AchievementListModel& list = *again.achievements();
+    CHECK(row(list, Achievement::BONUS, AchievementListModel::EarnedRole).toBool());
+    CHECK(row(list, Achievement::BERRIES_100, AchievementListModel::ProgressRole).toString() == "40 / 100");
+    // Nothing was earned in this run.
+    CHECK(again.achievedNow().isEmpty());
+}
+
+TEST_CASE("Loading a save file refreshes the list", "[achievements][save]")
+{
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        ProfileViewModel profile;
+        profile.setSaveFile(path);
+        profile.record_game(Mode::CLASSIC, 100, tally_of(Played{.portal = true}));
+    }
+    ProfileViewModel again;
+    QSignalSpy changed(again.achievements(), &AchievementListModel::dataChanged);
+    again.setSaveFile(path);
+    CHECK(changed.count() == 1);
+    CHECK(row(*again.achievements(), Achievement::PORTAL, AchievementListModel::EarnedRole).toBool());
+}
+
+TEST_CASE("A version 3 save with Portals open loads with that achievement earned", "[achievements][save]")
+{
+    const QTemporaryDir folder;
+    const QString path = folder.filePath("save.snk");
+    {
+        QFile file(path);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+        file.write(reinterpret_cast<const char*>(SAVE_FILE_V3.data()), static_cast<qint64>(SAVE_FILE_V3.size()));
+    }
+    ProfileViewModel profile;
+    profile.setSaveFile(path);
+    REQUIRE(profile.persistent());
+    REQUIRE(profile.data().unlocks.has(snake::profile::Unlockable::PORTALS));
+    const AchievementListModel& list = *profile.achievements();
+    CHECK(row(list, Achievement::PORTALS, AchievementListModel::EarnedRole).toBool());
+    CHECK_FALSE(row(list, Achievement::HOT_POTATO, AchievementListModel::EarnedRole).toBool());
+    CHECK(profile.data().achievements.blueberries_eaten() == 0);
+    // Nothing is announced for what a load found.
+    CHECK(profile.achievedNow().isEmpty());
+}
+
+TEST_CASE("The profile reads the tally of the game it watches", "[achievements]")
+{
+    GameViewModel game(counting_seeds());
+    ProfileViewModel profile;
+    profile.setGame(&game);
+    play_into_the_wall(game);
+    // Whatever the game came to, what is counted is what the game's tally holds.
+    CHECK(profile.data().achievements.blueberries_eaten() == game.tally().blueberries());
+    CHECK(profile.data().achievements.modes_finished() == (1U << static_cast<unsigned>(Mode::CLASSIC)));
+}
+
+TEST_CASE("A full tally earns every achievement a game can in one go", "[achievements]")
+{
+    ProfileViewModel profile;
+    profile.record_game(Mode::EASY, 100);
+    save_as(profile, "MUM");
+    profile.record_game(Mode::EASY, 3000, full_tally());
+    CHECK(profile.achievedNow() ==
+          QStringList{"Through the wall", "Bonus item", "Top combo", "New best", "Top speed", "Through a portal",
+                      "Shed in time"});
 }
