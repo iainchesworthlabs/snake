@@ -49,7 +49,12 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          current="$(gh api "repos/$REPO/git/ref/heads/site" --jq .object.sha 2>/dev/null || true)"
+          # gh prints the body of an error response, such as the 404 for a branch that does not exist yet, on stdout, so
+          # whether the branch exists is read from the exit status and never from the text.
+          current=""
+          if ! current="$(gh api "repos/$REPO/git/ref/heads/site" --jq .object.sha 2>/dev/null)"; then
+            current=""
+          fi
           if [ "$current" = "$GITHUB_SHA" ]; then
             echo "The site branch is already at $GITHUB_SHA, so there is nothing new to publish. To publish this commit again, re-run the last Docs run of the push to site." >> "$GITHUB_STEP_SUMMARY"
             exit 0
