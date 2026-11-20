@@ -48,7 +48,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if [[ "$version" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
       - name: Check the release has notes
-        uses: iainchesworthlabs/icl-common-infra/actions/release-notes@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/release-notes@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           version: ${{ steps.tag.outputs.version }}
           prerelease: ${{ steps.tag.outputs.prerelease }}
@@ -76,18 +76,18 @@ jobs:
           persist-credentials: false
       - name: Install GCC
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-gcc@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
       - name: Load the MSVC environment
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-msvc-env@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
       - name: Set up Qt
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-qt@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
       - name: Set up ccache
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-ccache@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           key: release-${{ matrix.name }}
       - name: Configure, build and install
@@ -121,13 +121,13 @@ jobs:
           grep -q '^snake [0-9]' version.txt
       - name: Check the glibc the package needs
         if: runner.os == 'Linux'
-        uses: iainchesworthlabs/icl-common-infra/actions/check-glibc-floor@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/check-glibc-floor@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           folder: stage
       - name: Sign the Windows binaries
         id: sign
         if: runner.os == 'Windows'
-        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/sign-windows@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           mode: ${{ vars.SIGN_WINDOWS || 'false' }}
           files: stage/bin/snake.exe
@@ -187,7 +187,7 @@ jobs:
       # The shared action names the secret that is missing, before a Qt download of several gigabytes.
       - name: Import the certificate and the provisioning profile
         id: signing
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           certificate-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
           certificate-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
@@ -196,14 +196,14 @@ jobs:
           method: ${{ env.METHOD }}
 
       - name: Set up vcpkg
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-vcpkg@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
 
       - name: Set up CMake
-        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/setup-cmake@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
 
       # Qt's iOS kit, and the macOS kit that aqtinstall's --autodesktop installs beside it for the host tools (as ios-build.yml).
       - name: Install Qt (iOS kit and macOS host kit)
-        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
+        uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
         with:
           version: "6.12.0"
           host: mac
@@ -257,7 +257,7 @@ jobs:
 
       - name: Archive and export the IPA
         id: export
-        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/export-ios-ipa@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           project: ${{ steps.name.outputs.project }}
           scheme: snake_app
@@ -289,7 +289,7 @@ jobs:
       # manual run that asks, the upload to TestFlight.
       - name: Validate with Apple, and upload to TestFlight
         if: env.METHOD == 'app-store'
-        uses: iainchesworthlabs/icl-common-infra/actions/upload-testflight@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/upload-testflight@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           ipa: ${{ steps.export.outputs.ipa }}
           key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
@@ -299,7 +299,7 @@ jobs:
 
       - name: Remove the signing keychain and profile
         if: always()
-        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+        uses: iainchesworthlabs/icl-common-infra/actions/import-ios-signing@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
         with:
           remove: "true"
 
@@ -345,7 +345,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/release-publish.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     secrets:
       REPO_GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
       REPO_GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}

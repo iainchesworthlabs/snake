@@ -21,7 +21,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
     permissions:
       contents: read
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       site-artifact: docs-site
 
@@ -30,7 +30,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       site-artifact: docs-site
 
@@ -45,7 +45,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       prefix: snake
       production-ref: refs/heads/develop
@@ -85,7 +85,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       prefix: snake
       preview: true
@@ -106,7 +106,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@37d47f6c680737a399a0f34d281bb4dedc541125 # v0.1.29
+    uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       mode: remove-preview
       prefix: snake
