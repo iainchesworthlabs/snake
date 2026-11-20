@@ -43,8 +43,9 @@ are several gigabytes and a macOS runner costs a multiple. Run one by hand anywh
   `verify_apk.sh` reads it: the application id, the version, the platform levels, **no permission but the vibrator**,
   `arm64-v8a` only, the library, the icon and the
   signature. The APK is uploaded for 14 days.
-- **iOS** (macOS runner): Qt's iOS kit and the macOS host kit, the `ios-release` preset through Xcode, unsigned, and
-  `verify_app.sh` reads the bundle.
+- **iOS** (the `xcode-27` runner, Xcode 27 and the iOS 27 SDK): Qt's iOS kit and the macOS host kit, the `ios-release` preset
+  through Xcode, unsigned, and `verify_app.sh` reads the bundle, which fails a build made with an SDK older than 27
+  (`DTSDKName`). The signed build of `release.yml` runs on the same runner.
 
 What they have **not** shown, and a device has to: that the program starts, that it draws at the size of the screen, that
 touch and tilt work, that the sound plays and the audio session behaves, and that a package installs. Nothing runs the

@@ -169,7 +169,7 @@ jobs:
     name: Package (iOS)
     needs: version
     if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') && (vars.SIGN_IOS_UPLOAD == 'true' || vars.SIGN_IOS_ADHOC == 'true') }}
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 120
     permissions:
       contents: read

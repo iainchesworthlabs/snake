@@ -118,7 +118,8 @@ cmake --build --preset ios-release
 The build is unsigned and needs no Apple account. `apps/snake/packaging/ios/verify_app.sh build/ios-release/Release-iphoneos/snake.app`
 checks the bundle: the identifier, the icon, the launch screen, that no permission text is in `Info.plist`, that the
 executable is `arm64` and links only the system. A signed build, for a device or the store, is the owner's, with the
-owner's account and provisioning profile.
+owner's account and provisioning profile. Build with Xcode 27 or later: the iOS build is made with the iOS 27 SDK or a later
+one, CI runs it on the `xcode-27` runner, and `verify_app.sh` fails a bundle whose `DTSDKName` is older.
 
 Qt is static on iOS and the game's fonts and texts are resources, so the bundle is the executable, the property list
 and the compiled icons.
