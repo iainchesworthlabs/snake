@@ -27,7 +27,7 @@
    detached GPG signatures, an SPDX SBOM and build provenance, creates the GitHub Release, and for a
    final release fast-forwards `main` to the tag.
 
-`main` only ever moves by that fast-forward. The docs site is deployed from the push to `main`.
+`main` only ever moves by that fast-forward. The docs site is not deployed from `main`: a push to the branch `site` deploys it, and `publish-site.yml` moves that branch (see `docs/ci.md`, "Publishing the site").
 
 ## Verifying a download
 

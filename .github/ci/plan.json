@@ -1,5 +1,6 @@
 {
-  "docs": ["docs/**", "*.md", "mkdocs.yml", "LICENSE*", "changelog.d/**", "requirements/docs.txt"],
+  "docs": ["docs/**", "*.md", "mkdocs.yml", "LICENSE*", "changelog.d/**", "requirements/docs.txt",
+           ".github/workflows/docs.yml", ".github/workflows/publish-site.yml"],
   "no_build": [".github/PULL_REQUEST_TEMPLATE*", ".github/CODEOWNERS", ".github/dependabot.yml",
                ".github/rulesets/**", ".github/repo-settings.json", ".github/labels.json",
                "REUSE.toml", ".editorconfig", "LICENSES/**", "tools/fonts/**", "tools/docs/**"],

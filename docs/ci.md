@@ -14,8 +14,12 @@ commit SHA. Dependabot proposes the SHA bump; the pull request also needs
 | Nightly | CodeQL |
 | Tag `v*` | Release |
 
-The Plan job reads `.github/ci/plan.json`. A change to documentation only builds nothing. A path
+The Plan job reads `.github/ci/plan.json`. A change to documentation only builds nothing; `docs.yml` and
+`publish-site.yml` count as documentation, because they build and publish the site and nothing else. A path
 the plan does not recognise builds everything.
+
+Publishing the site needs no CI at all: a push to the branch `site` runs `docs.yml` and nothing else, because `ci.yml`
+runs for pull requests, the merge queue and `develop` ([Publishing the site](#publishing-the-site)).
 
 ## The ESP32-P4 libraries
 
@@ -163,18 +167,36 @@ A change to a page needs no changelog fragment: the pages are under `docs/` and 
 |---|---|
 | Pull request from this repository | The site is built and uploaded to `https://iainchesworthlabs.com/_preview/snake/pr-<n>/` through the preview role (`_preview/snake/*` only). One comment on the pull request carries the address. A preview needs the secrets below; without them the step says so and is skipped. |
 | Pull request closed | The preview is deleted. |
-| Push to `develop`, or a manual run from `develop` | The site is synced to `snake/` of the bucket with `--delete` and the path is invalidated, through the production role (`snake/*` only). It refuses any other ref. |
+| Push to the branch `site` | The site is synced to `snake/` of the bucket with `--delete` and the path is invalidated, through the production role (`snake/*` only). It refuses any other ref. |
+
+A merge to `develop` does **not** publish. The branch `site` holds the commit of `develop` that the site was last built from,
+and only `publish-site.yml` moves it. To publish what `develop` holds, with no release and no CI:
+
+```bash
+gh workflow run publish-site.yml --ref develop
+```
+
+The workflow fast-forwards `site` to the tip of `develop` with the release bot's App token (a push made with `GITHUB_TOKEN`
+does not start workflows), and refuses to run on any other branch or to move `site` backwards. The push starts `docs.yml`
+and nothing else. What `develop` holds has been through the merge queue already, and a change to pages alone plans no build
+there. To publish the same commit again, re-run the Docs run of the last push to `site`.
+
+The `site-publish-only` ruleset lets the release bot, and nothing else, create or move `site`, with no deletion and no
+force push, because the company site's deploy role trusts a push to that branch. `branch-names` lets the name `site` exist.
 
 It replaces the earlier publication to GitHub Pages (`https://iainchesworthlabs.github.io/snake/`), which went out on a push
-to `main`. The setup is the owner's, once:
+to `main`, and the short-lived deploy on a push to `develop`. The setup is the owner's, once:
 
-1. In `icl-site`, add an entry to `APPS` in `infra/lib/apps.ts` (slug `snake`, repo `iainchesworthlabs/snake`, its numeric
-   repository id, a role name such as `icl-site-deploy-snake`), customise this repository's OIDC subject claim as the other
-   apps' are, and run the site stack's `cdk deploy`. The roles trust a push to `develop` and a pull request of this repository.
+1. In `icl-site`, set `publishRef: 'site'` on the `snake` entry of `APPS` in `infra/lib/apps.ts` (slug `snake`, repo
+   `iainchesworthlabs/snake`, its numeric repository id, the role `icl-site-deploy-snake`), and run the site stack's
+   `cdk deploy`. The role then trusts a push to `site` and a pull request of this repository, and no longer a push to `develop`.
 2. Set the repository secrets `DOCS_ROLE_ARN`, `DOCS_PREVIEW_ROLE_ARN`, `DOCS_BUCKET` and `DOCS_DISTRIBUTION_ID` from the stack's
    outputs.
-3. Run the Docs workflow from `develop`. If the production deploy fails, the job *Explain a failed deploy* says what to check.
-4. Point the repository's homepage (and `homepage` and `pages` in `.github/repo-settings.json`) at
+3. Apply the rulesets: `branch-names` (updated) and `site-publish-only` (new, with the release bot's App id in place of
+   `__RELEASE_BOT_APP_ID__`). `site-publish-only` may be applied before or after the first publish; `branch-names` must come first.
+4. Run `gh workflow run publish-site.yml --ref develop`. If the production deploy fails, the job *Explain a failed deploy*
+   says what to check.
+5. Point the repository's homepage (and `homepage` and `pages` in `.github/repo-settings.json`) at
    `https://iainchesworthlabs.com/snake/` and turn Pages off.
 
 ## Required checks

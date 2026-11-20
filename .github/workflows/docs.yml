@@ -5,13 +5,11 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches: [develop]
     paths: ["docs/**", "mkdocs.yml", "requirements/docs.txt", ".github/workflows/docs.yml", "tools/docs/**"]
-  # The site publishes from develop, independently of releases, and only when something the build reads changed
-  # (the same paths as a pull request). A push that changes only game code does not deploy the site.
+  # The site publishes from the branch `site`, which only publish-site.yml moves: it fast-forwards `site` to the tip of
+  # develop, by hand. A push to `site` runs this workflow and no other, because ci.yml runs for pull requests, the merge
+  # queue and develop. There is no path filter: `site` moves only when someone has asked for the site to go up.
   push:
-    branches: [develop]
-    paths: ["docs/**", "mkdocs.yml", "requirements/docs.txt", ".github/workflows/docs.yml", "tools/docs/**"]
-  # A manual run from develop republishes the site (for example after the deploy role's trust changed).
-  workflow_dispatch:
+    branches: [site]
 
 permissions: {}
 
@@ -27,20 +25,21 @@ jobs:
 
   publish:
     name: Build site for the domain
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     permissions:
       contents: read
     uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       site-artifact: docs-site
 
-  # Production: https://iainchesworthlabs.com/snake/, from develop. The role, bucket and distribution come from
+  # Production: https://iainchesworthlabs.com/snake/, from the branch site. The role, bucket and distribution come from
   # the repository secrets DOCS_ROLE_ARN, DOCS_BUCKET and DOCS_DISTRIBUTION_ID (set by the owner). The role's trust
-  # policy must allow a push to refs/heads/develop of this repository.
+  # policy must allow a push to refs/heads/site of this repository (publishRef 'site' for snake in icl-site). To
+  # publish the same commit again, re-run the run of that push.
   deploy:
     name: Deploy site
     needs: publish
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     permissions:
       contents: read
       id-token: write
@@ -48,7 +47,7 @@ jobs:
     uses: iainchesworthlabs/icl-common-infra/.github/workflows/docs-deploy-aws.yml@7343cae74fb2028b995b39cdec14a58b0f37f2e8 # v0.1.30
     with:
       prefix: snake
-      production-ref: refs/heads/develop
+      production-ref: refs/heads/site
     secrets:
       DOCS_ROLE_ARN: ${{ secrets.DOCS_ROLE_ARN }}
       DOCS_PREVIEW_ROLE_ARN: ${{ secrets.DOCS_PREVIEW_ROLE_ARN }}
@@ -68,7 +67,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          message="The production docs deploy failed. If the step 'Assume the production role' says the web identity token cannot be assumed or the action is not authorized, the deploy role's trust policy does not allow a push to refs/heads/develop of this repository: the owner adds the app to icl-site (infra/lib/apps.ts, slug snake), runs the site stack's deploy (cdk deploy), sets the secrets DOCS_ROLE_ARN, DOCS_PREVIEW_ROLE_ARN, DOCS_BUCKET and DOCS_DISTRIBUTION_ID on this repository, then re-runs this workflow (Actions, Docs, Run workflow, from develop). If another step failed, read its log. The site stays at its last good version."
+          message="The production docs deploy failed. If the step 'Assume the production role' says the web identity token cannot be assumed or the action is not authorized, the deploy role's trust policy does not allow a push to refs/heads/site of this repository: the owner sets publishRef to site for the snake entry of icl-site (infra/lib/apps.ts), runs the site stack's deploy (cdk deploy), sets the secrets DOCS_ROLE_ARN, DOCS_PREVIEW_ROLE_ARN, DOCS_BUCKET and DOCS_DISTRIBUTION_ID on this repository, then re-runs this run (Actions, Docs, the run of the push to site, Re-run all jobs). If another step failed, read its log. The site stays at its last good version."
           echo "::error title=Docs deploy failed::$message"
           echo "$message" >> "$GITHUB_STEP_SUMMARY"
           exit 1
